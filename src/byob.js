@@ -4446,7 +4446,7 @@ BlockExportDialogMorph.prototype.init = function (serializer, blocks, target) {
 };
 
 BlockExportDialogMorph.prototype.buildContents = function () {
-    var palette, x, y, block, checkBox, lastCat,
+    var palette, x, y, block, checkBox, catCheckBox, lastCat,
         padding = 4;
 
     // create plaette
@@ -4467,8 +4467,53 @@ BlockExportDialogMorph.prototype.buildContents = function () {
     SpriteMorph.prototype.allCategories().forEach(category => {
         this.blocks.forEach(definition => {
             if (definition.category === category) {
-                if (lastCat && (category !== lastCat)) {
+                if ((category !== lastCat)) {
+                    console.log(category)
                     y += padding;
+                    catCheckBox = new ToggleMorph(
+                        'checkbox',
+                        this,
+                        () => {
+                            var blocks = [];
+                            if (contains(this.blocks.map(b => b.category), category)) {
+                                this.blocks.forEach(block => {
+                                    if (block.category != category) {
+                                        blocks.push(block)
+                                    };
+                                });
+                                this.blocks = blocks;
+                            } else {
+                                this.body.contents.children.forEach(block => {
+                                    if (block instanceof ToggleMorph) {
+                                        if (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) {
+                                            if (block.element.category == category) {
+                                                if (!contains(this.blocks, block.element.definition)) {
+                                                    block.trigger()
+                                                };
+                                            };
+                                        };
+                                    };
+                                });
+                            };
+                            this.collectDependencies();
+                            
+                        },
+                        category,
+                        () => contains(this.blocks.map(b => b.category), category),
+                        null,
+                        null
+                    )
+                    catCheckBox.label.color = new Color(255, 255, 255, 1)
+                    catCheckBox.label.fontSize = 12
+                    catCheckBox.label.setWidth()
+                    catCheckBox.label.setTop()
+                    catCheckBox.setPosition(new Point(
+                        x,
+                        y + (catCheckBox.top())
+                    ));
+                    palette.addContents(catCheckBox);
+                    y += catCheckBox.fullBounds().height()
+                    y += padding
                 }
                 lastCat = category;
                 block = definition.templateInstance();
@@ -4538,7 +4583,9 @@ BlockExportDialogMorph.prototype.userMenu = function () {
 BlockExportDialogMorph.prototype.selectAll = function () {
     this.body.contents.children.forEach(checkBox => {
         if (!checkBox.state) {
-            checkBox.trigger();
+            if (checkBox instanceof ToggleMorph) {
+                checkBox.trigger();
+            }
         }
     });
 };
@@ -4546,7 +4593,9 @@ BlockExportDialogMorph.prototype.selectAll = function () {
 BlockExportDialogMorph.prototype.selectNone = function () {
     this.blocks = [];
     this.body.contents.children.forEach(checkBox => {
-        checkBox.refresh();
+        if (checkBox instanceof ToggleMorph) {
+            checkBox.refresh();
+        }
     });
 };
 
@@ -4561,7 +4610,9 @@ BlockExportDialogMorph.prototype.collectDependencies = function () {
     });
     // refresh the checkmarks
     this.body.contents.children.forEach(checkBox => {
-        checkBox.refresh();
+        if (checkBox instanceof ToggleMorph) {
+            checkBox.refresh();
+        }
     });
 };
 
