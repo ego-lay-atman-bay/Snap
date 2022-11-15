@@ -86,11 +86,11 @@ BlockVisibilityDialogMorph, ThreadManager, isString*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.gui = '2022-July-22';
+modules.gui = '2022-October-25';
 
 // Declarations
 
-var SnapVersion = '8.0.0-rc-220722';
+var SnapVersion = '8.1.0-dev';
 
 var IDE_Morph;
 var ProjectDialogMorph;
@@ -2508,7 +2508,7 @@ IDE_Morph.prototype.droppedImage = function (aCanvas, name, embeddedData, src) {
         isString(embeddedData) &&
         ['scripts', 'palette', 'categories'].includes(src) &&
         embeddedData[0] === '<' &&
-        ['blocks', 'block', 'script'].some(tag =>
+        ['blocks', 'block', 'script', 'sprite'].some(tag =>
             embeddedData.slice(1).startsWith(tag))
     ) {
         this.isImportingLocalFile = false;
@@ -4327,6 +4327,15 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to disable\ndirectly running blocks\nby clicking on them',
         false
     );
+    addPreference(
+        'Disable dragging data',
+        () => SpriteMorph.prototype.disableDraggingData =
+            !SpriteMorph.prototype.disableDraggingData,
+        SpriteMorph.prototype.disableDraggingData,
+        'uncheck to drag media\nand blocks out of\nwatchers and balloons',
+        'disable dragging media\nand blocks out of\nwatchers and balloons',
+        false
+    );
     menu.popup(world, pos);
 };
 
@@ -4862,10 +4871,12 @@ IDE_Morph.prototype.aboutSnap = function () {
         + '\nJoan Guillén: Countless contributions'
         + '\nKartik Chandra: Paint Editor'
         + '\nCarles Paredes: Initial Vector Paint Editor'
-        + '\n"Ava" Yuan Yuan, Dylan Servilla: Graphic Effects'
+        + '\n"Ava" Yuan Yuan, Deborah Servilla: Graphic Effects'
         + '\nKyle Hotchkiss: Block search design'
         + '\nBrian Broll: Many bugfixes and optimizations'
         + '\nEckart Modrow: SciSnap! Extension'
+        + '\nBambi Brewer: Birdbrain Robotics Extension Support'
+        + '\nGlen Bull & team: TuneScope Music Extension'
         + '\nIan Reynolds: UI Design, Event Bindings, '
         + 'Sound primitives'
         + '\nJadga Hügle: Icons and countless other contributions'
@@ -4874,7 +4885,13 @@ IDE_Morph.prototype.aboutSnap = function () {
         + '\nLucas Karahadian: Piano Keyboard Design'
         + '\nDavide Della Casa: Morphic Optimizations'
         + '\nAchal Dave: Web Audio'
-        + '\nJoe Otto: Morphic Testing and Debugging';
+        + '\nJoe Otto: Morphic Testing and Debugging'
+        + '\n\n'
+        + 'Jahrd, Derec, and Jamet costumes are watercolor paintings'
+        + '\nby Meghan Taylor and represent characters from her'
+        + '\nwebcomic Prophecy of the Circle, licensed to us only'
+        + '\nfor use in Snap! projects. Meghan also painted the Tad'
+        + '\ncostumes, but that character is in the public domain.';
 
     for (module in modules) {
         if (Object.prototype.hasOwnProperty.call(modules, module)) {
@@ -5410,7 +5427,7 @@ IDE_Morph.prototype.exportProjectSummary = function (useDropShadows) {
     function addBlocks(definitions) {
         if (definitions.length) {
             add(localize('Blocks'), 'h3');
-            SpriteMorph.prototype.categories.forEach(category => {
+            SpriteMorph.prototype.allCategories().forEach(category => {
                 var isFirst = true,
                     ul;
                 definitions.forEach(def => {
@@ -5917,12 +5934,12 @@ IDE_Morph.prototype.rawOpenDataString = function (str, name, type) {
     function newVarName(name) {
         var existing = globals.names(),
             ix = name.indexOf('\('),
-            stem = (ix < 0) ? name : name.substring(0, ix),
+            stem = ((ix < 0) ? name : name.substring(0, ix)).trim(),
             count = 1,
             newName = stem;
         while (contains(existing, newName)) {
             count += 1;
-            newName = stem + '(' + count + ')';
+            newName = stem + ' (' + count + ')';
         }
         return newName;
     }

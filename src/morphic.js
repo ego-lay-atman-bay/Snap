@@ -1307,9 +1307,10 @@
 
 /*jshint esversion: 11, bitwise: false*/
 
-var morphicVersion = '2022-April-26';
+var morphicVersion = '2022-November-01';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = true;
+var keepCanvasInCPU = false;
 
 const ZERO = new Point();
 const BLACK = new Color();
@@ -1495,6 +1496,9 @@ function newCanvas(extentPoint, nonRetina, recycleMe) {
         canvas = document.createElement('canvas');
         canvas.width = ext.x;
         canvas.height = ext.y;
+        canvas.getContext("2d", {
+            willReadFrequently: keepCanvasInCPU
+        });
     }
     if (nonRetina && canvas.isRetinaEnabled) {
         canvas.isRetinaEnabled = false;
@@ -1528,7 +1532,9 @@ function getMinimumFontHeight() {
         y;
     canvas.width = size;
     canvas.height = size;
-    ctx = canvas.getContext('2d');
+    ctx = canvas.getContext('2d', {
+        willReadFrequently: keepCanvasInCPU
+    });
     ctx.font = '1px serif';
     maxX = ctx.measureText(str).width;
     ctx.fillStyle = 'black';
@@ -1689,7 +1695,9 @@ function enableRetinaSupport() {
 
     // Get the window's pixel ratio for canvas elements.
     // See: http://www.html5rocks.com/en/tutorials/canvas/hidpi/
-    var ctx = document.createElement("canvas").getContext("2d"),
+    var ctx = document.createElement("canvas").getContext("2d", {
+            willReadFrequently: keepCanvasInCPU
+        }),
         backingStorePixelRatio = ctx.webkitBackingStorePixelRatio ||
             ctx.mozBackingStorePixelRatio ||
             ctx.msBackingStorePixelRatio ||
@@ -1788,12 +1796,14 @@ function enableRetinaSupport() {
                 var pixelRatio = getPixelRatio(this),
                     context;
                 uber.width.set.call(this, width * pixelRatio);
-                context = this.getContext('2d');
+                context = this.getContext('2d', {
+                    willReadFrequently: keepCanvasInCPU
+                });
                 /*
                 context.restore();
                 context.save();
                 */
-                context.scale(pixelRatio, pixelRatio);
+                context?.scale(pixelRatio, pixelRatio);
             } catch (err) {
                 console.log('Retina Display Support Problem', err);
                 uber.width.set.call(this, width);
@@ -1809,12 +1819,14 @@ function enableRetinaSupport() {
             var pixelRatio = getPixelRatio(this),
                 context;
             uber.height.set.call(this, height * pixelRatio);
-            context = this.getContext('2d');
+            context = this.getContext('2d', {
+                willReadFrequently: keepCanvasInCPU
+            });
             /*
             context.restore();
             context.save();
             */
-            context.scale(pixelRatio, pixelRatio);
+            context?.scale(pixelRatio, pixelRatio);
         }
     });
 
@@ -1913,7 +1925,9 @@ function enableRetinaSupport() {
 }
 
 function isRetinaSupported () {
-    var ctx = document.createElement("canvas").getContext("2d"),
+    var ctx = document.createElement("canvas").getContext("2d", {
+            willReadFrequently: keepCanvasInCPU
+        }),
         backingStorePixelRatio = ctx.webkitBackingStorePixelRatio ||
             ctx.mozBackingStorePixelRatio ||
             ctx.msBackingStorePixelRatio ||
@@ -4511,13 +4525,33 @@ Morph.prototype.developersMenu = function () {
     menu.addItem(
         "pic...",
         () => {
-            var morph = new Morph()
-                img = morph.fullImage().toDataURL(),
-                blob = new Blob([img, {type: 'image/png'}]),
-                lnk = document.createElement('a');
-            lnk.href = img;
-            lnk.download = blob;
-            lnk.click();
+            // var morph = new Morph()
+            //     img = morph.fullImage().toDataURL(),
+            //     blob = new Blob([img, {type: 'image/png'}]),
+            //     lnk = document.createElement('a');
+            // lnk.href = img;
+            // lnk.download = blob;
+            // lnk.click();
+            var imgURL = this.fullImage().toDataURL(),
+                doc, body, tag, str;
+            try {
+                doc = window.open('', '_blank', 'popup').document;
+                body = doc.getElementsByTagName('body')[0];
+                str = '' + this;
+                doc.title = str;
+                tag = doc.createElement('h1');
+                tag.textContent = str;
+                body.appendChild(tag);
+                tag = doc.createElement('img');
+                tag.alt = str;
+                tag.src = imgURL;
+                body.appendChild(tag);
+            } catch (error) {
+                console.warn(
+                    'failed to popup pic, morph:%O, error:%O, image URL:%O',
+                    this, error, [imgURL]
+                );
+            }
         },
         'open a new window\nwith a picture of this morph'
     );
@@ -9351,7 +9385,25 @@ TextMorph.prototype.parse = function () {
                         this.maxLineWidth,
                         context.measureText(oldline).width
                     );
-                    oldline = word + ' ';
+                    w = context.measureText(word).width;
+                    if (w > this.maxWidth) {
+                        oldline = '';
+                        word.split('').forEach((letter, idx) => {
+                            w = context.measureText(oldline + letter).width;
+                            if (w > this.maxWidth && oldline.length) {
+                                this.lines.push(oldline);
+                                this.lineSlots.push(slot + idx);
+                                this.maxLineWidth = Math.max(
+                                    this.maxLineWidth,
+                                    context.measureText(oldline).width
+                                );
+                                oldline = '';
+                            }
+                            oldline += letter;
+                        });
+                    } else {
+                        oldline = word + ' ';
+                    }
                 } else {
                     oldline = newline;
                 }
@@ -12016,6 +12068,9 @@ WorldMorph.prototype.init = function (aCanvas, fillPage) {
     this.isDraggable = false;
     this.currentKey = null; // currently pressed key code
     this.worldCanvas = aCanvas;
+    this.worldCanvas.getContext("2d", {
+        willReadFrequently: keepCanvasInCPU
+    });
 
     // additional properties:
     this.stamp = Date.now(); // reference in multi-world setups
