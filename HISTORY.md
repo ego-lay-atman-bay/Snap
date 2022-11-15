@@ -2,9 +2,11 @@
 
 ## in development:
 * **New Features:**
+    * visually highlight variable scope when mouse-hovering over a variable declaration in visible stepping mode or when paused
     * new PIPE primitive in the control category
     * "touching" predicate now  also accepts a 2-item list representing x/y-coordinates to check for collision with an arbitrary point 
-    * hyper-rays: support lists of relative angles in the left "ray length TO sprite" input slot for instant fields of vision 
+    * hyper-rays: support lists of relative angles in the left "ray length TO sprite" input slot for instant fields of vision
+    * added "delete" option to context menu of global and sprite-local variable declarations in the blocks palette 
     * new "disable dragging data" preference setting for (kids') MicroWorld creators
     * pixels library: Added command blocks to rename and export costumes
     * new "ide_blocks" extension primitive
@@ -41,6 +43,7 @@
     * fixed palette category ghosting update when hiding / unhiding blocks using extension primitives
     * fixed accidentally drawing unwanted dots when changing a pen color dimension thanks, Joan!
     * fixed zebra coloring for polyadic read-only input slots 
+    * fixed a label rendering glitch when flashing blocks
     * caught an occasional maximimum call-stack size range error when embedding blocks into a scripts pic
     * improved frame scheduling, prevent excessive frame drops, thanks, SArpnt!
 * **Documentation Updates:**
@@ -48,6 +51,16 @@
     * new doc for extensions, thanks, Michael!
 * **Translation Updates:**
     * German
+    * Catalan, thanks, Joan!
+
+### 2022-11-15
+* blocks: added "delete" option to context menu of global and sprite-local variable declarations in the blocks palette
+* threads: fixed #3144
+* Catalan translation update, thanks, Joan!
+* blocks: support flashing blocks in arbitrary colors
+* blocks: fixed a label rendering glitch when flashing blocks
+* blocks: visually highlight variable scope when mouse-hovering over a variable declaration in visible stepping mode or when paused
+* blocks: extended variable scope highlighting to palette templates
 
 ### 2022-11-14
 * blocks, objects: refactored renaming global and sprite-local variables
