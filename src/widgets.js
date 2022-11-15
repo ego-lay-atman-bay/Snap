@@ -2005,6 +2005,177 @@ DialogBoxMorph.prototype.promptRGB = function (
     this.popUp(world);
 };
 
+DialogBoxMorph.prototype.promptColor = function (
+    title,
+    color,
+    world,
+    pic,
+    msg
+) {
+
+    function labelText(string) {
+        return new TextMorph(
+            localize(string),
+            10,
+            null, // style
+            false, // bold
+            null, // italic
+            null, // alignment
+            null, // width
+            null, // font name
+            MorphicPreferences.isFlat ? null : new Point(1, 1),
+            WHITE // shadowColor
+        );
+    }
+    console.log(this.color);
+
+    function createValue(
+        label,
+        value,
+        isNumeric,
+        sliderMin,
+        sliderMax,
+        sliderAction,
+        decimals,
+        orientation,
+        padding,
+        parent
+    ) {
+        let precision = Math.pow(10, decimals),
+            sld,
+            txt,
+            align = new AlignmentMorph(
+                orientation,
+                padding
+            ),
+            lbl
+
+        txt = new InputFieldMorph(
+            value.toString(),
+            isNumeric || false // numeric?
+        );
+
+        txt.contents().minWidth = 40;
+        txt.setWidth(40);
+        
+        sld = new SliderMorph(
+            sliderMin * precision,
+            sliderMax * precision,
+            parseFloat(value) * precision,
+            (sliderMax - sliderMin) / 10 * precision, // knob size
+            orientation
+        );
+
+        sld.alpha = 1;
+        sld.color = align.color.lighter(50);
+        sld.setHeight(txt.height() * 0.7);
+        sld.setWidth(txt.width());
+        sld.action = num => {
+            if (sliderAction) {
+                sliderAction(num / precision);
+            }
+            txt.setContents(num / precision);
+            txt.edit();
+        };
+
+        txt.reactToInput = function () {
+            var inp = txt.getValue();
+            if (sld) {
+                inp = Math.max(inp, sliderMin);
+                sld.value = inp * precision;
+                sld.fixLayout();
+                sld.rerender();
+            }
+            if (sliderAction) {
+                sliderAction(inp);
+            }
+        };
+
+        lbl = new TextMorph(
+            localize(label),
+            10,
+            null, // style
+            false, // bold
+            null, // italic
+            null, // alignment
+            null, // width
+            null, // font name
+            MorphicPreferences.isFlat ? null : new Point(1, 1),
+            WHITE // shadowColor
+        );;
+        
+        align.add(lbl);
+        align.add(sld);
+        align.add(txt);
+
+        lbl.fixLayout();
+        sld.fixLayout();
+        txt.fixLayout();
+
+        align.fixLayout();
+
+        return align;
+
+    }
+
+    var clr = new AlignmentMorph('column', this.padding),
+        iw = this.fontSize * 4,
+        bdy = new AlignmentMorph('column', this.padding);
+
+    function constrain(num) {
+        return Math.max(0, Math.min(num, 255));
+    }
+
+    clr.add(createValue(
+        'r',
+        20,
+        true,
+        0,
+        255,
+        null,
+        1,
+        'horizontal',
+        this.padding,
+        this
+    ));
+
+    bdy.setColor(this.color);
+
+    if (msg) {
+        bdy.add(labelText(msg));
+    }
+
+    bdy.add(clr);
+
+    clr.fixLayout();
+    bdy.fixLayout();
+
+    this.labelString = title;
+    this.createLabel();
+
+    this.addBody(bdy);
+
+    this.addButton('ok', 'OK');
+
+    this.addButton('cancel', 'Cancel');
+    this.fixLayout();
+
+    this.edit = function () {
+    };
+
+    this.getInput = function () {
+        return new Color(
+        );
+    };
+
+    if (!this.key) {
+        this.key = 'RGB' + title;
+    }
+
+    this.popUp(world);
+
+}
+
 DialogBoxMorph.prototype.promptCategory = function (
     title,
     name,

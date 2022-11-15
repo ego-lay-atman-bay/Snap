@@ -4510,7 +4510,15 @@ Morph.prototype.developersMenu = function () {
     );
     menu.addItem(
         "pic...",
-        () => window.open(this.fullImage().toDataURL()),
+        () => {
+            var morph = new Morph()
+                img = morph.fullImage().toDataURL(),
+                blob = new Blob([img, {type: 'image/png'}]),
+                lnk = document.createElement('a');
+            lnk.href = img;
+            lnk.download = blob;
+            lnk.click();
+        },
         'open a new window\nwith a picture of this morph'
     );
     menu.addLine();

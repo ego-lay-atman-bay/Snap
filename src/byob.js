@@ -4446,8 +4446,12 @@ BlockExportDialogMorph.prototype.init = function (serializer, blocks, target) {
 };
 
 BlockExportDialogMorph.prototype.buildContents = function () {
-    var palette, x, y, block, checkBox, catCheckBox, lastCat,
+    var palette, x, y, block, checkBox, lastCat,
         padding = 4;
+
+    // =================
+    var catCheckBox
+    // =================
 
     // create plaette
     palette = new ScrollFrameMorph(
@@ -4460,6 +4464,9 @@ BlockExportDialogMorph.prototype.buildContents = function () {
     palette.isDraggable = false;
     palette.acceptsDrops = false;
     palette.contents.acceptsDrops = false;
+    palette.fontSize = InputFieldMorph.prototype.fontSize;
+    palette.contrast = InputFieldMorph.prototype.contrast;
+
 
     // populate palette
     x = palette.left() + padding;
@@ -4467,8 +4474,8 @@ BlockExportDialogMorph.prototype.buildContents = function () {
     SpriteMorph.prototype.allCategories().forEach(category => {
         this.blocks.forEach(definition => {
             if (definition.category === category) {
+                // =================
                 if ((category !== lastCat)) {
-                    console.log(category)
                     y += padding;
                     catCheckBox = new ToggleMorph(
                         'checkbox',
@@ -4482,7 +4489,8 @@ BlockExportDialogMorph.prototype.buildContents = function () {
                                     };
                                 });
                                 this.blocks = blocks;
-                            } else {
+                            }
+                            else {
                                 this.body.contents.children.forEach(block => {
                                     if (block instanceof ToggleMorph) {
                                         if (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) {
@@ -4495,26 +4503,44 @@ BlockExportDialogMorph.prototype.buildContents = function () {
                                     };
                                 });
                             };
-                            this.collectDependencies();
-                            
+                            try {
+                                this.collectDependencies(); // v8.0+
+                            }
+                            catch (err) { // v7
+                                this.body.contents.children.forEach(checkBox => {
+                                    if (checkBox instanceof ToggleMorph) {
+                                        checkBox.refresh();
+                                    }
+                                });
+                            }
+
                         },
-                        category,
+                        // category,
+                        null,
                         () => contains(this.blocks.map(b => b.category), category),
                         null,
-                        null
+                        null                        
                     )
-                    catCheckBox.label.color = new Color(255, 255, 255, 1)
-                    catCheckBox.label.fontSize = 12
-                    catCheckBox.label.setWidth()
-                    catCheckBox.label.setTop()
+                    // catCheckBox.label.color = new Color(255, 255, 255, 1)
+                    // catCheckBox.label.fontSize = 12
+                    // catCheckBox.label.setWidth()
+                    // catCheckBox.label.setTop()
+                    // catCheckBox.element.setTop(-(catCheckBox.fullBounds().height()/2))
                     catCheckBox.setPosition(new Point(
                         x,
                         y + (catCheckBox.top())
                     ));
                     palette.addContents(catCheckBox);
+                    txt = SpriteMorph.prototype.categoryText(category);
+                    txt.setPosition(new Point(x + catCheckBox.fullBounds().width() + padding, y));
+                    txt.refresh = function() {}; // to avoid an error when refreshing checkboxes
+                    palette.addContents(txt);
                     y += catCheckBox.fullBounds().height()
                     y += padding
                 }
+
+                // =================
+
                 lastCat = category;
                 block = definition.templateInstance();
                 block.isToggleLabel = true; // mark as unrefreshable label
@@ -4651,6 +4677,257 @@ BlockExportDialogMorph.prototype.exportBlocks = function () {
 // BlockExportDialogMorph layout
 
 BlockExportDialogMorph.prototype.fixLayout
+= BlockEditorMorph.prototype.fixLayout;
+
+// CustomizeThemeDialogMorph /////////////////////////////////////////////////
+CustomizeThemeDialogMorph.prototype = new DialogBoxMorph();
+CustomizeThemeDialogMorph.prototype.constructor = CustomizeThemeDialogMorph;
+CustomizeThemeDialogMorph.uber = DialogBoxMorph.prototype;
+
+CustomizeThemeDialogMorph.prototype.key = 'customizeTheme';
+
+CustomizeThemeDialogMorph.prototype.inputTypes = {
+    "isFlat": 'checkbox',
+    "paletteColor": 'color',
+    "paletteTextColor": 'color',
+    "buttonContrast": 'number',
+    "backgroundColor": 'color',
+    "buttonLabelColor": 'color',
+    "appModeColor": 'color',
+    "IDEPadding": 'number',
+    "SyntaxContrast": 'number',
+    "BlockShadow": 'color'
+}
+
+function CustomizeThemeDialogMorph(serializer, target) {
+    this.init(serializer, target);
+}
+
+CustomizeThemeDialogMorph.prototype.init = function (serializer, target) {
+    // additional properties:
+    this.serializer = serializer;
+
+    // initialize inherited properties:
+    CustomizeThemeDialogMorph.uber.init.call(
+        this,
+        target, // target
+        () => this.setTheme(),
+        null // environment
+    );
+
+    // override inherited properites:
+    this.labelString = 'Customize Theme';
+    this.createLabel();
+
+    // build contents
+    this.buildContents();
+};
+
+CustomizeThemeDialogMorph.prototype.buildContents = function () {
+    var body, x, y,
+        padding = 6,
+        ide = world.childThatIsA(IDE_Morph);
+
+    body = new ScrollFrameMorph(
+        null,
+        null,
+        SpriteMorph.prototype.sliderColor
+    );
+
+    // body.color = CLEAR;
+    // body.padding = padding;
+    // body.isDraggable = false;
+    // body.acceptsDrops = false;
+    // body.acceptsDrops = false;
+    // body.fontSize = InputFieldMorph.prototype.fontSize;
+    // body.contrast = InputFieldMorph.prototype.contrast;
+
+    // create body
+
+    function labelText(string) {
+        return new TextMorph(
+            localize(string),
+            10,
+            null, // style
+            false, // bold
+            null, // italic
+            null, // alignment
+            null, // width
+            null, // font name
+            MorphicPreferences.isFlat ? null : new Point(1, 1),
+            WHITE // shadowColor
+        );
+    }
+
+    // populate body
+
+    col = new AlignmentMorph('column', 4);
+    
+    for (const pref in ide.theme) {
+        if (Object.hasOwnProperty.call(ide.theme, pref)) {
+            const preference = ide.theme[pref];
+            let input = null;
+            let row = new AlignmentMorph('row', 4)
+            row.pref = pref
+            row.setColor(this.color)
+            let txt = labelText(pref)
+
+
+            switch (this.inputTypes[pref]) {
+                case 'checkbox':
+                    input = new ToggleMorph(
+                        'checkbox',
+                        txt,
+                        () => {ide.theme[pref] = !ide.theme[pref]},
+                        null,
+                        () => ide.theme[pref]
+                    )
+                    break
+                case 'color':
+                    input = new BoxMorph(2, 1)
+                    let side = txt.height() / 0.8
+                    input.setExtent(new Point(side, side));
+                    input.setColor(preference);
+                    input.mouseClickLeft = () => {
+                        var hand = world.hand,
+                            posInDocument = getDocumentPositionOf(world.worldCanvas),
+                            mouseMoveBak = hand.processMouseMove,
+                            mouseDownBak = hand.processMouseDown,
+                            mouseUpBak = hand.processMouseUp,
+                            pal = new ColorPaletteMorph(null, new Point(160, 100));
+                
+                        world.add(pal);
+                        pal.setPosition(input.topRight().add(new Point(this.edge,0)));
+                
+                        hand.processMouseMove = (event) => {
+                            var clr = world.getGlobalPixelColor(hand.position());
+                            hand.setPosition(new Point(
+                                event.pageX - posInDocument.x,
+                                event.pageY - posInDocument.y
+                            ));
+                            if (!clr.a) {
+                                // ignore transparent,
+                                // needed for retina-display support
+                                return;
+                            }
+                            input.setColor(clr);
+                        };
+                
+                        hand.processMouseDown = nop;
+                
+                        hand.processMouseUp = () => {
+                            pal.destroy();
+                            hand.processMouseMove = mouseMoveBak;
+                            hand.processMouseDown = mouseDownBak;
+                            hand.processMouseUp = mouseUpBak;
+                        };
+                    };
+                
+                    input.mouseClickRight = () => {
+                        new DialogBoxMorph(
+                            this,
+                            (clr) => input.setColor(clr),
+                            this
+                        ).promptColor(
+                            "Color",
+                            input.color,
+                            this.world(),
+                            null, // pic
+                            null // msg
+                        );
+                    };
+                    break
+                case 'number':
+                    input = new InputFieldMorph(preference.toString(), true);
+                    input.setWidth(100)
+                    input.setColor(this.color)
+                    break
+
+                default :
+                    input = new InputFieldMorph(preference.toString())
+                    input.setWidth(100);
+                    input.setColor(this.color)
+            }
+
+
+            txt.fixLayout()
+            input.fixLayout()
+
+            row.add(txt);
+            row.add(input);
+
+            col.add(row);
+            row.alignment = 'left'
+
+            row.fixLayout();
+
+            // y += input.fullBounds().height()
+        }
+    }
+
+    col.alignment = 'left';
+
+    // body.scrollX(padding);
+    // body.scrollY(padding);
+
+    // body.add(col);
+    this.addBody(col);
+
+    col.fixLayout();
+    // body.fixLayout();
+    
+    this.addButton('ok', 'OK');
+    this.addButton('cancel', 'Cancel');
+
+    this.setExtent(new Point(50 + col.width(), 100 + col.height()));
+
+    // this.setExtent(new Point(220, this.body.fullBounds().height()));
+    this.fixLayout();
+};
+
+CustomizeThemeDialogMorph.prototype.popUp = function (wrrld) {
+    var world = wrrld || this.target.world();
+    if (world) {
+        CustomizeThemeDialogMorph.uber.popUp.call(this, world);
+        // this.handle = new HandleMorph(
+        //     this,
+        //     200,
+        //     220,
+        //     this.corner,
+        //     this.corner
+        // );
+    }
+};
+
+CustomizeThemeDialogMorph.prototype.setTheme = function() {
+    ide = world.childThatIsA(IDE_Morph);
+    rows = this.body.children;
+
+    prefs = {}
+
+    rows.forEach(row => {
+        input = row.children[1];
+        switch (this.inputTypes[row.pref]) {
+            case 'checkbox':
+                prefs[row.pref] = input.state;
+                break
+            case 'color':
+                prefs[row.pref] = input.color;
+                break
+            case 'number':
+                prefs[row.pref] = parseFloat(input.getValue());
+                break
+            default:
+                prefs[row.pref] = input.getValue();
+        }
+    })
+
+    ide.theme = prefs;
+
+    ide.updateTheme();
+}
+
+CustomizeThemeDialogMorph.prototype.fixLayout
     = BlockEditorMorph.prototype.fixLayout;
 
 // BlockImportDialogMorph ////////////////////////////////////////////////////

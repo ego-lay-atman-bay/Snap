@@ -4078,6 +4078,11 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to rasterize\nSVGs on import',
         true
     );
+    menu.addItem(
+        'Customize Theme',
+        'customizeTheme',
+        'Customize the look of snap',
+    )
     addPreference(
         'Flat design',
         () => {
@@ -6857,6 +6862,75 @@ IDE_Morph.prototype.setBlockTransparency = function (num, save) {
         }
     }
 };
+
+// Customize theme
+
+IDE_Morph.prototype.getTheme = function() {
+    IDE_Morph.prototype.theme = {
+    	"isFlat": MorphicPreferences.isFlat,
+    	"paletteColor": SpriteMorph.prototype.paletteColor,
+    	"paletteTextColor": SpriteMorph.prototype.paletteTextColor,
+    	"buttonContrast": IDE_Morph.prototype.buttonContrast,
+    	"backgroundColor": IDE_Morph.prototype.backgroundColor,
+    	"buttonLabelColor": IDE_Morph.prototype.buttonLabelColor,
+    	"appModeColor": IDE_Morph.prototype.appModeColor,
+    	"IDEPadding": IDE_Morph.prototype.padding,
+    	"SyntaxContrast": SyntaxElementMorph.prototype.contrast,
+    	"BlockShadow": ScriptsMorph.prototype.feedbackColor
+    }
+}
+
+IDE_Morph.prototype.getTheme()
+
+IDE_Morph.prototype.updateTheme = function() {
+    MorphicPreferences.isFlat = this.theme['isFlat'];
+    SpriteMorph.prototype.paletteColor = this.theme['paletteColor'];
+    SpriteMorph.prototype.paletteTextColor = this.theme['paletteTextColor'];
+    StageMorph.prototype.paletteTextColor
+        = SpriteMorph.prototype.paletteTextColor;
+    StageMorph.prototype.paletteColor = SpriteMorph.prototype.paletteColor;
+    SpriteMorph.prototype.sliderColor
+        = SpriteMorph.prototype.paletteColor.lighter(30);
+
+    IDE_Morph.prototype.buttonContrast = this.theme['buttonContrast'];
+    IDE_Morph.prototype.backgroundColor = this.theme['backgroundColor'];
+    IDE_Morph.prototype.frameColor = SpriteMorph.prototype.paletteColor;
+
+    IDE_Morph.prototype.groupColor
+        = SpriteMorph.prototype.paletteColor.lighter(5);
+    IDE_Morph.prototype.sliderColor = SpriteMorph.prototype.sliderColor;
+    IDE_Morph.prototype.buttonLabelColor = this.theme['buttonLabelColor'];
+    IDE_Morph.prototype.tabColors = [
+        IDE_Morph.prototype.groupColor.darker(50),
+        IDE_Morph.prototype.groupColor.darker(25),
+        IDE_Morph.prototype.groupColor
+    ];
+    IDE_Morph.prototype.rotationStyleColors = IDE_Morph.prototype.tabColors;
+    IDE_Morph.prototype.appModeColor = this.theme['appModeColor'];
+    IDE_Morph.prototype.scriptsPaneTexture = this.scriptsTexture();
+    IDE_Morph.prototype.padding = this.theme['IDEPadding'];
+
+    SpriteIconMorph.prototype.labelColor
+        = IDE_Morph.prototype.buttonLabelColor;
+    CostumeIconMorph.prototype.labelColor
+        = IDE_Morph.prototype.buttonLabelColor;
+    SoundIconMorph.prototype.labelColor
+        = IDE_Morph.prototype.buttonLabelColor;
+    TurtleIconMorph.prototype.labelColor
+        = IDE_Morph.prototype.buttonLabelColor;
+    SceneIconMorph.prototype.labelColor
+        = IDE_Morph.prototype.buttonLabelColor;
+
+    SyntaxElementMorph.prototype.contrast = this.theme['SyntaxContrast'];
+    ScriptsMorph.prototype.feedbackColor = this.theme['BlockShadow'];
+
+    this.refreshIDE();
+}
+
+IDE_Morph.prototype.customizeTheme = function () {
+    this.getTheme();
+    new CustomizeThemeDialogMorph().popUp(world)
+}
 
 // IDE_Morph stage size manipulation
 
