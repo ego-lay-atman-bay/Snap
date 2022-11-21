@@ -2,7 +2,9 @@
 
 ## in development:
 * **New Features:**
-    * visually highlight variable scope when mouse-hovering over a variable declaration in visible stepping mode or when paused
+    * visually highlight variable scope when mouse-hovering over a variable declaration in visible stepping mode
+    * visually highlight the variable declaration of variable accessor blocks when mouse-hovering over them in visible stepping mode
+    * visually highlight senders / receivers when mouse-hovering over messaging blocks in visible stepping mode
     * new PIPE primitive in the control category
     * "touching" predicate now  also accepts a 2-item list representing x/y-coordinates to check for collision with an arbitrary point 
     * hyper-rays: support lists of relative angles in the left "ray length TO sprite" input slot for instant fields of vision
@@ -20,6 +22,7 @@
     * removed empty parens from extension prims "ide_all_blocks", "ide_language" and "ide_translations"
     * hyperized bitwise operators, and gave them more mnemonic block names, thanks, Bernat and Brian!
     * optional inputs "broadcast" and "switch to scene" blocks don't auto-fill when called with an input list
+    * made formal parameters available in variable-menu dropdowns of all blocks inside of block editors
     * round watcher readouts to 6 decimal digits (like Scratch), instead of 9
     * updated "for each" help screen, thanks, Brian!
     * TuneScope extension update, thanks, Harsh, Jo and Glen!
@@ -28,7 +31,9 @@
     * updated "Codification" example project
 * **Notable Fixes:**
     * fixed refactoring (renaming) variables (I hope, haha!)
+    * fixed displaying message senders
     * improved text wrapping - wrap words that are too wide for a line by letters
+    * improved touch-hold gesture on mobile Android devices, thanks, @ego-lay-atman-bay!
     * fixed aggressive cache issue, thanks, Michael!
     * fixed exporting pics of morphs in dev mode, thanks, @xBZZZZ!
     * fixed API->broadcast() to also accept a data payload, thanks, Zak!
@@ -52,6 +57,26 @@
 * **Translation Updates:**
     * German
     * Catalan, thanks, Joan!
+
+### 2022-11-21
+* morphic: added threshold to right-click on mobile, thanks, @ego-lay-atman-bay
+
+### 2022-11-18
+* blocks: made formal parameters available in variable-menu dropdowns of all blocks inside of block editors
+* gui: refactored SpriteIcon >> flash() mechanism
+* blocks: refactored Block >> showMesageUsers()
+
+### 2022-11-17
+* objects: fixed displaying message senders
+* gui: parameterized SpriteIconMorph >> flash()
+* gui, blocks: highlight senders / receivers when mouse-hovering over messaging blocks in visible stepping mode
+
+### 2022-11-16
+* blocks, objects: added comments to scope-highlighting
+* blocks: refactored scope-highlighting entry point
+* blocks: visually highlight the variable declaration of variable accessor blocks when mouse-hovering over them in visible stepping mode or when paused
+* blocks: confined scope-highlighting to visible stepping mode & non-dragging
+* blocks: catch attribute-references when highlighting variable scope
 
 ### 2022-11-15
 * blocks: added "delete" option to context menu of global and sprite-local variable declarations in the blocks palette
