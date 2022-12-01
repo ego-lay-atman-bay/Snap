@@ -650,6 +650,32 @@ IDE_Morph.prototype.openIn = function (world) {
             applyFlags(dict);
         } else if (location.hash.substr(0, 7) === '#signup') {
             this.createCloudAccount();
+        } else {
+            this.getURL(
+                '/Examples/vee.xml',
+                projectData => {
+                    var msg;
+                    this.nextSteps([
+                        () => msg = this.showMessage('Opening project...'),
+                        () => {
+                            if (projectData.indexOf('<snapdata') === 0) {
+                                this.rawOpenCloudDataString(projectData);
+                            } else if (
+                                projectData.indexOf('<project') === 0
+                            ) {
+                                this.rawOpenProjectString(projectData);
+                            }
+                            this.hasChangedMedia = true;
+                        },
+                        () => {
+                            this.shield.destroy();
+                            this.shield = null;
+                            msg.destroy();
+                            this.toggleAppMode(false);
+                        }
+                    ]);
+                }
+            );
         }
         this.loadNewProject = false;
     }
