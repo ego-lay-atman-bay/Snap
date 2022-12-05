@@ -36,6 +36,7 @@
         <script src="src/api.js?version=2022-11-28"></script>
         <script src="src/sha512.js?version=2019-06-27"></script>
         <script src="src/FileSaver.min.js?version=2019-06-27"></script>
+        <script src="src/startup.js"></script>
         <script>
             var world;
             window.onload = function () {
@@ -58,7 +59,7 @@
                     navigator.serviceWorker.register('sw.js');
                 }
                 world = new WorldMorph(document.getElementById('world'));
-                new IDE_Morph().openIn(world);
+                new IDE_Morph().openIn(world).openProjectString(startup());
                 requestAnimationFrame(loop);
             };
         </script>
