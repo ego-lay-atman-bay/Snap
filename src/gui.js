@@ -392,6 +392,19 @@ IDE_Morph.prototype.openIn = function (world) {
 
     this.reactToWorldResize(world.bounds);
 
+    function applySceneFlag(dict) {
+        if (!isNil(dict.scene)) {
+            scenes = myself.scenes
+            if (isNaN(dict.scene)) {
+                scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
+            } else {
+                scene = scenes.at(dict.scene)
+            }
+            myself.switchToScene(scene)
+            console.log('loaded scene: ' + dict.scene)
+        }
+    }
+
     function applyFlags(dict) {
         if (dict.noCloud) {
             myself.cloud.disable();
@@ -418,12 +431,6 @@ IDE_Morph.prototype.openIn = function (world) {
             myself.savingPreferences = false;
             myself.setBlocksScale(Math.max(1,Math.min(dict.blocksZoom, 12)));
             myself.savingPreferences = true;
-        }
-        if (dict.scene) {
-            scenes = myself.scenes
-            scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
-            myself.switchToScene(scene)
-            console.log('loaded scene: ' + dict.scene)
         }
 
 
@@ -508,14 +515,7 @@ IDE_Morph.prototype.openIn = function (world) {
                                     this.rawOpenProjectString(projectData);
                                 }
                                 this.hasChangedMedia = true;
-                                if (dict.scene) {
-                                    let scenes = myself.scenes
-                                    console.log(scenes)
-                                    let scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
-                                    console.log(scene)
-                                    myself.switchToScene(scene)
-                                    console.log('loaded scene: ' + dict.scene)
-                                }
+                                applySceneFlag(dict)
                             },
                             () => {
                                 this.shield.destroy();
@@ -583,12 +583,7 @@ IDE_Morph.prototype.openIn = function (world) {
                                     this.rawOpenProjectString(projectData);
                                 }
                                 this.hasChangedMedia = true;
-                                if (dict.scene) {
-                                    scenes = myself.scenes
-                                    scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
-                                    myself.switchToScene(scene)
-                                    console.log('loaded scene: ' + dict.scene)
-                                }
+                                applySceneFlag(dict)
                             },
                             () => {
                                 this.shield.destroy();
@@ -628,12 +623,7 @@ IDE_Morph.prototype.openIn = function (world) {
                                 myself.rawOpenProjectString(projectData);
                             }
                             myself.hasChangedMedia = true;
-                            if (dict.scene) {
-                                scenes = myself.scenes
-                                scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
-                                myself.switchToScene(scene)
-                                console.log('loaded scene: ' + dict.scene)
-                            }
+                            applySceneFlag(dict)
                         },
                         () => {
                             myself.shield.destroy();
@@ -671,12 +661,7 @@ IDE_Morph.prototype.openIn = function (world) {
                                 myself.rawOpenProjectString(projectData);
                             }
                             myself.hasChangedMedia = true;
-                            if (dict.scene) {
-                                scenes = myself.scenes
-                                scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
-                                myself.switchToScene(scene)
-                                console.log('loaded scene: ' + dict.scene)
-                            }
+                            applySceneFlag(dict)
                         },
                         () => {
                             myself.shield.destroy();
