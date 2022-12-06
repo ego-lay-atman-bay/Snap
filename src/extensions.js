@@ -49,7 +49,8 @@ var SnapExtensions = {
         'libraries/',
         'https://snap.berkeley.edu/',
         'https://ecraft2learn.github.io/ai/', // Uni-Oxford, Ken Kahn
-        'https://microworld.edc.org/' // EDC, E. Paul Goldenberg
+        'https://microworld.edc.org/', // EDC, E. Paul Goldenberg
+        'https://ego-lay-atman-bay.github.io/',
     ]
 };
 
