@@ -419,6 +419,13 @@ IDE_Morph.prototype.openIn = function (world) {
             myself.setBlocksScale(Math.max(1,Math.min(dict.blocksZoom, 12)));
             myself.savingPreferences = true;
         }
+        if (dict.scene) {
+            scenes = myself.scenes
+            scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
+            myself.switchToScene(scene)
+            console.log('loaded scene: ' + dict.scene)
+        }
+
 
         // only force my world to get focus if I'm not in embed mode
         // to prevent the iFrame from involuntarily scrolling into view
@@ -501,6 +508,14 @@ IDE_Morph.prototype.openIn = function (world) {
                                     this.rawOpenProjectString(projectData);
                                 }
                                 this.hasChangedMedia = true;
+                                if (dict.scene) {
+                                    let scenes = myself.scenes
+                                    console.log(scenes)
+                                    let scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
+                                    console.log(scene)
+                                    myself.switchToScene(scene)
+                                    console.log('loaded scene: ' + dict.scene)
+                                }
                             },
                             () => {
                                 this.shield.destroy();
@@ -568,6 +583,12 @@ IDE_Morph.prototype.openIn = function (world) {
                                     this.rawOpenProjectString(projectData);
                                 }
                                 this.hasChangedMedia = true;
+                                if (dict.scene) {
+                                    scenes = myself.scenes
+                                    scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
+                                    myself.switchToScene(scene)
+                                    console.log('loaded scene: ' + dict.scene)
+                                }
                             },
                             () => {
                                 this.shield.destroy();
@@ -607,6 +628,12 @@ IDE_Morph.prototype.openIn = function (world) {
                                 myself.rawOpenProjectString(projectData);
                             }
                             myself.hasChangedMedia = true;
+                            if (dict.scene) {
+                                scenes = myself.scenes
+                                scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
+                                myself.switchToScene(scene)
+                                console.log('loaded scene: ' + dict.scene)
+                            }
                         },
                         () => {
                             myself.shield.destroy();
@@ -644,6 +671,12 @@ IDE_Morph.prototype.openIn = function (world) {
                                 myself.rawOpenProjectString(projectData);
                             }
                             myself.hasChangedMedia = true;
+                            if (dict.scene) {
+                                scenes = myself.scenes
+                                scene = detect(scenes.itemsArray(), scn => scn.name === dict.scene);
+                                myself.switchToScene(scene)
+                                console.log('loaded scene: ' + dict.scene)
+                            }
                         },
                         () => {
                             myself.shield.destroy();
