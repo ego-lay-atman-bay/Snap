@@ -120,8 +120,16 @@ IDE_Morph.uber = Morph.prototype;
 
 // IDE_Morph preferences settings and skins
 
-IDE_Morph.prototype.setDefaultDesign = function () {
+IDE_Morph.prototype.set3DDesign = function () {
     MorphicPreferences.isFlat = false;
+}
+
+IDE_Morph.prototype.setFlatDesign = function () {
+    MorphicPreferences.isFlat = true;
+}
+
+IDE_Morph.prototype.setDarkTheme = function () {
+    MorphicPreferences.isDark = true;
     SpriteMorph.prototype.paletteColor = new Color(30, 30, 30);
     SpriteMorph.prototype.paletteTextColor = new Color(230, 230, 230);
     StageMorph.prototype.paletteTextColor
@@ -161,10 +169,16 @@ IDE_Morph.prototype.setDefaultDesign = function () {
 
     SyntaxElementMorph.prototype.contrast = 65;
     ScriptsMorph.prototype.feedbackColor = WHITE;
+
+    PushButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    TabMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleElementMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
 };
 
-IDE_Morph.prototype.setFlatDesign = function () {
-    MorphicPreferences.isFlat = true;
+IDE_Morph.prototype.setLightTheme = function () {
+    MorphicPreferences.isDark = false;
     SpriteMorph.prototype.paletteColor = WHITE;
     SpriteMorph.prototype.paletteTextColor = new Color(70, 70, 70);
     StageMorph.prototype.paletteTextColor
@@ -202,6 +216,12 @@ IDE_Morph.prototype.setFlatDesign = function () {
 
     SyntaxElementMorph.prototype.contrast = 25;
     ScriptsMorph.prototype.feedbackColor = new Color(153, 255, 213);
+
+    PushButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    TabMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleElementMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
 };
 
 IDE_Morph.prototype.scriptsTexture = function () {
@@ -220,7 +240,7 @@ IDE_Morph.prototype.scriptsTexture = function () {
     return pic;
 };
 
-IDE_Morph.prototype.setDefaultDesign();
+IDE_Morph.prototype.set3DDesign();
 
 // IDE_Morph instance creation:
 
@@ -783,7 +803,7 @@ IDE_Morph.prototype.applyConfigurations = function () {
         if (cnf.design === 'flat') {
             this.setFlatDesign();
         } else if (cnf.design === 'classic') {
-            this.setDefaultDesign();
+            this.set3DDesign();
         }
         SpriteMorph.prototype.initBlocks();
     }
@@ -972,7 +992,7 @@ IDE_Morph.prototype.createLogo = function () {
                 this.width(),
                 0
             );
-        gradient.addColorStop(0, 'black');
+        gradient.addColorStop(0, myself.appModeColor.toString());
         gradient.addColorStop(0.5, myself.frameColor.toString());
         ctx.fillStyle = MorphicPreferences.isFlat ?
                 myself.frameColor.toString() : gradient;
@@ -1017,12 +1037,7 @@ IDE_Morph.prototype.createControlBar = function () {
         steppingButton,
         cloudButton,
         x,
-        colors = MorphicPreferences.isFlat ? this.tabColors
-        : [
-            this.groupColor,
-            this.frameColor.darker(50),
-            this.frameColor.darker(50)
-        ],
+        colors = this.tabColors,
         activeColor = new Color(153, 255, 213),
         activeColors = [
             activeColor,
@@ -1068,9 +1083,7 @@ IDE_Morph.prototype.createControlBar = function () {
     button.padding = 0;
     button.labelShadowOffset = new Point(-1, -1);
     button.labelShadowColor = colors[1];
-    button.labelColor = MorphicPreferences.isFlat ?
-        WHITE
-        : this.buttonLabelColor;
+    button.labelColor = this.buttonLabelColor;
     button.contrast = this.buttonContrast;
     // button.hint = 'stage size\nsmall & normal';
     button.fixLayout();
@@ -3190,7 +3203,7 @@ IDE_Morph.prototype.toggleRetina = function () {
 // IDE_Morph skins
 
 IDE_Morph.prototype.defaultDesign = function () {
-    this.setDefaultDesign();
+    this.set3DDesign();
     this.refreshIDE();
     this.removeSetting('design');
 };
@@ -3200,6 +3213,18 @@ IDE_Morph.prototype.flatDesign = function () {
     this.refreshIDE();
     this.saveSetting('design', 'flat');
 };
+
+IDE_Morph.prototype.darkTheme = function () {
+    this.setDarkTheme();
+    this.refreshIDE();
+    this.saveTheme();
+}
+
+IDE_Morph.prototype.lightTheme = function () {
+    this.setLightTheme();
+    this.refreshIDE();
+    this.saveTheme();
+}
 
 IDE_Morph.prototype.refreshIDE = function () {
     var projectData;
@@ -3242,13 +3267,21 @@ IDE_Morph.prototype.applySavedSettings = function () {
         tables = this.getSetting('tables'),
         tableLines = this.getSetting('tableLines'),
         autoWrapping = this.getSetting('autowrapping'),
-        solidshadow = this.getSetting('solidshadow');
+        solidshadow = this.getSetting('solidshadow'),
+        theme = this.getSetting('theme');
 
     // design
     if (design === 'flat') {
         this.setFlatDesign();
     } else {
-        this.setDefaultDesign();
+        this.set3DDesign();
+    }
+
+    // theme
+    if (theme) {
+        this.applySavedTheme();
+    } else {
+        this.setDarkTheme();
     }
 
     // blocks zoom
@@ -4393,6 +4426,19 @@ IDE_Morph.prototype.settingsMenu = function () {
         MorphicPreferences.isFlat,
         'uncheck for default\nGUI design',
         'check for alternative\nGUI design',
+        false
+    );
+    addPreference(
+        'Dark theme',
+        () => {
+            if (MorphicPreferences.isDark) {
+                return this.lightTheme();
+            }
+            this.darkTheme();
+        },
+        MorphicPreferences.isDark,
+        'uncheck for light\nGUI theme',
+        'check for dark\nGUI theme',
         false
     );
     addPreference(
@@ -7190,7 +7236,7 @@ IDE_Morph.prototype.setBlockTransparency = function (num, save) {
 // Customize theme
 
 IDE_Morph.prototype.getTheme = function() {
-    IDE_Morph.prototype.theme = {
+    this.theme = {
     	"isFlat": MorphicPreferences.isFlat,
     	"paletteColor": SpriteMorph.prototype.paletteColor,
     	"paletteTextColor": SpriteMorph.prototype.paletteTextColor,
@@ -7201,10 +7247,44 @@ IDE_Morph.prototype.getTheme = function() {
     	"IDEPadding": IDE_Morph.prototype.padding,
     	"SyntaxContrast": SyntaxElementMorph.prototype.contrast,
     	"BlockShadow": ScriptsMorph.prototype.feedbackColor
-    }
+    };
+
+    return this.theme;
 }
 
 IDE_Morph.prototype.getTheme()
+
+IDE_Morph.prototype.saveTheme = function () {
+    this.saveSetting('theme', JSON.stringify(this.getTheme()));
+}
+
+IDE_Morph.prototype.applySavedTheme = function () {
+    theme = this.getSetting('theme');
+    if (['light', 'dark'].includes(theme)) {
+
+    } else {
+        theme = JSON.parse(theme);
+
+        for (const key in theme) {
+            if (Object.hasOwnProperty.call(theme, key)) {
+                const option = theme[key];
+                if (typeof option == 'object') {
+                    theme[key] = new Color(option['r'],option['g'],option['b'],option['a'])
+                }
+            }
+        }
+
+        this.theme = theme;
+        this.updateTheme();
+    }
+
+}
+
+IDE_Morph.prototype.applyTheme = function () {
+    this.updateTheme();
+    this.saveTheme();
+    this.refreshIDE();
+}
 
 IDE_Morph.prototype.updateTheme = function() {
     MorphicPreferences.isFlat = this.theme['isFlat'];
@@ -7248,7 +7328,11 @@ IDE_Morph.prototype.updateTheme = function() {
     SyntaxElementMorph.prototype.contrast = this.theme['SyntaxContrast'];
     ScriptsMorph.prototype.feedbackColor = this.theme['BlockShadow'];
 
-    this.refreshIDE();
+    PushButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    TabMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleElementMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
 }
 
 IDE_Morph.prototype.customizeTheme = function () {

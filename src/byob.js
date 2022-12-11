@@ -2089,7 +2089,7 @@ BlockDialogMorph.prototype.addCategoryButton = function (category) {
         colors = [
             IDE_Morph.prototype.frameColor,
             IDE_Morph.prototype.frameColor.darker
-                (MorphicPreferences.isFlat ? 5 : 50
+                (MorphicPreferences.isDark ? 5 : 50
             ),
             SpriteMorph.prototype.blockColorFor(category)
         ],
@@ -4844,7 +4844,7 @@ CustomizeThemeDialogMorph.prototype.buildContents = function () {
                             this,
                             (clr) => input.setColor(clr),
                             this
-                        ).promptColor(
+                        ).promptRGB(
                             "Color",
                             input.color,
                             this.world(),
@@ -4940,7 +4940,7 @@ CustomizeThemeDialogMorph.prototype.setTheme = function() {
 
     ide.theme = prefs;
 
-    ide.updateTheme();
+    ide.applyTheme();
 }
 
 CustomizeThemeDialogMorph.prototype.fixLayout
