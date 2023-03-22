@@ -206,29 +206,6 @@ TuneScope.playNote = function (note, noteLength, instrumentName, volume) {
     play();
 }
 
-TuneScope._playNote = (note, noteLength, instrumentName, volume) => {
-    window._currentNote = note
-    if (note == "R" || note == "r") return;
-
-    note = _convertToSharp(note);
-
-    var player = new WebAudioFontPlayer();
-    instrumentName = instrumentName || this.currentInstrumentName;
-    instrumentName = instrumentName.toLowerCase()
-    // console.log(instrumentName);
-    let currentInstrumentData = this.instrumentData[instrumentName]
-    player.loader.decodeAfterLoading(audioContext, currentInstrumentData.name);
-    function play() {
-        const vol = volume || window.parent.instrumentVolumes[instrumentName] || window.parent.globalInstrumentVolume;
-        console.log(note, noteLength, instrumentName, vol)
-        player.queueWaveTable(audioContext, audioContext.destination
-            , window[currentInstrumentData.name], 0, window.parent.midiPitches[note], noteLength, vol
-        );
-        return false;
-    }
-    play();
-}
-
 TuneScope.timeSignatureToBeatsPerMeasure = function (time) {
     timeSig = time.split('/')
     // newTime = (timeSig[0]*4)/timeSig[1]
