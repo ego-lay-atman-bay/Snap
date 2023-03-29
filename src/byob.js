@@ -5224,6 +5224,10 @@ BlockRemovalDialogMorph.prototype.buildContents = function () {
     var palette, x, y, block, checkBox, lastCat,
         padding = 4;
 
+    // =================
+    var catCheckBox
+    // =================
+
     // create plaette
     palette = new ScrollFrameMorph(
         null,
@@ -5244,9 +5248,73 @@ BlockRemovalDialogMorph.prototype.buildContents = function () {
     SpriteMorph.prototype.allCategories().forEach(category => {
         this.blocks.forEach(definition => {
             if (definition.category === category) {
-                if (lastCat && (category !== lastCat)) {
+                // =================
+                if ((category !== lastCat)) {
                     y += padding;
+                    catCheckBox = new ToggleMorph(
+                        'checkbox',
+                        this,
+                        () => {
+                            var blocks = [];
+                            if (contains(this.blocks.map(b => b.category), category)) {
+                                this.blocks.forEach(block => {
+                                    if (block.category != category) {
+                                        blocks.push(block)
+                                    };
+                                });
+                                this.blocks = blocks;
+                            }
+                            else {
+                                this.body.contents.children.forEach(block => {
+                                    if (block instanceof ToggleMorph) {
+                                        if (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) {
+                                            if (block.element.category == category) {
+                                                if (!contains(this.blocks, block.element.definition)) {
+                                                    block.trigger()
+                                                };
+                                            };
+                                        };
+                                    };
+                                });
+                            };
+                            try {
+                                this.collectDependencies(); // v8.0+
+                            }
+                            catch (err) { // v7
+                                this.body.contents.children.forEach(checkBox => {
+                                    if (checkBox instanceof ToggleMorph) {
+                                        checkBox.refresh();
+                                    }
+                                });
+                            }
+
+                        },
+                        // category,
+                        null,
+                        () => contains(this.blocks.map(b => b.category), category),
+                        null,
+                        null                        
+                    )
+                    // catCheckBox.label.color = new Color(255, 255, 255, 1)
+                    // catCheckBox.label.fontSize = 12
+                    // catCheckBox.label.setWidth()
+                    // catCheckBox.label.setTop()
+                    // catCheckBox.element.setTop(-(catCheckBox.fullBounds().height()/2))
+                    catCheckBox.setPosition(new Point(
+                        x,
+                        y + (catCheckBox.top())
+                    ));
+                    palette.addContents(catCheckBox);
+                    txt = SpriteMorph.prototype.categoryText(category);
+                    txt.setPosition(new Point(x + catCheckBox.fullBounds().width() + padding, y));
+                    txt.refresh = function() {}; // to avoid an error when refreshing checkboxes
+                    palette.addContents(txt);
+                    y += catCheckBox.fullBounds().height()
+                    y += padding
                 }
+                
+                // =================
+                
                 lastCat = category;
                 block = definition.templateInstance();
                 block.isToggleLabel = true; // mark as unrefreshable label
