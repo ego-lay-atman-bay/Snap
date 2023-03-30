@@ -3463,7 +3463,7 @@ BlockMorph.prototype.userMenu = function () {
         menu.addItem(
             'copy all',
             () => {
-                ide.clipboard = this.fullCopy()
+                ide.scene.clipboard = this.fullCopy()
             },
             'Send this block and all\nblocks underneath to the clipboard.'
         )
@@ -3471,8 +3471,8 @@ BlockMorph.prototype.userMenu = function () {
     menu.addItem(
         'copy block',
         () => {
-            ide.clipboard = this.fullCopy()
-            var nb = ide.clipboard.nextBlock()
+            ide.scene.clipboard = this.fullCopy()
+            var nb = ide.scene.clipboard.nextBlock()
             if (nb) {
                 nb.destroy();
             }
@@ -3482,7 +3482,7 @@ BlockMorph.prototype.userMenu = function () {
     menu.addItem(
         'cut block',
         () => {
-            ide.clipboard = this.fullCopy()
+            ide.scene.clipboard = this.fullCopy()
 
             this.userDestroy()
         },
@@ -8547,12 +8547,12 @@ ScriptsMorph.prototype.userMenu = function () {
         }
     }
 
-    if (ide.clipboard) {
+    if (ide.scene.clipboard) {
         menu.addLine();
         menu.addItem(
             "paste",
             () => {
-                var cpy = ide.clipboard.fullCopy(),
+                var cpy = ide.scene.clipboard.fullCopy(),
                     blockEditor = this.parentThatIsA(BlockEditorMorph);
                 cpy.pickUp(world);
                 // register the drop-origin, so the block can
@@ -15190,14 +15190,14 @@ CommentMorph.prototype.userMenu = function () {
     menu.addItem(
         'copy comment',
         () => {
-            ide.clipboard = this.fullCopy()
+            ide.scene.clipboard = this.fullCopy()
         },
         'Send this comment\nto the clipboard'
     )
     menu.addItem(
         'cut comment',
         () => {
-            ide.clipboard = this.fullCopy()
+            ide.scene.clipboard = this.fullCopy()
 
             this.userDestroy()
         },
@@ -16119,7 +16119,7 @@ ScriptFocusMorph.prototype.reactToKeyEvent = function (key) {
         types,
         vNames;
 
-    // console.log(evt);
+    console.log(evt);
     switch (evt) {
     case 'esc':
         return this.stopEditing();
@@ -16154,10 +16154,14 @@ ScriptFocusMorph.prototype.reactToKeyEvent = function (key) {
     case 'backspace':
         return this.deleteLastElement();
     case 'ctrl z':
+        console.log('ctrl z')
         return this.undrop();
     case 'ctrl y':
     case 'ctrl shift z':
         return this.redrop();
+    case 'ctrl c':
+        console.log('ctrl c')
+        return
     case 'ctrl [': // ignore the first press of the Mac cmd key
         return;
     default:
