@@ -9165,12 +9165,25 @@ StageMorph.prototype.fireKeyEvent = function (key) {
         return;
     }
     if (evt === 'ctrl z') {
+        console.log('ctrl z')
         if (!ide.isAppMode) {ide.currentSprite.scripts.undrop(); }
-         return;
+        return;
     }
     if (evt === 'ctrl shift z' || (evt === 'ctrl y')) {
         if (!ide.isAppMode) {ide.currentSprite.scripts.redrop(); }
-         return;
+        return;
+    }
+    if (evt === 'ctrl shift c' || (evt === 'ctrl c')) {
+        ide.userCopy(evt);
+        return;
+    }
+    if (evt === 'ctrl x') {
+        ide.userCut(evt);
+        return;
+    }
+    if (evt === 'ctrl v' || (evt === 'ctrl shift v')) {
+        ide.userPaste();
+        return;
     }
     if (evt === 'ctrl n') {
         if (!ide.isAppMode) {ide.createNewProject(); }

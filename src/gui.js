@@ -5238,6 +5238,63 @@ IDE_Morph.prototype.undelete = function (aSprite, pos) {
     );
 };
 
+IDE_Morph.prototype.userCopy = function (event) {
+    var world = this.world();
+    var underHand,
+        hand,
+        mouseOverList;
+
+    hand = world.hand;
+    mouseOverList = hand.mouseOverList;
+
+    underHand = mouseOverList[0].parentThatIsA(BlockMorph) || 
+                mouseOverList[0].parentThatIsA(CommentMorph);
+    
+    if (underHand) {
+        this.scene.clipboard = underHand.fullCopy();
+        if ((this.scene.clipboard instanceof BlockMorph) && event === 'ctrl shift c') {
+            var nb = this.scene.clipboard.nextBlock()
+            if (nb) {
+                nb.destroy();
+            }
+        }
+    }
+}
+
+IDE_Morph.prototype.userCut = function (event) {
+    var world = this.world();
+    var underHand,
+        hand,
+        mouseOverList;
+
+    hand = world.hand;
+    mouseOverList = hand.mouseOverList;
+
+    underHand = mouseOverList[0].parentThatIsA(BlockMorph) || 
+                mouseOverList[0].parentThatIsA(CommentMorph);
+    
+    if (underHand) {
+        this.scene.clipboard = underHand.fullCopy();
+        underHand.userDestroy();
+    }
+}
+
+IDE_Morph.prototype.userPaste = function (event) {
+    var world = this.world();
+
+    if (this.scene.clipboard) {
+        var cpy = this.scene.clipboard.fullCopy();
+        cpy.pickUp(world);
+        // register the drop-origin, so the block can
+        // slide back to its former situation if dropped
+        // somewhere where it gets rejected
+        world.hand.grabOrigin = {
+            origin: this.palette,
+            position: this.palette.center()
+        };
+    }
+}
+
 // IDE_Morph menu actions
 
 IDE_Morph.prototype.aboutSnap = function () {
