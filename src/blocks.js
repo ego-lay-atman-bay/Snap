@@ -3077,6 +3077,7 @@ BlockMorph.prototype.abstractBlockSpec = function () {
 BlockMorph.prototype.userMenu = function () {
     var menu = new MenuMorph(this),
         world = this.world(),
+        ide = this.parentThatIsA(IDE_Morph),
         myself = this,
         hasLine = false,
         proc = this.activeProcess(),
@@ -3454,6 +3455,48 @@ BlockMorph.prototype.userMenu = function () {
             }
         );
     }
+
+    
+    
+    menu.addLine();
+    if ((this instanceof CommandBlockMorph)) {
+        menu.addItem(
+            'copy all',
+            () => {
+                ide.clipboard = this.fullCopy()
+            },
+            'Send this block and all\nblocks underneath to the clipboard.'
+        )
+    }
+    menu.addItem(
+        'copy block',
+        () => {
+            ide.clipboard = this.fullCopy()
+            var nb = ide.clipboard.nextBlock()
+            if (nb) {
+                nb.destroy();
+            }
+        },
+        'Send this block to the clipboard.'
+    )
+    menu.addItem(
+        'cut block',
+        () => {
+            ide.clipboard = this.fullCopy()
+
+            this.userDestroy()
+        },
+        'Send this block to the\nclipboard and delete this block.'
+    )
+
+    if (this.parent instanceof ReporterSlotMorph
+            || (this.parent instanceof CommandSlotMorph)
+            || (this instanceof HatBlockMorph)
+            || (this instanceof CommandBlockMorph
+                && (top instanceof HatBlockMorph))) {
+        return menu;
+    }
+
     menu.addLine();
     menu.addItem(
         "script pic...",
@@ -3550,13 +3593,7 @@ BlockMorph.prototype.userMenu = function () {
             'showMessageUsers'
         );
     }
-    if (this.parent instanceof ReporterSlotMorph
-            || (this.parent instanceof CommandSlotMorph)
-            || (this instanceof HatBlockMorph)
-            || (this instanceof CommandBlockMorph
-                && (top instanceof HatBlockMorph))) {
-        return menu;
-    }
+
     if (!hasLine) {menu.addLine(); }
     rcvr = rcvr || this.scriptTarget(true);
     if (rcvr && !rcvr.parentThatIsA(IDE_Morph).config.noRingify) {
@@ -3573,6 +3610,7 @@ BlockMorph.prototype.userMenu = function () {
             'mapToCode'
         );
     }
+
     return menu;
 };
 
@@ -8508,6 +8546,32 @@ ScriptsMorph.prototype.userMenu = function () {
             );
         }
     }
+
+    if (ide.clipboard) {
+        menu.addLine();
+        menu.addItem(
+            "paste",
+            () => {
+                var cpy = ide.clipboard.fullCopy(),
+                    blockEditor = this.parentThatIsA(BlockEditorMorph);
+                cpy.pickUp(world);
+                // register the drop-origin, so the block can
+                // slide back to its former situation if dropped
+                // somewhere where it gets rejected
+                if (!ide && blockEditor) {
+                    ide = blockEditor.target.parentThatIsA(IDE_Morph);
+                }
+                if (ide) {
+                    world.hand.grabOrigin = {
+                        origin: ide.palette,
+                        position: ide.palette.center()
+                    };
+                }
+            },
+            'Retrieve script\nfrom clipboard'
+        );
+    }
+    
     return menu;
 };
 
@@ -15071,7 +15135,8 @@ CommentMorph.prototype.fixLayout = function () {
 // CommentMorph menu:
 
 CommentMorph.prototype.userMenu = function () {
-    var menu = new MenuMorph(this);
+    var menu = new MenuMorph(this),
+        ide = this.parentThatIsA(IDE_Morph);
 
     menu.addItem(
         "duplicate",
@@ -15119,6 +15184,25 @@ CommentMorph.prototype.userMenu = function () {
         },
         'save a picture\nof this comment'
     );
+    
+    
+    menu.addLine();
+    menu.addItem(
+        'copy comment',
+        () => {
+            ide.clipboard = this.fullCopy()
+        },
+        'Send this comment\nto the clipboard'
+    )
+    menu.addItem(
+        'cut comment',
+        () => {
+            ide.clipboard = this.fullCopy()
+
+            this.userDestroy()
+        },
+        'Send this comment to the\nclipboard and delete this comment'
+    )
     return menu;
 };
 
