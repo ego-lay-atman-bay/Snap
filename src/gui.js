@@ -8331,9 +8331,11 @@ IDE_Morph.prototype.warnAboutDev = function () {
         return;
     }
     this.inform(
-        "CAUTION! Development Version",
-        'This version of Snap! is being developed.\n' +
+        "CAUTION! Modded Version",
+        'This version of Snap! is a modification.\n' +
             '*** It is NOT supported for end users. ***\n' +
+            'This version includes features that are not\n' +
+            'present in the official Snap! versions.\n\n' +
             'Saving a project in THIS version is likely to\n' +
             'make it UNUSABLE or DEFECTIVE for current and\n' +
             'even future official versions!\n\n' +
