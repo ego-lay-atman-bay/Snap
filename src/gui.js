@@ -5250,7 +5250,7 @@ IDE_Morph.prototype.userCopy = function (event) {
     underHand = mouseOverList[0].parentThatIsA(BlockMorph) || 
                 mouseOverList[0].parentThatIsA(CommentMorph);
     
-    if (underHand) {
+    if (underHand && !underHand.isTemplate) {
         this.scene.clipboard = underHand.fullCopy();
         if ((this.scene.clipboard instanceof BlockMorph) && event === 'ctrl shift c') {
             var nb = this.scene.clipboard.nextBlock()
@@ -5273,7 +5273,7 @@ IDE_Morph.prototype.userCut = function (event) {
     underHand = mouseOverList[0].parentThatIsA(BlockMorph) || 
                 mouseOverList[0].parentThatIsA(CommentMorph);
     
-    if (underHand) {
+    if (underHand && !underHand.isTemplate) {
         this.scene.clipboard = underHand.fullCopy();
         underHand.userDestroy();
     }
