@@ -2,16 +2,11 @@
 var AudioContextFunc = window.AudioContext || window.webkitAudioContext;
 var audioContext = new AudioContextFunc();
 
-window._currentNote = ""
-window._parsed = ""
-window._isParsed = false
-window.parent._ts_pausePlayback = false;
-
 const _ide = world.children[0];
 const original_stop = _ide.stopAllScripts.bind(_ide);
 _ide.stopAllScripts = function () {
     original_stop();
-    window.parent._ts_pausePlayback = true;
+    TuneScope.pausePlayback = true;
 }
 
 var TuneScope = {
