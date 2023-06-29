@@ -221,12 +221,18 @@ TuneScope.noteLengthToTimeValue = function (duration) {
         splitDuration = duration.split(' ');
 
         let notes = {
-            'whole': 4,
-            'half': 2,
-            'quarter': 1,
-            'eighth': 0.5,
-            'sixteenth': 0.25,
-            'thirtysecond': 0.125
+            "whole": 4,
+            "w": 4,
+            "half": 2,
+            "h": 2,
+            "quarter": 1,
+            "q": 1,
+            "eighth": .5,
+            "e": .5,
+            "sixteenth": .25,
+            "s": .25,
+            "thirtysecond": .125,
+            "t": .12
         };
 
         var dots = 0;
@@ -264,6 +270,28 @@ TuneScope.noteLengthToTimeValue = function (duration) {
         return noteDur;
     } else {
         return parseFloat(duration);
+    }
+}
+
+TuneScope.getArticulation = function (duration, articulation) {
+    duration = this.noteLengthToTimeValue(duration)
+
+    var articulations = {
+        'legato': (duration) => {return duration},
+        'tenuto': (duration) => {return duration},
+        'staccato': (duration) => {return duration / 2},
+    }
+
+    var newDuration = duration
+
+    articulation = articulation.toLowerCase()
+    if (articulations[articulation]) {
+        newDuration = articulations[articulation](duration)
+    }
+    
+    return {
+        length : newDuration,
+        restLength : duration - newDuration,
     }
 }
 
