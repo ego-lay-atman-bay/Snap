@@ -72,7 +72,7 @@ StringMorph, Point, MenuMorph, morphicVersion, DialogBoxMorph, BlockEditorMorph,
 ToggleButtonMorph, contains, ScrollFrameMorph, StageMorph, PushButtonMorph, sb,
 InputFieldMorph, FrameMorph, Process, nop, SnapSerializer, ListMorph, detect,
 AlignmentMorph, TabMorph, Costume, MorphicPreferences,BlockMorph, ToggleMorph,
-InputSlotDialogMorph, ScriptsMorph, isNil, SymbolMorph, fontHeight,  localize,
+InputSlotDialogMorph, ScriptsMorph, isNil, SymbolMorph, fontHeight, localize,
 BlockExportDialogMorph, BlockImportDialogMorph, SnapTranslator, List, ArgMorph,
 Uint8Array, HandleMorph, SVG_Costume, TableDialogMorph, CommentMorph, saveAs,
 CommandBlockMorph, BooleanSlotMorph, RingReporterSlotMorph, ScriptFocusMorph,
@@ -80,17 +80,19 @@ BlockLabelPlaceHolderMorph, SpeechBubbleMorph, XML_Element, WatcherMorph, WHITE,
 BlockRemovalDialogMorph,TableMorph, isSnapObject, isRetinaEnabled, SliderMorph,
 disableRetinaSupport, enableRetinaSupport, isRetinaSupported, MediaRecorder,
 Animation, BoxMorph, BlockDialogMorph, RingMorph, Project, ZERO, BLACK,
-BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions*/
+BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions, snapEquals,
+MultiArgMorph
+*/
 
-/*jshint esversion: 6*/
+/*jshint esversion: 8*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.gui = '2023-March-20';
+modules.gui = '2023-June-27';
 
 // Declarations
 
-var SnapVersion = '8.3.0-dev';
+var SnapVersion = '9.0.0-dev';
 
 var IDE_Morph;
 var ProjectDialogMorph;
@@ -264,6 +266,7 @@ function IDE_Morph(config = {}) {
         mode:           str, currently "presentation" or "edit"
         hideControls:   bool, hide/show the tool bar
         hideCategories: bool, hide/show the palette block category buttons
+        noSpriteEdits:  bool, hide/show the corral & sprite controls/menus
         noSprites:      bool, hide/show the stage, corral, sprite editor
         noPalette:      bool, hide/show the palette including the categories
         noImports:      bool, disable/allow importing files via drag&drop
@@ -511,6 +514,44 @@ IDE_Morph.prototype.openIn = function (world) {
                     1
                 )) {
                 this.droppedText(hash);
+            } else if (hash.match(/\.(png|gif|svg|jpe?g|tiff)$/i)) {
+                // Import an image, which could contain embedded scripts
+                fetch(hash).then(res => res.blob()).then(blob => {
+                    let pic = new Image(),
+                        imgURL = URL.createObjectURL(blob),
+                        dataMarker = MorphicPreferences.pngPayloadMarker;
+
+                    pic.src = imgURL;
+                    pic.onload = (async () => {
+                        let buff = new Uint8Array(await blob.arrayBuffer()),
+                            strBuff = buff.reduce((acc, b) =>
+                                acc + String.fromCharCode(b), ""),
+                            hasImportanbleCode = (txt) =>
+                                txt.match(
+                                    /^<(blocks|block|script|sprite)/i
+                                ),
+                            embeddedData, canvas;
+
+                            if (strBuff.includes(dataMarker)) {
+                            embeddedData = decodeURIComponent(
+                                strBuff.split(dataMarker)[1]
+                            );
+                            if (hasImportanbleCode(embeddedData)) {
+                                return this.rawOpenScriptString(
+                                    embeddedData,
+                                    true
+                                );
+                            }
+                        } else {
+                            canvas = newCanvas(
+                                new Point(pic.width, pic.height),
+                                true
+                            );
+                            canvas.getContext('2d').drawImage(pic, 0, 0);
+                            this.droppedImage(canvas, decodeURIComponent(hash));
+                        }
+                    })();
+                });
             } else {
                 idx = hash.indexOf("&");
                 if (idx > 0) {
@@ -906,10 +947,15 @@ IDE_Morph.prototype.applyPaneHidingConfigurations = function () {
     // no sprites
     if (cnf.noSprites) {
         this.stage.hide();
-        this.corralBar.hide();
-        this.corral.hide();
+        cnf.noSpriteEdits = true;
+    }
+
+    // hide sprite editing widgets
+    if (cnf.noSpriteEdits) {
         this.spriteBar.hide();
         this.stageHandle.hide();
+        this.corralBar.hide();
+        this.corral.hide();
     }
 
     // no palette
@@ -2609,7 +2655,7 @@ IDE_Morph.prototype.fixLayout = function (situation) {
         if (this.spriteEditor.isVisible) {
             this.spriteEditor.setLeft(this.spriteBar.left());
             this.spriteEditor.setTop(
-                cnf.noSprites ?
+                cnf.noSprites || cnf.noSpriteEdits ?
                     (cnf.hideControls ? this.top() + border
                         : this.controlBar.bottom() + padding)
                     : this.spriteBar.bottom() + padding
@@ -2916,9 +2962,9 @@ IDE_Morph.prototype.droppedAudio = function (anAudio, name) {
     if (this.config.noImports) {return; }
 
     if (anAudio.src.indexOf('data:audio') !== 0) {
-    	// fetch and base 64 encode samples using FileReader
-    	this.getURL(
-        	anAudio.src,
+        // fetch and base 64 encode samples using FileReader
+        this.getURL(
+            anAudio.src,
             blob => {
                 var reader = new window.FileReader();
                 reader.readAsDataURL(blob);
@@ -3507,7 +3553,7 @@ IDE_Morph.prototype.backupAndDo = function (callback) {
     } catch (err) {
         nop(err);
         this.confirm(
-            'Backup failed.\nThis cannot be undone, proceed anyway?',
+            'Backup failed. This cannot be undone, proceed anyway?',
             'Unsaved Changes!',
             callback
         );
@@ -3850,7 +3896,7 @@ IDE_Morph.prototype.instantiateSprite = function (sprite) {
     );
 };
 
-IDE_Morph.prototype.removeSprite = function (sprite) {
+IDE_Morph.prototype.removeSprite = function (sprite, enableUndelete = true) {
     var idx;
     sprite.parts.slice().forEach(part =>
     	this.removeSprite(part)
@@ -3882,7 +3928,9 @@ IDE_Morph.prototype.removeSprite = function (sprite) {
     this.selectSprite(this.currentSprite);
 
     // remember the deleted sprite so it can be recovered again later
-    this.scene.trash.push(sprite);
+    if (enableUndelete) {
+        this.scene.trash.push(sprite);
+    }
 };
 
 IDE_Morph.prototype.newSoundName = function (name) {
@@ -3915,9 +3963,10 @@ IDE_Morph.prototype.newSceneName = function (name, ignoredScene) {
 
 IDE_Morph.prototype.newName = function (name, elements) {
     var count = 1,
-        newName = name;
+        newName = name,
+        exist = e => snapEquals(e, newName);
 
-    while (contains(elements, newName)) {
+    while (elements.some(exist)) {
         count += 1;
         newName = name + '(' + count + ')';
     }
@@ -4364,12 +4413,33 @@ IDE_Morph.prototype.settingsMenu = function () {
         false
     );
     addPreference(
+        'Case sensitivity',
+        () => Process.prototype.isCaseInsensitive =
+            !Process.prototype.isCaseInsensitive,
+        !Process.prototype.isCaseInsensitive,
+        'uncheck to ignore upper- and\n lowercase when comparing texts',
+        'check to distinguish upper- and\n lowercase when comparing texts',
+        false
+    );
+    addPreference(
         'Ternary Boolean slots',
         () => BooleanSlotMorph.prototype.isTernary =
             !BooleanSlotMorph.prototype.isTernary,
         BooleanSlotMorph.prototype.isTernary,
         'uncheck to limit\nBoolean slots to true / false',
         'check to allow\nempty Boolean slots',
+        true
+    );
+    addPreference(
+        'Explicit input lists',
+        () => {
+            MultiArgMorph.prototype.enableExplicitInputLists =
+                !MultiArgMorph.prototype.enableExplicitInputLists;
+            this.refreshIDE();
+        },
+        MultiArgMorph.prototype.enableExplicitInputLists,
+        'uncheck to hide the list symbol\nin empty variadic input slots',
+        'check to show a list symbol\nin empty variadic input slots',
         true
     );
     addPreference(
@@ -4857,6 +4927,15 @@ IDE_Morph.prototype.projectMenu = function () {
         menu.addItem(
             'Remove a category...',
             () => this.deleteUserCategory(pos)
+        );
+    }
+    if (this.currentSprite instanceof SpriteMorph &&
+        !this.currentSprite.solution) {
+        menu.addItem(
+            'Generate puzzle',
+            'generatePuzzle',
+            'generate a Parson\'s Puzzle\n' +
+                'from the current sprite'
         );
     }
     menu.addLine();
@@ -5365,9 +5444,9 @@ IDE_Morph.prototype.aboutSnap = function () {
         + '\nAchal Dave: Web Audio'
         + '\nJoe Otto: Morphic Testing and Debugging'
         + '\n\n'
-        + 'Jahrd, Derec, and Jamet costumes are watercolor paintings'
-        + '\nby Meghan Taylor and represent characters from her'
-        + '\nwebcomic Prophecy of the Circle, licensed to us only'
+        + 'Jahrd, Derec, Jamet and Sarron costumes are watercolor'
+        + '\npaintings by Meghan Taylor and represent characters from'
+        + '\nher webcomic Prophecy of the Circle, licensed to us only'
         + '\nfor use in Snap! projects. Meghan also painted the Tad'
         + '\ncostumes, but that character is in the public domain.';
 
@@ -5789,6 +5868,94 @@ IDE_Morph.prototype.removeUnusedBlocks = function () {
                 + 'global custom blocks in this project'
         );
     }
+};
+
+IDE_Morph.prototype.generatePuzzle = function () {
+    var current = this.currentSprite,
+        allBlocks = current.allPaletteBlocks(),
+        used = current.scripts.allChildren().filter(
+            m => m instanceof BlockMorph),
+        uPrim = [],
+        uCust = [],
+        uVars = [],
+        unused,
+        puzzle;
+
+    // add stage-only blocks
+    this.stage.allPaletteBlocks().forEach(b => {
+        if (!allBlocks.includes(b)) {
+            allBlocks.push(b);
+        }
+    });
+
+    // determine unused blocks
+    used.forEach(b => {
+        if (b.isCustomBlock) {
+            uCust.push(b.isGlobal ? b.definition
+                : current.getMethod(b.semanticSpec));
+        } else if (b.selector === 'reportGetVar') {
+            uVars.push(b.blockSpec);
+        } else {
+            uPrim.push(b.selector);
+        }
+    });
+    unused = allBlocks.filter(b => {
+        if (b.isCustomBlock) {
+            return !contains(
+                uCust,
+                b.isGlobal ? b.definition
+                    : current.getMethod(b.semanticSpec)
+                );
+        } else if (b.selector === 'reportGetVar') {
+            return !contains(uVars, b.blockSpec);
+        } else {
+            return !contains(uPrim, b.selector);
+        }
+    });
+
+    // hide all unused blocks and show all used ones in the palette
+    allBlocks.forEach(block => current.changeBlockVisibility(
+        block,
+        contains(unused, block),
+        true // quick - without palette update
+    ));
+    if (unused.length === 0) {
+        StageMorph.prototype.hiddenPrimitives = [];
+    }
+
+    // fire user edit event
+    current.recordUserEdit(
+        'palette',
+        'hide block'
+    );
+
+    // turn on single palette and hide buttons
+    this.setUnifiedPalette(true);
+    this.scene.showPaletteButtons = false;
+
+    // refresh
+    this.flushBlocksCache();
+    this.refreshPalette();
+    this.categories.refreshEmpty();
+
+    // generate a new puzzle sprite by duplicating the current one
+    this.duplicateSprite(current);
+    puzzle = this.currentSprite; // this is now the duplicate
+    puzzle.setPosition(current.position());
+    puzzle.setName(this.newSpriteName(current.name + ' ' + localize('Puzzle')));
+
+    // remove all scripts but keep the unattached comments
+    puzzle.scripts.children.filter(m =>
+        m instanceof BlockMorph
+    ).forEach(b => b.destroy());
+
+    // store the solution inside the puzzlem
+    // and remove the solution from the stage
+    puzzle.solution = current;
+    this.removeSprite(current, false); // disable undelete
+
+    // refresh
+    this.selectSprite(puzzle);
 };
 
 IDE_Morph.prototype.exportSprite = function (sprite) {
@@ -6356,7 +6523,7 @@ IDE_Morph.prototype.openScriptString = function (str) {
     ]);
 };
 
-IDE_Morph.prototype.rawOpenScriptString = function (str) {
+IDE_Morph.prototype.rawOpenScriptString = function (str, silently) {
     var world = this.world(),
         script;
 
@@ -6371,11 +6538,16 @@ IDE_Morph.prototype.rawOpenScriptString = function (str) {
     }
     script.fixBlockColor(null, true);
     this.spriteBar.tabBar.tabTo('scripts');
-    script.pickUp(world);
-    world.hand.grabOrigin = {
-        origin: this.palette,
-        position: this.palette.center()
-    };
+    if (silently) {
+        this.currentSprite.scripts.add(script);
+        this.currentSprite.scripts.cleanUp();
+    } else {
+        script.pickUp(world);
+        world.hand.grabOrigin = {
+            origin: this.palette,
+            position: this.palette.center()
+        };
+    }
     this.showMessage(
         'Imported Script.',
         2
@@ -7021,6 +7193,13 @@ IDE_Morph.prototype.toggleAppMode = function (appMode) {
         }
         // update undrop controls
         this.currentSprite.scripts.updateToolbar();
+        // hide hidden panes
+        if (this.config.noSpriteEdits) {
+            this.spriteBar.hide();
+            this.stageHandle.hide();
+            this.corralBar.hide();
+            this.corral.hide();
+        }
     }
     this.setExtent(this.world().extent());
 };
@@ -7262,14 +7441,23 @@ IDE_Morph.prototype.languageMenu = function () {
 
 IDE_Morph.prototype.setLanguage = function (lang, callback, noSave) {
     var translation = document.getElementById('language'),
-        src = this.resourceURL('locale', 'lang-' + lang + '.js');
+        src;
     SnapTranslator.unload();
     if (translation) {
         document.head.removeChild(translation);
     }
+    if (!(lang in SnapTranslator.dict)) {
+        if (lang.includes('_') && lang.split('_')[0] in SnapTranslator.dict) {
+            lang = lang.split('_')[0];
+        } else {
+            lang = 'en';
+        }
+    }
     if (lang === 'en') {
         return this.reflectLanguage('en', callback, noSave);
     }
+
+    src = this.resourceURL('locale', 'lang-' + lang + '.js');
     translation = document.createElement('script');
     translation.id = 'language';
     translation.onload = () =>
@@ -7695,6 +7883,13 @@ IDE_Morph.prototype.initializeCloud = function () {
                         'Verification Email..." option in the cloud\n' +
                         'menu.\n\n' +
                         'You have ' + duration + ' left.',
+                        world,
+                        this.cloudIcon(null, new Color(0, 180, 0))
+                    );
+                } else if (response.title) {
+                    new DialogBoxMorph().inform(
+                        response.title,
+                        response.message,
                         world,
                         this.cloudIcon(null, new Color(0, 180, 0))
                     );
@@ -10370,6 +10565,32 @@ SpriteIconMorph.prototype.userMenu = function () {
     }
     menu.addItem("delete", 'removeSprite');
     menu.addLine();
+    if (this.object.solution) {
+        menu.addItem(
+            'extract solution',
+            () => {
+                this.parentThatIsA(IDE_Morph).undelete(
+                    this.object.solution.fullCopy(),
+                    this.center()
+                );
+            }
+        );
+        menu.addItem(
+            'delete solution',
+            () => {
+                this.parentThatIsA(IDE_Morph).removeSprite(
+                    this.object.solution
+                );
+                this.object.solution = null;
+                this.object.recordUserEdit(
+                    'sprite',
+                    'solution',
+                    'delete'
+                );
+            }
+        );
+        menu.addLine();
+    }
     if (StageMorph.prototype.enableInheritance) {
         /* version that hides refactoring capability unless shift-clicked
         if (this.world().currentKey === 16) { // shift-clicked
