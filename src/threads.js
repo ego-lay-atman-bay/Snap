@@ -65,7 +65,7 @@ StagePickerMorph, CustomBlockDefinition, CommentMorph*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2023-June-29';
+modules.threads = '2023-July-14';
 
 var ThreadManager;
 var Process;
@@ -2275,9 +2275,34 @@ Process.prototype.reportListAttribute = function (choice, list) {
     case 'transpose':
         this.assertType(list, 'list');
         return list.transpose();
+    case 'uniques':
+        this.assertType(list, 'list');
+        if (list.canBeCSV()) {
+            if (Process.prototype.isCaseInsensitive) {
+                return list.map(row => row instanceof List ?
+                    row.map(cell =>
+                        cell.toString().toLowerCase()
+                    )
+                    : row.toString().toLowerCase()
+                ).distribution().columns().at(1);
+            }
+            return list.distribution().columns().at(1);
+        }
+        return this.reportUniqueValues(list);
     case 'distribution':
         this.assertType(list, 'list');
-        return list.distribution();
+        if (list.canBeCSV()) {
+            if (Process.prototype.isCaseInsensitive) {
+                return list.map(row => row instanceof List ?
+                    row.map(cell =>
+                        cell.toString().toLowerCase()
+                    )
+                    : row.toString().toLowerCase()
+                ).distribution();
+            }
+            return list.distribution();
+        }
+        return this.reportDistribution(list);
     case 'sorted':
         this.assertType(list, 'list');
         return this.reportSorted(list);
@@ -2342,7 +2367,67 @@ Process.prototype.doShowTable = function (list) {
     new TableDialogMorph(list).popUp(this.blockReceiver().world());
 };
 
-// process - sorting and shuffling a list (general utility)
+// process - analyzing sorting and shuffling a list (general utility)
+
+Process.prototype.reportUniqueValues = function (list) {
+    // Filter - answer a new list representing the set of unique values
+    // in the list based on equality,
+    // interpolated so it can be interrupted by the user
+    // because snapEquals() can be a lot slower than identity comparison
+    var next;
+    if (this.context.accumulator === null) {
+        this.assertType(list, 'list');
+        this.context.accumulator = {
+            idx : 0,
+            target : []
+        };
+    }
+    if (this.context.accumulator.idx === list.length()) {
+        this.returnValueToParentContext(
+            new List(this.context.accumulator.target)
+        );
+        return;
+    }
+    this.context.accumulator.idx += 1;
+    next = list.at(this.context.accumulator.idx);
+    if (!this.context.accumulator.target.some(any => snapEquals(any, next))) {
+        this.context.accumulator.target.push(next);
+    }
+    this.pushContext();
+};
+
+Process.prototype.reportDistribution = function (list) {
+    // answer a new list with an entry for each unique value and the
+    // number of its occurrences in the source list,
+    // interpolated so it can be interrupted by the user
+    // because snapEquals() can be a lot slower than identity comparison
+    var next, record;
+    if (this.context.accumulator === null) {
+        this.assertType(list, 'list');
+        this.context.accumulator = {
+            idx : 0,
+            target : []
+        };
+    }
+    if (this.context.accumulator.idx === list.length()) {
+        this.returnValueToParentContext(
+            new List(this.context.accumulator.target.map(row => new List(row)))
+        );
+        return;
+    }
+    this.context.accumulator.idx += 1;
+    next = list.at(this.context.accumulator.idx);
+
+    record = this.context.accumulator.target.find(row =>
+        snapEquals(row[0], next)
+    );
+    if (record !== undefined) {
+        record[1] += 1;
+    } else {
+        this.context.accumulator.target.push([next, 1]);
+    }
+    this.pushContext();
+};
 
 Process.prototype.reportSorted = function (data) {
     return new List(data.itemsArray().slice().sort((a, b) =>
@@ -6197,6 +6282,18 @@ Process.prototype.reportBasicAttributeOf = function (attribute, name) {
                 return thatObj.getVolume();
             case 'balance':
                 return thatObj.getPan();
+            case 'extent':
+                if (thatObj instanceof StageMorph) {
+                    return new List([
+                        thatObj.dimensions.x,
+                        thatObj.dimensions.y
+                    ]);
+                }
+                this.assertType(thatObj, 'sprite');
+                return new List([
+                    thatObj.width() / stage.scale,
+                    thatObj.height() / stage.scale,
+                ]);
             case 'width':
                 if (thatObj instanceof StageMorph) {
                     return thatObj.dimensions.x;
@@ -6326,6 +6423,20 @@ Process.prototype.reportGet = function (query) {
                     each => each.fullCopy().reify()
                 )
             );
+        case 'solutions':
+            if (thisObj.solution) {
+                return new List(
+                    thisObj.solution.scripts.sortedElements().filter(
+                        each => each instanceof BlockMorph
+                    ).map(
+                        each => new List([
+                            each?.comment.text() || '',
+                            each.fullCopy().reify()
+                        ])
+                    )
+                );
+            }
+            return new List();
         case 'blocks': // palette unoordered without inherited methods
             return new List(
                 thisObj.parentThatIsA(StageMorph).globalBlocks.concat(
@@ -7274,7 +7385,7 @@ Process.prototype.reportBlockAttribute = function (attribute, block) {
 
 Process.prototype.reportBasicBlockAttribute = function (attribute, block) {
     var choice = this.inputOption(attribute),
-        expr, body, slots, def, info, loc;
+        expr, body, slots, def, info, loc, cmt;
     this.assertType(block, ['command', 'reporter', 'predicate']);
     expr = block.expression;
     switch (choice) {
@@ -7282,15 +7393,19 @@ Process.prototype.reportBasicBlockAttribute = function (attribute, block) {
         return expr ? expr.abstractBlockSpec() : '';
     case 'comment':
         if (block.comment) {
-            return block.comment.text();
+            return block.comment;
+        }
+        cmt = expr?.comment?.text();
+        if (cmt) {
+            return cmt;
         }
         if (expr.isCustomBlock) {
             def = (expr.isGlobal ?
                 expr.definition
                 : this.blockReceiver().getMethod(expr.semanticSpec));
-            return def.comment?.text();
+            return def.comment?.text() || expr?.comment?.text() || '';
         }
-        return expr ? expr.comment?.text() : '';
+        return '';
     case 'definition':
         if (expr.isCustomBlock) {
             if (expr.isGlobal) {
@@ -8534,6 +8649,15 @@ Context.prototype.toBlock = function () {
         );
     }
     return ring;
+};
+
+Context.prototype.toUserBlock = function () {
+    var ring = this.toBlock(),
+        block = ring.contents();
+    if (!block || ring.inputNames().length) {
+        return ring;
+    }
+    return block;
 };
 
 // Context continuations:
