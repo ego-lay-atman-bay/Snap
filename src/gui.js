@@ -361,6 +361,7 @@ IDE_Morph.prototype.init = function (config) {
 
     // override inherited properites:
     this.color = this.backgroundColor;
+    
 };
 
 IDE_Morph.prototype.openIn = function (world) {
@@ -8596,7 +8597,7 @@ IDE_Morph.prototype.isIE = function () {
 // IDE_Morph warn about saving project in the dev version
 
 IDE_Morph.prototype.warnAboutDev = function () {
-    if (!SnapVersion.includes('-dev') || this.config.noDevWarning) {
+    if (this.config.noDevWarning) {
         return;
     }
     this.inform(
