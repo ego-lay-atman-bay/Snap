@@ -65,7 +65,7 @@ StagePickerMorph, CustomBlockDefinition, CommentMorph*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2023-June-28';
+modules.threads = '2023-June-29';
 
 var ThreadManager;
 var Process;
@@ -1317,6 +1317,9 @@ Process.prototype.reify = function (topBlock, parameterNames, isCustomBlock) {
         ),
         i = 0;
 
+    if (this.context?.expression instanceof RingMorph) {
+        context.comment = this.context.expression?.comment?.text();
+    }
     if (topBlock) {
         context.expression = this.enableLiveCoding ||
             this.enableSingleStepping ?
@@ -7277,7 +7280,10 @@ Process.prototype.reportBasicBlockAttribute = function (attribute, block) {
     switch (choice) {
     case 'label':
         return expr ? expr.abstractBlockSpec() : '';
-    case 'comment': // +++
+    case 'comment':
+        if (block.comment) {
+            return block.comment.text();
+        }
         if (expr.isCustomBlock) {
             def = (expr.isGlobal ?
                 expr.definition
@@ -7637,6 +7643,9 @@ Process.prototype.doSetBlockAttribute = function (attribute, block, val) {
         break;
     case 'comment':
         def.comment = new CommentMorph(val);
+        if (def.body) {
+            def.body.comment = val;
+        }
         break;
     case 'definition':
         this.assertType(val, types);
@@ -8441,6 +8450,7 @@ function Context(
     }
     this.inputs = [];
     this.pc = 0;
+    this.comment = null;
     this.isContinuation = false;
     this.startTime = null;
     this.activeSends = null;
@@ -8478,7 +8488,14 @@ Context.prototype.image = function () {
 Context.prototype.toBlock = function () {
     var ring = new RingMorph(),
         block,
+        cmt,
         cont;
+
+    if (this.comment) {
+        cmt = new CommentMorph(this.comment);
+        cmt.block = ring;
+        ring.comment = cmt;
+    }
 
     if (this.expression instanceof Morph) {
         block = this.expression.fullCopy();
