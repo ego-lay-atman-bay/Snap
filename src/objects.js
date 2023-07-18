@@ -94,7 +94,7 @@ embedMetadataPNG, SnapExtensions, SnapSerializer, snapEquals*/
 
 /*jshint esversion: 11*/
 
-modules.objects = '2023-June-26';
+modules.objects = '2023-July-19';
 
 var SpriteMorph;
 var StageMorph;
@@ -2181,6 +2181,9 @@ SpriteMorph.prototype.fullCopy = function (forClone) {
                 block.definition = cb
             );
         });
+        if (c.costume instanceof Costume && !c.getCostumeIdx()) {
+            c.costume = c.costume.copy();
+        }
         arr = [];
         this.costumes.asArray().forEach(costume => {
             var cst = forClone ? costume : costume.copy();
@@ -4431,6 +4434,7 @@ SpriteMorph.prototype.doPlaySound = function (name) {
             this.currentSrc = null;
             this.src = "";
             this.srcObject = null;
+            this.terminated = true;
             this.remove();
         };
 
@@ -7262,6 +7266,11 @@ SpriteMorph.prototype.allBlockInstances = function (definition) {
         objects = stage.children.filter(morph =>
             morph instanceof SpriteMorph
         );
+        objects.slice().forEach(sprite => {
+            if (sprite.solution) {
+                objects.push(sprite.solution);
+            }
+        });
         objects.push(stage);
         objects.forEach(sprite =>
             blocks = blocks.concat(
@@ -11103,7 +11112,7 @@ SpriteBubbleMorph.prototype.dataAsMorph = function (data) {
         contents.isDraggable = !sprite.disableDraggingData;
 
         contents.selectForEdit = function () {
-            var script = data.toBlock(),
+            var script = data.toUserBlock(),
                 prepare = script.prepareToBeGrabbed,
                 ide = this.parentThatIsA(IDE_Morph)||
                     this.world().childThatIsA(IDE_Morph);
@@ -12535,7 +12544,7 @@ CellMorph.prototype.createContents = function () {
                 !SpriteMorph.prototype.disableDraggingData;
 
             this.contentsMorph.selectForEdit = function () {
-                var script = myself.contents.toBlock(),
+                var script = myself.contents.toUserBlock(),
                     prepare = script.prepareToBeGrabbed,
                     ide = this.parentThatIsA(IDE_Morph) ||
                         this.world().childThatIsA(IDE_Morph);
