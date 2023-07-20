@@ -1,7 +1,9 @@
+// extension functions
+
 SnapExtensions.primitives.set(
     'ts_setinst(name)',
     function (name) {
-        window.parent.currentInstrumentName = name.toLowerCase();
+        TuneScope.currentInstrumentName = name.toLowerCase();
     }
 );
 
@@ -9,30 +11,37 @@ SnapExtensions.primitives.set(
     'ts_setvol(percent)',
     function (percent) {
         let adjusted_percent = (percent === 0) ? 0.0001: percent;
-        window.parent.globalInstrumentVolume = adjusted_percent/100.0;
+        TuneScope.globalInstrumentVolume = adjusted_percent/100.0;
     }
 );
 
 SnapExtensions.primitives.set(
     'ts_setinstvol(name, percent)',
-    function (name, percent) {
-        name = name.toLowerCase();
+    function (instrumentName, percent) {
+        instrumentName = instrumentName.toLowerCase();
         let adjusted_percent = (percent === 0) ? 0.0001: percent;
-        window.parent.instrumentVolumes[name] = adjusted_percent/100.0;
+        TuneScope.instrumentVolumes[instrumentName] = adjusted_percent/100.0;
     }
 );
 
 SnapExtensions.primitives.set(
     'ts_playnote(note, duration)',
     function (note, noteLength) {
-        window.playNote(note, noteLength);
+        TuneScope.playNote(note, noteLength, );
+    }
+);
+
+SnapExtensions.primitives.set(
+    'ts_playnoteIns(note, duration, instrument)',
+    function (note, noteLength, instrument) {
+        TuneScope.playNote(note, noteLength, instrument.toLowerCase());
     }
 );
 
 SnapExtensions.primitives.set(
     'ts_getcurrentnote()',
     function () {
-        return window._currentNote
+        return TuneScope.currentNote
     }
 )
 
@@ -40,11 +49,11 @@ SnapExtensions.primitives.set(
     'ts_parsemidifile()',
     function () {
         const getMidiFile = async () => {
-            window._parsed = "";
+            TuneScope.midi.parsed = "";
             fileMidi = await window._selectFile(".mid", false);
             const arrayBuffer = await fileMidi.arrayBuffer()
-            const _parsedMidi = await new window.Midi(arrayBuffer)
-            window._parsed = _parsedMidi.toJSON();
+            const parsedMidi = await new window.Midi(arrayBuffer)
+            TuneScope.midi.parsed = parsedMidi.toJSON();
             world.children[0].broadcast("ts_file_input_received")
         }
         getMidiFile();
@@ -55,16 +64,109 @@ SnapExtensions.primitives.set(
     'ts_getparsed()',
     function() {
         world.children[0].broadcast("ts_no_file_upload")
-        let temp = window._objToArray(window._parsed);
+        let temp = window._objToArray(TuneScope.midi.parsed);
         temp = window.convertArrayToListRecursive(temp);
         return temp;
     }
 );
 
 SnapExtensions.primitives.set(
-    'ts_playtracks(tracklist, timesignature)',
+    'ts_playMIDI(controller, instrument)',
+    function (controller_name, instrument_name) {
+
+        function onEnabled(controller, instrument) {
+            let synth = window.WebMidi.getInputByName(controller);
+            let keyboard = synth.channels[1];
+            //remove any existing listeners
+            keyboard.removeListener("noteon")
+
+            // Listener for the keyboard, prints midi note number
+            keyboard.addListener("noteon", e => {
+                TuneScope.playNote(e.note.identifier, 0.5, instrument);
+            });
+        }
+
+        const playMidiController = async (controller, instrument) => {
+            if(controller === null || controller === "") return;
+
+            //enables the webmidi controller, doesn't record notes
+            window.WebMidi.enable((err) => {
+                if (err) {
+                    alert(err);
+                } else {
+                    onEnabled(controller, instrument);
+                }
+            });
+        }
+
+        playMidiController(controller_name, instrument_name);
+    }
+);
+
+SnapExtensions.primitives.set(
+    'ts_stopMIDI()',
+    function() {
+        window.WebMidi.disable();
+    }
+)
+
+SnapExtensions.primitives.set(
+    'ts_settone(id, frequency, amplitude, balance)',
+    function (id, freq, ampl, bal) {
+        var created = false;
+        if (!window.tones[id]) {
+          TuneScope.tones[id] = new window.Tone(id);
+          created = true;
+        } else {
+            TuneScope.tones[id].turnOff();
+            created = true;
+        }
+
+        TuneScope.tones[id].setFreq(freq);
+        TuneScope.tones[id].setAmpl(ampl * 100);
+        TuneScope.tones[id].setPan(bal);
+        created && TuneScope.tones[id].turnOn();
+    }
+);
+
+SnapExtensions.primitives.set(
+    'ts_turntoneon(id, bool)',
+    function (id, on) {
+        if (!TuneScope.tones[id]) {
+          return;
+        }
+
+        if (on) {
+          TuneScope.tones[id].turnOn();
+        } else {
+          TuneScope.tones[id].turnOff();
+        }
+    }
+);
+
+SnapExtensions.primitives.set(
+    'ts_stoptones()',
+    function () {
+        const vals = Object.values(TuneScope.tones);
+
+        for (let i = 0; i < vals.length; i++) {
+          const currTone = vals[i];
+          currTone.turnOff();
+        }
+    }
+);
+
+SnapExtensions.primitives.set(
+    'ts_loaded()',
+    function () {
+        return TuneScope.loadedTuneScope === true;
+    }
+);
+
+SnapExtensions.primitives.set(
+    'ts_playtracks(tracklist, timesignature, tempo)',
     function (tracksList, timeSignature, tempo) {
-        window.parent._ts_pausePlayback = false;
+        TuneScope._ts_pausePlayback = false;
         const multiplyArray = (arr, length) =>
           Array.from({ length }, () => arr).flat()
 
@@ -78,23 +180,32 @@ SnapExtensions.primitives.set(
 
         const playTrackMeasure = async (currTrack, measureIndex, beatsPerMeasure, tempo, instrument) => {
             var elapsedMeasureTime = 0;
-            const timeEndIndex = beatsPerMeasure[0] * (window.baseTempo / tempo);
+            const timeEndIndex = beatsPerMeasure[0] * (TuneScope.baseTempo / tempo);
 
             /**
              * We can calculate in seconds how long the measure lasts in seconds and then simply calculate when we are past the elapsed time in seconds and this is how we synchronize measures
              */
             while (elapsedMeasureTime < timeEndIndex) {
-                if(window.parent._ts_pausePlayback) break;
+                if(TuneScope._ts_pausePlayback) break;
                 const note = currTrack[measureIndex][0];
-                const noteLength = currTrack[measureIndex][1];
+                const fullNoteLength = TuneScope.noteLengthToTimeValue(currTrack[measureIndex][1]);
+                var noteLength = fullNoteLength;
+                var restLength = 0
+
+                if (currTrack[measureIndex][2]) {
+                    newDuration = TuneScope.getArticulation(fullNoteLength, currTrack[measureIndex][2])
+                    noteLength = newDuration.length;
+                    restLength = newDuration.restLength;
+                }
+
                 measureIndex++; //increment for the next index in the track
 
                 // play the note and wait
-                await window.playNote(note, noteLength, instrument);
-                await wait(noteLength * 1000)
+                await TuneScope.playNote(note, noteLength, instrument);
+                await wait(fullNoteLength * 1000)
 
                 // we increment i with respect to the number of beats the current note occupies in a measure
-                elapsedMeasureTime += noteLength;
+                elapsedMeasureTime += fullNoteLength;
             }
 
         }
@@ -103,7 +214,7 @@ SnapExtensions.primitives.set(
             // verify inputs
             if (!tracksList.contents) return;
 
-            const beatsPerMeasure = window.timeSignatureToBeatsPerMeasure[timeSignature];
+            const beatsPerMeasure = TuneScope.timeSignatureToBeatsPerMeasure(timeSignature);
 
             var tracks = window.convertListToArrayRecursive(tracksList);
 
@@ -119,6 +230,7 @@ SnapExtensions.primitives.set(
             // this ensures that we have a deinitive track length
             for (let i = 0; i < tracks.length; i++) {
                 let currTrack = tracks[i];
+                console.log(currTrack)
                 if (currTrack[0][0] === "melody" || currTrack[0][0] === "chords") {
                     definitiveTrackIndex = i;
                     haveSetTrackLength = true;
@@ -128,7 +240,7 @@ SnapExtensions.primitives.set(
 
 
             if (!haveSetTrackLength) {
-                console.error("No Melody or Chord track provided, only Chord/Drum Loop")
+                throw new Error("No Melody or Chord track provided, only Chord/Drum Loop")
                 return;
             }
 
@@ -146,10 +258,10 @@ SnapExtensions.primitives.set(
                     //Reassign the durations list to duration in seconds 
                     //jth (Note, Duration) pair
                     if (!window.isNumber(currTrack[j][1])) {
-                        currTrack[j][1] = window.noteLengthToTimeValue[currTrack[j][1]] * (window.baseTempo / tempo);
+                        currTrack[j][1] = TuneScope.noteLengthToTimeValue(currTrack[j][1]) * (TuneScope.baseTempo / tempo);
                         console.log("the number is " + currTrack[j][1]);
                     } else {
-                        currTrack[j][1] = parseFloat(currTrack[j][1]);
+                        currTrack[j][1] = parseFloat(currTrack[j][1]) * (TuneScope.baseTempo / tempo);
                         console.log("the number is " + currTrack[j][1]);
                     }
                 }
@@ -160,7 +272,7 @@ SnapExtensions.primitives.set(
             for (let j = 1; j < defTrack.length; j++) {
                 totalSeconds += defTrack[j][1];
             }
-            const secondsPerMeasure = (window.baseTempo / tempo) * beatsPerMeasure[0]
+            const secondsPerMeasure = (TuneScope.baseTempo / tempo) * beatsPerMeasure[0]
             const totalMeasures = Math.ceil(totalSeconds / secondsPerMeasure)
 
             //convert any melody/chord/drum loop to a regular track
@@ -235,14 +347,14 @@ SnapExtensions.primitives.set(
 
             // Play Measures track by track
             for (let i = 0; i < totalMeasures; i++) {
-                if(window.parent._ts_pausePlayback) break;
+                if(TuneScope._ts_pausePlayback) break;
                 console.log("Playing measure " + (i + 1));
                 const measureResults = [];
 
                 // count for the number of beats that have passed since the last measure
                 // e.g. in 4/4, measure 3 will have 2*4 = 8 beats elapsed. Next measure starts
                 // on beat 8 (0 indexed)
-                let elapsedTime = i * (window.baseTempo / tempo) * beatsPerMeasure[0];
+                let elapsedTime = i * (TuneScope.baseTempo / tempo) * beatsPerMeasure[0];
 
                 //per track
                 for (let j = 0; j < tracks.length; j++) {
@@ -278,95 +390,5 @@ SnapExtensions.primitives.set(
         }
 
         playTracks(tracksList, timeSignature, tempo);
-    }
-);
-
-SnapExtensions.primitives.set(
-    'ts_playMIDI(controller, instrument)',
-    function (controller_name, instrument_name) {
-
-        function onEnabled(controller, instrument) {
-            let synth = window.WebMidi.getInputByName(controller);
-            let keyboard = synth.channels[1];
-            //remove any existing listeners
-            keyboard.removeListener("noteon")
-
-            // Listener for the keyboard, prints midi note number
-            keyboard.addListener("noteon", e => {
-                window.playNote(e.note.identifier, 0.5, instrument);
-            });
-        }
-
-        const playMidiController = async (controller, instrument) => {
-            if(controller === null || controller === "") return;
-
-            //enables the webmidi controller, doesn't record notes
-            window.WebMidi.enable((err) => {
-                if (err) {
-                    alert(err);
-                } else {
-                    onEnabled(controller, instrument);
-                }
-            });
-        }
-
-        playMidiController(controller_name, instrument_name);
-    }
-);
-
-SnapExtensions.primitives.set(
-    'ts_stopMIDI()',
-    function() {
-        window.WebMidi.disable();
-    }
-)
-
-SnapExtensions.primitives.set(
-    'ts_settone(id, frequency, amplitude, balance)',
-    function (id, freq, ampl, bal) {
-        var created = false;
-        if (!window.tones[id]) {
-          window.tones[id] = new window._Tone(id);
-          created = true;
-        }
-
-        window.tones[id].setFreq(freq);
-        window.tones[id].setAmpl(ampl * 100);
-        window.tones[id].setPan(bal);
-        window.tones[id].turnOn();
-    }
-);
-
-SnapExtensions.primitives.set(
-    'ts_turntoneon(id, bool)',
-    function (id, on) {
-        if (!window.tones[id]) {
-          return;
-        }
-
-        if (on) {
-          window.tones[id].turnOn();
-        } else {
-          window.tones[id].turnOff();
-        }
-    }
-);
-
-SnapExtensions.primitives.set(
-    'ts_stoptones()',
-    function () {
-        const vals = Object.values(window.tones);
-
-        for (let i = 0; i < vals.length; i++) {
-          const currTone = vals[i];
-          currTone.turnOff();
-        }
-    }
-);
-
-SnapExtensions.primitives.set(
-    'ts_loaded()',
-    function () {
-        return window.parent.loadedTuneScope === true;
     }
 );
