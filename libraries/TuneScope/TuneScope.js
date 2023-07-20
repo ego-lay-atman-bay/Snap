@@ -240,7 +240,7 @@ SnapExtensions.primitives.set(
 
 
             if (!haveSetTrackLength) {
-                console.error("No Melody or Chord track provided, only Chord/Drum Loop")
+                throw new Error("No Melody or Chord track provided, only Chord/Drum Loop")
                 return;
             }
 
@@ -261,7 +261,7 @@ SnapExtensions.primitives.set(
                         currTrack[j][1] = TuneScope.noteLengthToTimeValue(currTrack[j][1]) * (TuneScope.baseTempo / tempo);
                         console.log("the number is " + currTrack[j][1]);
                     } else {
-                        currTrack[j][1] = parseFloat(currTrack[j][1]);
+                        currTrack[j][1] = parseFloat(currTrack[j][1]) * (TuneScope.baseTempo / tempo);
                         console.log("the number is " + currTrack[j][1]);
                     }
                 }
