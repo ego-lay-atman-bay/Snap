@@ -259,7 +259,7 @@ SnapSerializer.uber = XML_Serializer.prototype;
 
 // SnapSerializer constants:
 
-SnapSerializer.prototype.app = 'Snap! 9.0, https://snap.berkeley.edu';
+SnapSerializer.prototype.app = 'Snap!-mod-(ego-lay-atman-bay) 9.0, https://ego-lay-atman-bay.github.io/Snap';
 
 SnapSerializer.prototype.thumbnailSize = new Point(160, 120);
 
