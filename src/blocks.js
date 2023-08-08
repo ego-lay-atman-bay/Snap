@@ -2954,7 +2954,8 @@ BlockMorph.prototype.init = function () {
     this.color = new Color(102, 102, 102);
     this.cachedInputs = null;
 
-    this.cursorStyle = 'pointer'
+    this.cursorStyle = 'grab'
+    this.cursorGrabStyle = 'grabbing'
 };
 
 BlockMorph.prototype.scriptTarget = function (noError) {
@@ -10573,8 +10574,6 @@ InputSlotMorph.prototype.init = function (
     contents.isDraggable = false;
     contents.enableSelecting();
     this.setContents(text);
-
-    this.cursorStyle = 'text';
 };
 
 // InputSlotMorph accessing:
@@ -11530,6 +11529,8 @@ InputSlotMorph.prototype.fixLayout = function () {
         contents = this.contents(),
         arrow = this.arrow(),
         tp = this.topBlock();
+    
+    arrow.cursorStyle = 'default';
 
     contents.isNumeric = this.isNumeric && !this.isAlphanumeric;
     contents.isEditable = (!this.isReadOnly);
@@ -11610,6 +11611,12 @@ InputSlotMorph.prototype.fixLayout = function () {
         tp.fullChanged();
         this.parent.fixLayout();
         tp.fullChanged();
+    }
+
+    if (this.isReadOnly) {
+        this.cursorStyle = 'default';
+    } else {
+        this.cursorStyle = 'text';
     }
 };
 
@@ -13102,7 +13109,6 @@ TextSlotMorph.prototype.init = function (
     contents.isDraggable = false;
     contents.enableSelecting();
     this.setContents(text);
-
 };
 
 // TextSlotMorph accessing:
