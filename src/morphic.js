@@ -3236,6 +3236,7 @@ Morph.prototype.init = function () {
     this.customContextMenu = null;
     this.lastTime = Date.now();
     this.onNextStep = null; // optional function to be run once
+    this.cursorStyle = null;
 };
 
 // Morph string representation: e.g. 'a Morph 2 [20@45 | 130@250]'
@@ -4514,13 +4515,6 @@ Morph.prototype.developersMenu = function () {
     menu.addItem(
         "pic...",
         () => {
-            // var morph = new Morph()
-            //     img = morph.fullImage().toDataURL(),
-            //     blob = new Blob([img, {type: 'image/png'}]),
-            //     lnk = document.createElement('a');
-            // lnk.href = img;
-            // lnk.download = blob;
-            // lnk.click();
             var imgURL = this.fullImage().toDataURL(),
                 doc, body, tag, str;
             try {
@@ -11271,6 +11265,7 @@ HandMorph.prototype.init = function (aWorld) {
     // properties for caching dragged objects:
     this.cachedFullImage = null;
     this.cachedFullBounds = null;
+    this.cursorStyle = 'auto';
 };
 
 // HandMorph dragging optimizations:
@@ -11612,6 +11607,8 @@ HandMorph.prototype.processMouseMove = function (event) {
         mouseOverBoundsNew,
         morph,
         topMorph;
+    
+    this.cursorStyle = null;
 
     pos = new Point(
         event.pageX - posInDocument.x,
@@ -11716,6 +11713,20 @@ HandMorph.prototype.processMouseMove = function (event) {
     });
     this.mouseOverList = mouseOverNew;
     this.mouseOverBounds = mouseOverBoundsNew;
+
+    if (this.mouseButton === 'left' && this.morphToGrab) {
+        this.cursorStyle = this.morphToGrab.cursorStyle;
+    }
+    if (this.cursorStyle == null) {
+    
+        for (const morph of this.mouseOverList) {
+            if (morph.cursorStyle != null) {
+                this.cursorStyle = morph.cursorStyle;
+                break;
+            }
+        }
+    }
+    this.world.worldCanvas.style.cursor = this.cursorStyle;
 };
 
 HandMorph.prototype.processMouseScroll = function (event) {
