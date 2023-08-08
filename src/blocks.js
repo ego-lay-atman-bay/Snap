@@ -2954,7 +2954,11 @@ BlockMorph.prototype.init = function () {
     this.color = new Color(102, 102, 102);
     this.cachedInputs = null;
 
-    this.cursorStyle = 'grab'
+    if (this.isPrototype) {
+        this.cursorStyle = 'pointer'
+    } else {
+        this.cursorStyle = 'grab'
+    }
     this.cursorGrabStyle = 'grabbing'
 };
 
