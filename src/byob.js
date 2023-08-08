@@ -3104,6 +3104,9 @@ PrototypeHatBlockMorph.prototype.init = function (definition) {
     proto.refreshPrototypeSlotTypes(); // show slot type indicators
     this.fixLayout();
     proto.fixBlockColor(this, true);
+
+    this.cursorStyle = 'default';
+    this.cursorGrabStyle = null;
 };
 
 PrototypeHatBlockMorph.prototype.mouseClickLeft = function () {
@@ -3172,6 +3175,13 @@ PrototypeHatBlockMorph.prototype.enableBlockVars = function (choice) {
     this.replaceInput(this.parts()[0], prot);
     this.spec = null;
 };
+
+// PrototypeHatBlockMorph.prototype.fixLayout = function () {
+//     // this.uber.fixLayout()
+    
+    // this.cursorStyle = 'default';
+    // this.cursorGrabStyle = null;
+// }
 
 // BlockLabelFragment //////////////////////////////////////////////////
 
