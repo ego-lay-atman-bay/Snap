@@ -2953,6 +2953,8 @@ BlockMorph.prototype.init = function () {
     BlockMorph.uber.init.call(this);
     this.color = new Color(102, 102, 102);
     this.cachedInputs = null;
+
+    this.cursorStyle = 'pointer'
 };
 
 BlockMorph.prototype.scriptTarget = function (noError) {
@@ -5686,6 +5688,8 @@ BlockMorph.prototype.mouseEnterBounds = function (dragged) {
             }
         }
     }
+
+    
 };
 
 BlockMorph.prototype.mouseLeaveBounds = function (dragged) {
@@ -10569,6 +10573,8 @@ InputSlotMorph.prototype.init = function (
     contents.isDraggable = false;
     contents.enableSelecting();
     this.setContents(text);
+
+    this.cursorStyle = 'text';
 };
 
 // InputSlotMorph accessing:
