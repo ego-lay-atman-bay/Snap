@@ -1302,6 +1302,8 @@ ListWatcherMorph.prototype.init = function (list, parentCell) {
     this.handle.fixLayout();
     this.update();
     this.fixLayout();
+
+    this.cursorStyle = 'default';
 };
 
 // ListWatcherMorph updating:

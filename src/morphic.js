@@ -4844,6 +4844,8 @@ HandleMorph.prototype.init = function (
     }
     this.setExtent(new Point(size, size));
     this.fixLayout();
+
+    this.cursorStyle = 'nwse-resize';
 };
 
 // HandleMorph drawing:
@@ -6929,6 +6931,8 @@ SliderButtonMorph.prototype.init = function (orientation) {
     this.is3D = false;
     this.hasMiddleDip = true;
     SliderButtonMorph.uber.init.call(this, orientation);
+
+    this.cursorStyle = 'pointer';
 };
 
 SliderButtonMorph.prototype.autoOrientation = nop;
@@ -9424,6 +9428,12 @@ TextMorph.prototype.fixLayout = function () {
         if (this.parent.layoutChanged) {
             this.parent.layoutChanged();
         }
+    }
+
+    if (this.isEditable) {
+        this.cursorStyle = 'text';
+    } else {
+        this.cursorStyle = null;
     }
 };
 

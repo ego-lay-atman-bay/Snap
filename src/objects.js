@@ -12484,6 +12484,8 @@ CellMorph.prototype.createContents = function () {
         this.version = null;
     }
 
+    this.cursorStyle = null;
+
     if (!isSameList && !isSameTable) {
         if (this.contents instanceof Morph) {
             if (isSnapObject(this.contents)) {
@@ -12511,6 +12513,7 @@ CellMorph.prototype.createContents = function () {
             if (this.isEditable) {
                 this.contentsMorph.isEditable = true;
                 this.contentsMorph.enableSelecting();
+                this.cursorStyle = 'text';
             }
             this.contentsMorph.setColor(WHITE);
         } else if (typeof this.contents === 'boolean') {
@@ -12542,7 +12545,7 @@ CellMorph.prototype.createContents = function () {
             // support blocks to be dragged out of watchers:
             this.contentsMorph.isDraggable =
                 !SpriteMorph.prototype.disableDraggingData;
-
+            
             this.contentsMorph.selectForEdit = function () {
                 var script = myself.contents.toUserBlock(),
                     prepare = script.prepareToBeGrabbed,
@@ -12562,6 +12565,11 @@ CellMorph.prototype.createContents = function () {
                 script.setPosition(this.position());
                 return script;
             };
+
+            if (this.contentsMorph.isDraggable) {
+                this.contentsMorph.cursorStyle = 'grab';
+                this.contentsMorph.cursorGrabStyle = 'grabbing';
+            }
         } else if (this.contents instanceof Costume) {
             img = this.contents.thumbnail(new Point(40, 40));
             this.contentsMorph = new Morph();
@@ -12597,6 +12605,11 @@ CellMorph.prototype.createContents = function () {
                 icon.setCenter(this.center());
                 return icon;
             };
+
+            if (this.contentsMorph.isDraggable) {
+                this.contentsMorph.cursorStyle = 'grab';
+                this.contentsMorph.cursorGrabStyle = 'grabbing';
+            }
         } else if (this.contents instanceof Sound) {
             this.contentsMorph = new SymbolMorph('notes', 30);
 
@@ -12627,6 +12640,11 @@ CellMorph.prototype.createContents = function () {
                 icon.setCenter(this.center());
                 return icon;
             };
+
+            if (this.contentsMorph.isDraggable) {
+                this.contentsMorph.cursorStyle = 'grab';
+                this.contentsMorph.cursorGrabStyle = 'grabbing';
+            }
         } else if (this.contents instanceof List) {
             if (this.contents.isTable()) {
                 this.contentsMorph = new TableFrameMorph(new TableMorph(
@@ -12859,6 +12877,9 @@ WatcherMorph.prototype.init = function (
     if (isHidden) { // for de-serializing
         this.hide();
     }
+
+    this.cursorStyle = 'grab';
+    this.cursorGrabStyle = 'grabbing';
 };
 
 // WatcherMorph accessing:

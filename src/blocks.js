@@ -8209,6 +8209,8 @@ ScriptsMorph.prototype.init = function () {
     this.isAnimating = false;
     this.dropRecord = null;
     this.recordDrop();
+
+    this.cursorGrabStyle = 'grabbing'
 };
 
 // ScriptsMorph deep copying:
@@ -11597,8 +11599,6 @@ InputSlotMorph.prototype.fixLayout = function () {
         contents = this.contents(),
         arrow = this.arrow(),
         tp = this.topBlock();
-    
-    arrow.cursorStyle = 'default';
 
     contents.isNumeric = this.isNumeric && !this.isAlphanumeric;
     contents.isEditable = (!this.isReadOnly);
@@ -12304,6 +12304,8 @@ TemplateSlotMorph.prototype.init = function (name) {
     this.fixLayout();
     this.isDraggable = false;
     this.isStatic = true; // I cannot be exchanged
+
+    template.cursorStyle = 'pointer';
 };
 
 // TemplateSlotMorph accessing:
@@ -12464,6 +12466,8 @@ BooleanSlotMorph.prototype.init = function (initialValue) {
     BooleanSlotMorph.uber.init.call(this);
     this.alpha = 1;
     this.fixLayout();
+
+    this.cursorStyle = 'pointer';
 };
 
 BooleanSlotMorph.prototype.getSpec = function () {
@@ -13070,6 +13074,8 @@ ArrowMorph.prototype.init = function (direction, size, padding, color, isLbl) {
     this.bounds.setWidth(this.size);
     this.bounds.setHeight(this.size);
     this.rerender();
+
+    this.cursorStyle = 'default';
 };
 
 ArrowMorph.prototype.setSize = function (size) {
@@ -13231,6 +13237,8 @@ ColorSlotMorph.prototype.init = function (clr) {
     ColorSlotMorph.uber.init.call(this);
     this.alpha = 1;
     this.setColor(clr || new Color(145, 26, 68));
+
+    this.cursorStyle = 'pointer';
 };
 
 ColorSlotMorph.prototype.getSpec = function () {

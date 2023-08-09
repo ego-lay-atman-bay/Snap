@@ -12427,6 +12427,8 @@ StageHandleMorph.prototype.init = function (target) {
             IDE_Morph.prototype.backgroundColor : new Color(190, 190, 190);
     this.isDraggable = false;
     this.setExtent(new Point(12, 50));
+
+    this.cursorStyle = 'ew-resize';
 };
 
 // StageHandleMorph drawing:
