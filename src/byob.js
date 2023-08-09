@@ -3762,6 +3762,8 @@ InputSlotDialogMorph.prototype.createTypeButtons = function () {
     };
 
     arrow.refresh(this.isLaunchingExpanded);
+
+    arrow.cursorStyle = 'pointer';
 };
 
 InputSlotDialogMorph.prototype.addTypeButton

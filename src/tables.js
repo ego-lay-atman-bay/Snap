@@ -349,6 +349,11 @@ TableCellMorph.prototype.render = function (ctx) {
         ((raw instanceof Context) ||
             (raw instanceof Costume) ||
             (raw instanceof Sound));
+    
+    if (this.isDraggable) {
+        this.cursorStyle = 'grab';
+        this.cursorGrabStyle = 'grabbing';
+    }
 
     ctx.fillStyle = background;
     if (this.shouldBeList()) {
@@ -384,6 +389,17 @@ TableCellMorph.prototype.render = function (ctx) {
         x = Math.max((width - txtWidth) / 2, 0);
         y = Math.max((height - txtHeight) / 2, 0);
         ctx.fillText(dta, x, txtHeight + y);
+    }
+
+    if (this.isLabel) {
+        tm = this.parentThatIsA(TableMorph);
+        x = tm.world().hand.top() - (tm.top() + 5);
+        c = tm.columnAt(x);
+        if (c == 0) {
+            this.cursorStyle = 'ew-resize';
+        } else {
+            this.cursorStyle = 'ns-resize';
+        }
     }
 };
 

@@ -176,6 +176,8 @@ PushButtonMorph.prototype.init = function (
     this.createLabel();
     this.fixLayout();
     this.rerender();
+
+    this.cursorStyle = 'pointer';
 };
 
 // PushButtonMorph layout:
@@ -1357,6 +1359,8 @@ ToggleElementMorph.prototype.init = function (
     // override inherited properties:
     this.color = element.color;
     this.createLabel();
+
+    this.cursorStyle = 'pointer';
 };
 
 // ToggleElementMorph drawing:
@@ -3329,7 +3333,12 @@ InputFieldMorph.prototype.fixLayout = function () {
         this.right() - arrow.width() - this.edge,
         contents.top()
     ));
-
+    
+    if (this.isReadOnly) {
+        this.cursorStyle = null;
+    } else {
+        this.cursorStyle = 'text';
+    }
 };
 
 // InputFieldMorph events:
