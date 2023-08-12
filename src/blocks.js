@@ -8171,8 +8171,6 @@ ScriptsMorph.prototype.init = function () {
     this.isAnimating = false;
     this.dropRecord = null;
     this.recordDrop();
-
-    this.cursorGrabStyle = 'grabbing'
 };
 
 // ScriptsMorph deep copying:

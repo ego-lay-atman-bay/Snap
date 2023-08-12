@@ -1800,6 +1800,8 @@ IDE_Morph.prototype.createPalette = function (forSearching) {
     this.palette.acceptsDrops = true;
     this.palette.enableAutoScrolling = false;
     this.palette.contents.acceptsDrops = false;
+    
+    this.palette.cursorGrabStyle = 'grabbing';
 
     if (this.scene.unifiedPalette) {
         this.palette.adjustScrollBars = function () {
@@ -2200,6 +2202,7 @@ IDE_Morph.prototype.createSpriteEditor = function () {
         };
         this.add(this.spriteEditor);
     }
+    this.spriteEditor.cursorGrabStyle = 'grabbing';
 
     this.spriteEditor.mouseEnterDragging = (morph) => {
         if (morph instanceof BlockMorph) {
@@ -12337,6 +12340,8 @@ PaletteHandleMorph.prototype.init = function (target) {
             IDE_Morph.prototype.backgroundColor : new Color(190, 190, 190);
     this.isDraggable = false;
     this.setExtent(new Point(12, 50));
+
+    this.cursorStyle = 'ew-resize';
 };
 
 // PaletteHandleMorph drawing:

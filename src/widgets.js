@@ -1554,6 +1554,8 @@ DialogBoxMorph.prototype.init = function (target, action, environment) {
     this.createLabel();
     this.createButtons();
     this.setExtent(new Point(300, 150));
+
+    this.cursorGrabStyle = 'move'
 };
 
 // DialogBoxMorph ops
