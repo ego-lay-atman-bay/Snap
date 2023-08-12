@@ -2687,6 +2687,8 @@ BlockEditorMorph.prototype.init = function (definition, target) {
     scripts.scrollFrame = scriptsFrame;
     scripts.updateToolbar();
 
+    scriptsFrame.cursorGrabStyle = 'grabbing'
+
     this.addBody(scriptsFrame);
     this.addButton('ok', 'OK');
     if (!isLive) {
