@@ -4676,7 +4676,7 @@ IDE_Morph.prototype.settingsMenu = function () {
         false
     );
     addPreference(
-        'Dark design',
+        'Dark theme',
         () => {
             if (SnapTheme.isDark) {
                 return this.lightTheme();
@@ -4684,8 +4684,8 @@ IDE_Morph.prototype.settingsMenu = function () {
             this.darkTheme();
         },
         SnapTheme.isDark,
-        'uncheck for default\nGUI design',
-        'check for alternative\nGUI design',
+        'uncheck for flat\nGUI theme',
+        'check for dark\nGUI theme',
         false
     );
     addPreference(
