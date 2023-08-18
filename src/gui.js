@@ -304,49 +304,6 @@ IDE_Morph.prototype.applyTheme = function () {
     ToggleElementMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
 }
 
-// IDE_Morph.prototype.setDefaultDesign = function () {
-//     MorphicPreferences.isFlat = false;
-//     SpriteMorph.prototype.paletteColor = new Color(30, 30, 30);
-//     SpriteMorph.prototype.paletteTextColor = new Color(230, 230, 230);
-//     StageMorph.prototype.paletteTextColor
-//         = SpriteMorph.prototype.paletteTextColor;
-//     StageMorph.prototype.paletteColor = SpriteMorph.prototype.paletteColor;
-//     SpriteMorph.prototype.sliderColor
-//         = SpriteMorph.prototype.paletteColor.lighter(30);
-
-//     IDE_Morph.prototype.buttonContrast = 30;
-//     IDE_Morph.prototype.backgroundColor = new Color(10, 10, 10);
-//     IDE_Morph.prototype.frameColor = SpriteMorph.prototype.paletteColor;
-
-//     IDE_Morph.prototype.groupColor
-//         = SpriteMorph.prototype.paletteColor.lighter(5);
-//     IDE_Morph.prototype.sliderColor = SpriteMorph.prototype.sliderColor;
-//     IDE_Morph.prototype.buttonLabelColor = WHITE;
-//     IDE_Morph.prototype.tabColors = [
-//         IDE_Morph.prototype.groupColor.darker(50),
-//         IDE_Morph.prototype.groupColor.darker(25),
-//         IDE_Morph.prototype.groupColor
-//     ];
-//     IDE_Morph.prototype.rotationStyleColors = IDE_Morph.prototype.tabColors;
-//     IDE_Morph.prototype.appModeColor = BLACK;
-//     IDE_Morph.prototype.scriptsPaneTexture = this.scriptsTexture();
-//     IDE_Morph.prototype.padding = 1;
-
-//     SpriteIconMorph.prototype.labelColor
-//         = IDE_Morph.prototype.buttonLabelColor;
-//     CostumeIconMorph.prototype.labelColor
-//         = IDE_Morph.prototype.buttonLabelColor;
-//     SoundIconMorph.prototype.labelColor
-//         = IDE_Morph.prototype.buttonLabelColor;
-//     TurtleIconMorph.prototype.labelColor
-//         = IDE_Morph.prototype.buttonLabelColor;
-//     SceneIconMorph.prototype.labelColor
-//         = IDE_Morph.prototype.buttonLabelColor;
-
-//     SyntaxElementMorph.prototype.contrast = 65;
-//     ScriptsMorph.prototype.feedbackColor = WHITE;
-// };
-
 IDE_Morph.prototype.scriptsTexture = function () {
     var pic = newCanvas(new Point(100, 100)), // bigger scales faster
         ctx = pic.getContext('2d'),
