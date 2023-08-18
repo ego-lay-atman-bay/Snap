@@ -2716,7 +2716,7 @@ function BlockLabelMorph(
 
 BlockLabelMorph.prototype.getRenderColor = function () {
     var block = this.parentThatIsA(BlockMorph);
-    if (MorphicPreferences.isFlat) {
+    if (SnapTheme.backgroundColor.hsl()[2] > 0.5) {
         return !block || block.alpha > 0.5 ? this.color
             : block.color.solid().darker(Math.max(block.alpha * 200, 0.1));
     }
@@ -2753,7 +2753,7 @@ function BlockSymbolMorph(name, size, color, shadowOffset, shadowColor) {
 
 BlockSymbolMorph.prototype.getRenderColor = function () {
     var block = this.parentThatIsA(BlockMorph);
-    if (MorphicPreferences.isFlat) {
+    if (SnapTheme.backgroundColor.hsl()[2] > 0.5) {
         if (this.isFading) {
             return this.color.mixed(block.alpha, WHITE);
         }
@@ -8211,7 +8211,7 @@ ScriptsMorph.prototype.render = function (aContext) {
 };
 
 ScriptsMorph.prototype.getRenderColor = function () {
-    if (MorphicPreferences.isFlat ||
+    if (SnapTheme.backgroundColor.hsl()[2] > 0.5 ||
             SyntaxElementMorph.prototype.alpha > 0.85) {
         return this.color;
     }
@@ -12140,7 +12140,7 @@ function InputSlotStringMorph(
 }
 
 InputSlotStringMorph.prototype.getRenderColor = function () {
-    if (MorphicPreferences.isFlat) {
+    if (SnapTheme.backgroundColor.hsl()[2] > 0.5) {
         if (this.isEditable) {
             return this.color;
         }
@@ -13056,7 +13056,7 @@ ArrowMorph.prototype.render = function (ctx) {
 
 ArrowMorph.prototype.getRenderColor = function () {
     if (this.isBlockLabel) {
-        if (MorphicPreferences.isFlat) {
+        if (SnapTheme.backgroundColor.hsl()[2] > 0.5) {
             return this.color;
         }
         return SyntaxElementMorph.prototype.alpha > 0.5 ? this.color : WHITE;
@@ -13491,7 +13491,7 @@ MultiArgMorph.prototype.init = function (
     listSymbol.alpha = 0.5;
     listSymbol.getRenderColor = function () {
         // behave the same as arrows when fading the blocks
-        if (MorphicPreferences.isFlat) {
+        if (SnapTheme.backgroundColor.hsl()[2] > 0.5) {
             return this.color;
         }
         return SyntaxElementMorph.prototype.alpha > 0.5 ? this.color : WHITE;
