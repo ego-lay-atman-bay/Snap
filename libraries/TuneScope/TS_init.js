@@ -2,20 +2,6 @@
 var AudioContextFunc = window.AudioContext || window.webkitAudioContext;
 var audioContext = new AudioContextFunc();
 
-// calculate midi pitches and frequencies
-var tempMidiPitches = {}
-var tempMidiFreqs = {}
-
-let notes = [
-    "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
-]
-
-for (var i = 0; i <= 127; i++) {
-    let note = notes[i % 12] + Math.floor((i-12)/12);
-    tempMidiPitches[note] = i;
-    tempMidiFreqs[note] = 440 * Math.pow(2, (i - 69)/12)
-}
-
 window._currentNote = ""
 window._parsed = ""
 window._isParsed = false
@@ -23,317 +9,447 @@ window.parent._ts_pausePlayback = false;
 
 const _ide = world.children[0];
 const original_stop = _ide.stopAllScripts.bind(_ide);
-_ide.stopAllScripts = function() {
-  original_stop();
-  window.parent._ts_pausePlayback = true;
+_ide.stopAllScripts = function () {
+    original_stop();
+    window.parent._ts_pausePlayback = true;
 }
 
-const _convertToSharp = (note) => {
-    const splitByFlat = note.split("b");
-    if (splitByFlat.length < 2) return note; // does not include a flat
+var TuneScope = {
+    currentNote: '',
+    pausePlayback: false,
+    midi: {
+        parsed: '',
+        isParsed: false
+    },
+    baseTempo: 60,
 
-    const letter = splitByFlat[0];
-    const number = splitByFlat[1];
+    // instrument data
+    instrumentData: {
+        "accordion": {
+            path: "libraries/TuneScope/0230_Aspirin_sf2_file.js",
+            name: "_tone_0230_Aspirin_sf2_file"
+        },
+        "bass, acoustic": {
+            path: "libraries/TuneScope/0320_GeneralUserGS_sf2_file.js",
+            name: "_tone_0320_GeneralUserGS_sf2_file"
+        },
+        "bass, electric (finger)": {
+            path: "libraries/TuneScope/0350_JCLive_sf2_file.js",
+            name: "_tone_0350_JCLive_sf2_file"
+        },
+        "guitar, acoustic": {
+            path: "libraries/TuneScope/0241_JCLive_sf2_file.js",
+            name: "_tone_0241_JCLive_sf2_file"
+        },
+        "guitar, electric": {
+            path: "libraries/TuneScope/0260_JCLive_sf2_file.js",
+            name: "_tone_0260_JCLive_sf2_file"
+        },
+        "guitar, overdrive": {
+            path: "libraries/TuneScope/0291_LesPaul_sf2_file.js",
+            name: "_tone_0291_LesPaul_sf2_file"
+        },
+        "piano": {
+            path: "libraries/TuneScope/0020_JCLive_sf2_file.js",
+            name: "_tone_0020_JCLive_sf2_file"
+        },
+        "organ": {
+            path: "libraries/TuneScope/0180_Chaos_sf2_file.js",
+            name: "_tone_0180_Chaos_sf2_file"
+        },
+        "banjo": {
+            path: "libraries/TuneScope/1050_FluidR3_GM_sf2_file.js",
+            name: "_tone_1050_FluidR3_GM_sf2_file"
+        },
+        "saxophone": {
+            path: "libraries/TuneScope/0650_FluidR3_GM_sf2_file.js",
+            name: "_tone_0650_FluidR3_GM_sf2_file"
+        },
+        "shakuhachi": {
+            path: "libraries/TuneScope/0770_SBLive_sf2.js",
+            name: "_tone_0770_SBLive_sf2"
+        },
+        "sitar": {
+            path: "libraries/TuneScope/1040_Aspirin_sf2_file.js",
+            name: "_tone_1040_Aspirin_sf2_file"
+        },
+        "bassoon": {
+            path: "libraries/TuneScope/0700_FluidR3_GM_sf2_file.js",
+            name: "_tone_0700_FluidR3_GM_sf2_file"
+        },
+        "bass": {
+            path: "libraries/TuneScope/0350_JCLive_sf2_file.js",
+            name: "_tone_0350_JCLive_sf2_file"
+        },
+        "violin": {
+            path: "libraries/TuneScope/0400_JCLive_sf2_file.js",
+            name: "_tone_0400_JCLive_sf2_file"
+        },
+        "cello": {
+            path: "libraries/TuneScope/0420_JCLive_sf2_file.js",
+            name: "_tone_0420_JCLive_sf2_file"
+        },
+        "clarinet": {
+            path: "libraries/TuneScope/0710_Chaos_sf2_file.js",
+            name: "_tone_0710_Chaos_sf2_file"
+        },
+        "flute": {
+            path: "libraries/TuneScope/0730_JCLive_sf2_file.js",
+            name: "_tone_0730_JCLive_sf2_file"
+        },
+        "french horn": {
+            path: "libraries/TuneScope/0600_GeneralUserGS_sf2_file.js",
+            name: "_tone_0600_GeneralUserGS_sf2_file"
+        },
+        "harp": {
+            path: "libraries/TuneScope/0460_GeneralUserGS_sf2_file.js",
+            name: "_tone_0460_GeneralUserGS_sf2_file"
+        },
+        "koto": {
+            path: "libraries/TuneScope/1070_FluidR3_GM_sf2_file.js",
+            name: "_tone_1070_FluidR3_GM_sf2_file"
+        },
+        "marimba": {
+            path: "libraries/TuneScope/0121_FluidR3_GM_sf2_file.js",
+            name: "_tone_0121_FluidR3_GM_sf2_file"
+        },
+        "music box": {
+            path: "libraries/TuneScope/0100_SBLive_sf2.js",
+            name: "_tone_0100_SBLive_sf2"
+        },
+        "oboe": {
+            path: "libraries/TuneScope/0680_JCLive_sf2_file.js",
+            name: "_tone_0680_JCLive_sf2_file"
+        },
+        "trumpet": {
+            path: "libraries/TuneScope/0560_GeneralUserGS_sf2_file.js",
+            name: "_tone_0560_GeneralUserGS_sf2_file"
+        },
+        "tuba": {
+            path: "libraries/TuneScope/0580_GeneralUserGS_sf2_file.js",
+            name: "_tone_0580_GeneralUserGS_sf2_file"
+        },
+        "vibraphone": {
+            path: "libraries/TuneScope/0110_GeneralUserGS_sf2_file.js",
+            name: "_tone_0110_GeneralUserGS_sf2_file"
+        },
 
-    const indexOfLetter = notes.indexOf(letter);
-    if (indexOfLetter === -1) return note; // TODO: handle this error
-    let previousSharp;
-    if (indexOfLetter === 0) {
-        previousSharp = notes[notes.length - 1];
-    } else {
-        previousSharp = notes[indexOfLetter - 1];
+        // drums
+
+        "cabasa": {
+            path: "libraries/TuneScope/12869_6_JCLive_sf2_file.js",
+            name: "_drum_69_6_JCLive_sf2_file"
+        },
+        "snare drum": {
+            path: "libraries/TuneScope/12840_6_JCLive_sf2_file.js",
+            name: "_drum_40_6_JCLive_sf2_file"
+        },
+        "bass drum": {
+            path: "libraries/TuneScope/12835_21_FluidR3_GM_sf2_file.js",
+            name: "_drum_35_21_FluidR3_GM_sf2_file"
+        },
+        "closed hi-hat": {
+            path: "libraries/TuneScope/12842_0_FluidR3_GM_sf2_file.js",
+            name: "_drum_42_0_FluidR3_GM_sf2_file"
+        },
+        "open hi-hat": {
+            path: "libraries/TuneScope/12846_0_FluidR3_GM_sf2_file.js",
+            name: "_drum_46_0_FluidR3_GM_sf2_file"
+        },
+        "mid tom": {
+            path: "libraries/TuneScope/12847_21_FluidR3_GM_sf2_file.js",
+            name: "_drum_47_21_FluidR3_GM_sf2_file"
+        },
+        "high tom": {
+            path: "libraries/TuneScope/12848_21_FluidR3_GM_sf2_file.js",
+            name: "_drum_48_21_FluidR3_GM_sf2_file"
+        },
+        "crash cymbal": {
+            path: "libraries/TuneScope/12849_21_FluidR3_GM_sf2_file.js",
+            name: "_drum_49_21_FluidR3_GM_sf2_file"
+        },
+    },
+}
+
+TuneScope.playNote = function (note, noteLength, instrumentName, volume) {
+    this.currentNote = note
+    if (note == "R" || note == "r") return;
+
+    note = this.noteNum(note)
+    noteLength = this.noteLengthToTimeValue(noteLength)
+
+    // note = _convertToSharp(note);
+
+    var player = new WebAudioFontPlayer();
+    instrumentName = instrumentName || this.currentInstrumentName;
+    instrumentName = instrumentName.toLowerCase()
+    // console.log(instrumentName);
+    let currentInstrumentData = this.instrumentData[instrumentName]
+    player.loader.decodeAfterLoading(audioContext, currentInstrumentData.name);
+
+    play = () => {
+        console.log(volume, this.instrumentVolumes[instrumentName], this.globalInstrumentVolume)
+        const vol = volume || this.instrumentVolumes[instrumentName] || this.globalInstrumentVolume;
+        console.log(note, noteLength, instrumentName, vol)
+        console.log(window[currentInstrumentData.name])
+        player.queueWaveTable(
+            audioContext,
+            audioContext.destination,
+            window[currentInstrumentData.name],
+            0,
+            note,
+            noteLength,
+            vol,
+        );
+        return false;
     }
-    return previousSharp + number;
-}
-window.parent.midiPitches = tempMidiPitches;
-window.parent.midiFreqs = tempMidiFreqs;
-
-
-window.playNote = (note, noteLength, instrumentName, volume) => {
-  window._currentNote = note
-   if (note == "R" || note == "r") return;
-
-   note = _convertToSharp(note);
-   
-			var player=new WebAudioFontPlayer();
-   instrumentName = instrumentName || window.parent.currentInstrumentName;
-   instrumentName = instrumentName.toLowerCase()
-   // console.log(instrumentName);
-   let currentInstrumentData = window.parent.instrumentData[instrumentName]
-			player.loader.decodeAfterLoading(audioContext, currentInstrumentData.name);
-			function play(){
-    const vol = volume || window.parent.instrumentVolumes[instrumentName] || window.parent.globalInstrumentVolume;
-    console.log(note, noteLength, instrumentName, vol)
-				player.queueWaveTable(audioContext, audioContext.destination
-					, window[currentInstrumentData.name], 0, window.parent.midiPitches[note], noteLength, vol
-    );
-				return false;
-			}
-   play();
+    play();
 }
 
-window.timeSignatureToBeatsPerMeasure = {
-    "4/4": [4,1], // 4 beats per measure, Quarter note gets the beat
-    "3/4": [3,1],
-    "5/4": [5,1],
-    "7/4": [7,1],
-    "6/8": [6,0.5], // 6 beats per measure, Eighth note gets the beat
-    "9/8": [9,0.5],
-    "12/8": [12,0.5]
+TuneScope.timeSignatureToBeatsPerMeasure = function (time) {
+    timeSig = time.split('/')
+    // newTime = (timeSig[0]*4)/timeSig[1]
+    newTime = [parseInt(timeSig[0]), 4 / timeSig[1]]
+    console.log(newTime)
+    return newTime
 }
-
-window.baseTempo = 60;
 
 // converts note lengths (quarter, half, whole)
 // to corresponding time value (1, 2, 4)
-window.noteLengthToTimeValue = {
-    "dotted whole": 6,
-    "whole": 4,
-    "dotted half": 3,
-    "half": 2,
-    "dotted quarter": 1.5,
-    "quarter": 1,
-    "dotted eighth": 0.75,
-    "eighth": 0.5,
-    "dotted sixteenth": 0.375,
-    "sixteenth": 0.25,
-    "dotted thirtysecond": 0.1875,
-    "thirtysecond": 0.125,
-    "whole triplet": 2.667,
-    "half triplet": 1.333,
-    "quarter triplet": 0.667,
-    "eighth triplet": 0.333,
-    "sixteenth triplet": 0.167,
-    "thirtysecond triplet": 0.0417
+TuneScope.noteLengthToTimeValue = function (duration) {
+    if (parseFloat(duration) != duration) {
+        splitDuration = duration.split(' ');
+
+        let notes = {
+            "whole": 4,
+            "w": 4,
+            "half": 2,
+            "h": 2,
+            "quarter": 1,
+            "q": 1,
+            "eighth": .5,
+            "e": .5,
+            "sixteenth": .25,
+            "s": .25,
+            "thirtysecond": .125,
+            "t": .12
+        };
+
+        var dots = 0;
+
+        function dotted(duration) {
+            dots += 1;
+            return duration + (start * Math.pow(0.5, dots));
+        };
+
+        modifiers = {
+            'dotted': dotted,
+            'tie': (d) => {
+                return d * 2;
+            },
+            'triplet': (d) => {
+                return (((d > 0) ? d : 1) * 2) / 3;
+            }
+        }
+
+        for (let i = 0; i < splitDuration.length; i++) {
+            splitDuration[i] = splitDuration[i].toLowerCase();
+        }
+
+        var noteDur = notes[splitDuration.find(e => notes[e] != undefined)]
+        start = noteDur;
+
+        console.log(splitDuration);
+        for (let keyword = 0; keyword < splitDuration.length; keyword++) {
+            console.log(keyword, splitDuration[keyword]);
+            console.log(noteDur);
+            if (modifiers[splitDuration[keyword]] != undefined) {
+                noteDur = modifiers[splitDuration[keyword]](noteDur);
+            }
+        }
+        return noteDur;
+    } else {
+        return parseFloat(duration);
+    }
 }
 
-// instrument data
-window.parent.instrumentData = {
-    "accordion": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0230_Aspirin_sf2_file.js",
-        name: "_tone_0230_Aspirin_sf2_file"
-    },
-    "bass, acoustic": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0320_GeneralUserGS_sf2_file.js",
-        name: "_tone_0320_GeneralUserGS_sf2_file"
-    },
-    "bass, electric (finger)": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0350_JCLive_sf2_file.js",
-        name: "_tone_0350_JCLive_sf2_file"
-    },
-    "guitar, acoustic": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0241_JCLive_sf2_file.js",
-        name: "_tone_0241_JCLive_sf2_file"
-    },
-    "guitar, electric": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0260_JCLive_sf2_file.js",
-        name: "_tone_0260_JCLive_sf2_file"
-    },
-    "guitar, overdrive": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0291_LesPaul_sf2_file.js",
-        name: "_tone_0291_LesPaul_sf2_file"
-    },
-    "piano": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0020_JCLive_sf2_file.js",
-        name: "_tone_0020_JCLive_sf2_file"
-    },
-    "organ": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0180_Chaos_sf2_file.js",
-        name: "_tone_0180_Chaos_sf2_file"
-    },
-    "banjo": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/1050_FluidR3_GM_sf2_file.js",
-        name: "_tone_1050_FluidR3_GM_sf2_file"
-    },
-    "saxophone": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0650_FluidR3_GM_sf2_file.js",
-        name: "_tone_0650_FluidR3_GM_sf2_file"
-    },
-    "shakuhachi": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0770_SBLive_sf2.js",
-        name: "_tone_0770_SBLive_sf2"
-    },
-    "sitar": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/1040_Aspirin_sf2_file.js",
-        name: "_tone_1040_Aspirin_sf2_file"
-    },
-    "bassoon": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0700_FluidR3_GM_sf2_file.js",
-        name: "_tone_0700_FluidR3_GM_sf2_file"
-    },
-    "bass": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0350_JCLive_sf2_file.js",
-        name: "_tone_0350_JCLive_sf2_file"
-    },
-    "violin": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0400_JCLive_sf2_file.js",
-        name: "_tone_0400_JCLive_sf2_file"
-    },
-    "cello": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0420_JCLive_sf2_file.js",
-        name: "_tone_0420_JCLive_sf2_file"
-    },
-    "clarinet": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0710_Chaos_sf2_file.js",
-        name: "_tone_0710_Chaos_sf2_file"
-    },
-    "flute": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0730_JCLive_sf2_file.js",
-        name: "_tone_0730_JCLive_sf2_file"
-    },
-    "french horn": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0600_GeneralUserGS_sf2_file.js",
-        name: "_tone_0600_GeneralUserGS_sf2_file"
-    },
-    "harp": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0460_GeneralUserGS_sf2_file.js",
-        name: "_tone_0460_GeneralUserGS_sf2_file"
-    },
-    "koto": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/1070_FluidR3_GM_sf2_file.js",
-        name: "_tone_1070_FluidR3_GM_sf2_file"
-    },
-    "marimba": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0121_FluidR3_GM_sf2_file.js",
-        name: "_tone_0121_FluidR3_GM_sf2_file"
-    },
-    "music box": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0100_SBLive_sf2.js",
-        name: "_tone_0100_SBLive_sf2"
-    },
-    "oboe": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0680_JCLive_sf2_file.js",
-        name: "_tone_0680_JCLive_sf2_file"
-    },
-    "trumpet": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0560_GeneralUserGS_sf2_file.js",
-        name: "_tone_0560_GeneralUserGS_sf2_file"
-    },
-    "tuba": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0580_GeneralUserGS_sf2_file.js",
-        name: "_tone_0580_GeneralUserGS_sf2_file"
-    },
-    "vibraphone": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/0110_GeneralUserGS_sf2_file.js",
-        name: "_tone_0110_GeneralUserGS_sf2_file"
-    },
+TuneScope.getArticulation = function (duration, articulation) {
+    duration = this.noteLengthToTimeValue(duration)
 
-    // drums
+    var articulations = {
+        'legato': (duration) => {return duration},
+        'tenuto': (duration) => {return duration},
+        'staccato': (duration) => {return duration / 2},
+    }
 
-    "cabasa": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12869_6_JCLive_sf2_file.js",
-        name: "_drum_69_6_JCLive_sf2_file"
-    },
-    "snare drum": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12840_6_JCLive_sf2_file.js",
-        name: "_drum_40_6_JCLive_sf2_file"
-    },
-    "bass drum": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12835_21_FluidR3_GM_sf2_file.js",
-        name: "_drum_35_21_FluidR3_GM_sf2_file"
-    },
-    "closed hi-hat": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12842_0_FluidR3_GM_sf2_file.js",
-        name: "_drum_42_0_FluidR3_GM_sf2_file"
-    },
-    "open hi-hat": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12846_0_FluidR3_GM_sf2_file.js",
-        name: "_drum_46_0_FluidR3_GM_sf2_file"
-    },
-    "mid tom": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12847_21_FluidR3_GM_sf2_file.js",
-        name: "_drum_47_21_FluidR3_GM_sf2_file"
-    },
-    "high tom": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12848_21_FluidR3_GM_sf2_file.js",
-        name: "_drum_48_21_FluidR3_GM_sf2_file"
-    },
-    "crash cymbal": {
-        path: "https://surikov.github.io/webaudiofontdata/sound/12849_21_FluidR3_GM_sf2_file.js",
-        name: "_drum_49_21_FluidR3_GM_sf2_file"
-    },
+    var newDuration = duration
+
+    articulation = articulation.toLowerCase()
+    if (articulations[articulation]) {
+        newDuration = articulations[articulation](duration)
+    }
+    
+    return {
+        length : newDuration,
+        restLength : duration - newDuration,
+    }
+}
+
+TuneScope.noteNum = function (noteName) {
+    if (Array.isArray(noteName)) {
+        return noteName.map((e) => {
+            return noteNum(e);
+        })
+    }
+
+    if (typeof noteName == 'string' && isNaN(noteName)) {
+        function range(start, end) {
+            if (end == undefined) {
+                end = start;
+                start = 0;
+            }
+
+            if (start > end) {
+                return Array.from(new Array(start - end + 1), (x, i) => i + end).reverse()
+            } else if (start == end) {
+                return [start];
+            } else {
+                return Array.from(new Array(end - start + 1), (x, i) => i + start);
+            }
+        }
+
+        function letter(string, list) {
+            var result = [];
+            if (typeof list == 'object') {
+                for (let i = 0; i < list.length; i++) {
+                    result.push(string[list[i]]);
+                }
+            } else {
+                result = string[list];
+            }
+            return result;
+        }
+
+        splitNoteName = noteName.split('')
+        var index = splitNoteName.indexOf(splitNoteName.find(e => !isNaN(e) || e == '-'))
+        var octiveNum = ((index > 0) ? letter(noteName, range(index, noteName.length)) : ['4']).join('')
+        console.log(octiveNum)
+        var octive = parseFloat((!isNaN(octiveNum) ? octiveNum : 4))
+        let notes = {
+            'c': 1,
+            'd': 3,
+            'e': 5,
+            'f': 6,
+            'g': 8,
+            'a': 10,
+            'b': 12
+        };
+        var note = notes[letter(noteName, 0).toLowerCase()];
+
+        var accidentals = letter(noteName, range(0, (index > 0) ? index - 1 : noteName.length));
+
+        for (i = 0; i < accidentals.length; i++) {
+            item = accidentals[i];
+
+            if (item == undefined) {
+                continue;
+            }
+
+            if (item == '#' || item == 's') {
+                note += 1;
+            } else if (item == '♭' || item == 'b') {
+                note -= 1;
+            }
+        }
+
+        return ((note + ((13 * (octive + 1)) - octive)) - 2);
+    } else {
+        return parseFloat(noteName);
+    }
 }
 
 // load all instruments
-let instrumentNames = Object.keys(window.parent.instrumentData);
-window.parent.currentInstrumentName = "piano";
+TuneScope.instrumentNames = Object.keys(TuneScope.instrumentData)
+TuneScope.currentInstrumentName = "piano"
 
 // initialize volumes
-window.parent.instrumentVolumes = {}
-window.parent.globalInstrumentVolume = 0.5;
+TuneScope.instrumentVolumes = {}
+TuneScope.globalInstrumentVolume = 0.5
 
 // tones
-class _Tone {
-  constructor(id) {
-    this.id = id;
-    this.on = false;
+class Tone {
+    constructor(id) {
+        this.id = id;
+        this.on = false;
 
-    //const pannerNode = new StereoPannerNode(audioContext, -1);
-    const thisPlayer = new Object;
-    thisPlayer.context = new AudioContext();
-    thisPlayer.oscillator = thisPlayer.context.createOscillator();
-    thisPlayer.panner = thisPlayer.context.createStereoPanner();
-    thisPlayer.gainobj = thisPlayer.context.createGain();
-    thisPlayer.oscillator.frequency.value = 100;
-    thisPlayer.panner.pan.value = 0;
-    thisPlayer.gainobj.gain.value = 1;
-    thisPlayer.oscillator.connect(thisPlayer.panner);
-    thisPlayer.panner.connect(thisPlayer.gainobj);
-    thisPlayer.gainobj.connect(thisPlayer.context.destination);
+        //const pannerNode = new StereoPannerNode(audioContext, -1);
+        const thisPlayer = new Object;
+        thisPlayer.context = new AudioContext();
+        thisPlayer.oscillator = thisPlayer.context.createOscillator();
+        thisPlayer.panner = thisPlayer.context.createStereoPanner();
+        thisPlayer.gainobj = thisPlayer.context.createGain();
+        thisPlayer.oscillator.frequency.value = 100;
+        thisPlayer.panner.pan.value = 0;
+        thisPlayer.gainobj.gain.value = 1;
+        thisPlayer.oscillator.connect(thisPlayer.panner);
+        thisPlayer.panner.connect(thisPlayer.gainobj);
+        thisPlayer.gainobj.connect(thisPlayer.context.destination);
 
-    this.player = thisPlayer;
-  }
-
-  dBFS2gain = (dbfs) => {
-    //return Math.pow(10, dbfs / 20);
-    return (dbfs / 100).toFixed(2);
-  }
-
-  setFreq = (freq) => {
-    this.freq = freq;
-    this.player.oscillator.frequency.value = Math.max(freq, 0);
-  }
-
-  setAmpl = (ampl) => {
-    this.ampl = ampl;
-    this.player.gainobj.gain.value = this.dBFS2gain(parseInt(ampl));
-  }
-
-  setPan = (pan) => {
-    this.pan = Math.min(Math.max(pan, -100), 100);
-    this.player.panner.pan.setValueAtTime(this.pan / 100, this.player.context.currentTime);
-  }
-
-  turnOn = () => {
-    console.log("on");
-    if (this.on) return;
-    console.log("turning on");
-    if (!this.started) {
-      this.player.oscillator.start(0);
-      this.started = true;
-    } else {
-      this.player.context.resume();
+        this.player = thisPlayer;
     }
-    this.on = true;
-  }
 
-  turnOff = () => {
-    console.log("off");
-    if (!this.on) return;
-    console.log("turning off");
-    this.player.context.suspend();
-    this.on = false;
-  }
+    dBFS2gain = (dbfs) => {
+        //return Math.pow(10, dbfs / 20);
+        return (dbfs / 100).toFixed(2);
+    }
 
+    setFreq = (freq) => {
+        this.freq = freq;
+        this.player.oscillator.frequency.value = Math.max(freq, 0);
+    }
+
+    setAmpl = (ampl) => {
+        this.ampl = ampl;
+        this.player.gainobj.gain.value = this.dBFS2gain(parseInt(ampl));
+    }
+
+    setPan = (pan) => {
+        this.pan = Math.min(Math.max(pan, -100), 100);
+        this.player.panner.pan.setValueAtTime(this.pan / 100, this.player.context.currentTime);
+    }
+
+    turnOn = () => {
+        console.log("on");
+        if (this.on) return;
+        console.log("turning on");
+        if (!this.started) {
+            this.player.oscillator.start(0);
+            this.started = true;
+        } else {
+            this.player.context.resume();
+        }
+        this.on = true;
+    }
+
+    turnOff = () => {
+        console.log("off");
+        if (!this.on) return;
+        console.log("turning off");
+        this.player.context.suspend();
+        this.on = false;
+    }
+
+    Tone = Tone;
+    tones = {};
 }
-window._Tone = _Tone;
-window.tones = {};
 
 /* Auxillary Functions */
 // repeats an array n times
 // similar to [1,2,3] * 2 = [1,2,3,1,2,3] in Python
 window.multiplyArray = (arr, length) =>
-  Array.from({ length }, () => arr).flat()
+    Array.from({
+        length
+    }, () => arr).flat()
 
 
 /*
@@ -348,59 +464,62 @@ http://creativecommons.org/publicdomain/zero/1.0/legalcode
  * Creates a new queue. A queue is a first-in-first-out (FIFO) data structure -
  * items are added to the end of the queue and removed from the front.
  */
-function Queue() {
+class Queue {
+    constructor() {
 
-  // initialise the queue and offset
-  var queue = [];
-  var offset = 0;
+        // initialise the queue and offset
+        var queue = [];
+        var offset = 0;
 
-  // Returns the length of the queue.
-  this.getLength = function () {
-    return (queue.length - offset);
-  }
+        // Returns the length of the queue.
+        this.getLength = function () {
+            return (queue.length - offset);
+        };
 
-  // Returns true if the queue is empty, and false otherwise.
-  this.isEmpty = function () {
-    return (queue.length === 0);
-  }
+        // Returns true if the queue is empty, and false otherwise.
+        this.isEmpty = function () {
+            return (queue.length === 0);
+        };
 
-  /* Enqueues the specified item. The parameter is:
-   *
-   * item - the item to enqueue
-   */
-  this.enqueue = function (item) {
-    queue.push(item);
-  }
+        /* Enqueues the specified item. The parameter is:
+         *
+         * item - the item to enqueue
+         */
+        this.enqueue = function (item) {
+            queue.push(item);
+        };
 
-  /* Dequeues an item and returns it. If the queue is empty, the value
-   * 'undefined' is returned.
-   */
-  this.dequeue = function () {
+        /* Dequeues an item and returns it. If the queue is empty, the value
+         * 'undefined' is returned.
+         */
+        this.dequeue = function () {
 
-    // if the queue is empty, return immediately
-    if (queue.length === 0) return undefined;
+            // if the queue is empty, return immediately
+            if (queue.length === 0)
+                return undefined;
 
-    // store the item at the front of the queue
-    var item = queue[offset];
+            // store the item at the front of the queue
+            var item = queue[offset];
 
-    // increment the offset and remove the free space if necessary
-    if (++offset * 2 >= queue.length) {
-      queue = queue.slice(offset);
-      offset = 0;
+            // increment the offset and remove the free space if necessary
+            if (++offset * 2 >= queue.length) {
+                queue = queue.slice(offset);
+                offset = 0;
+            }
+
+            // return the dequeued item
+            return item;
+
+        };
+
+        /* Returns the item at the front of the queue (without dequeuing it). If the
+         * queue is empty then undefined is returned.
+         */
+        this.peek = function () {
+            return (queue.length > 0 ? queue[offset] : undefined);
+        };
+
     }
-
-    // return the dequeued item
-    return item;
-
-  }
-
-  /* Returns the item at the front of the queue (without dequeuing it). If the
-   * queue is empty then undefined is returned.
-   */
-  this.peek = function () {
-    return (queue.length > 0 ? queue[offset] : undefined);
-  }
-
 }
 window.Queue = Queue;
 
@@ -409,24 +528,24 @@ window.Queue = Queue;
  * @param {*} arr
  */
 function toLowerCaseRecursive(array) {
-  //check for arrays and recurse
-  if (Array.isArray(array)) {
-    for (var i = 0; i < array.length; i++) {
-      array[i] = toLowerCaseRecursive(array[i]);
+    //check for arrays and recurse
+    if (Array.isArray(array)) {
+        for (var i = 0; i < array.length; i++) {
+            array[i] = toLowerCaseRecursive(array[i]);
+        }
+        return array;
     }
-    return array;
-  }
-  //check for string vs non-strings
-  if (typeof array === "string") {
-    if (!hasNumber(array)) { //contains no numbers, so it isn't a note value
-      return array.toLowerCase();
-    } else {  //case with note values, which contain numbers
-      //capitalize the first character in the string
-      return array[0].toUpperCase() + array.slice(1);
+    //check for string vs non-strings
+    if (typeof array === "string") {
+        if (!hasNumber(array)) { //contains no numbers, so it isn't a note value
+            return array.toLowerCase();
+        } else { //case with note values, which contain numbers
+            //capitalize the first character in the string
+            return array[0].toUpperCase() + array.slice(1);
+        }
+    } else {
+        return array;
     }
-  } else {
-    return array;
-  }
 }
 window.toLowerCaseRecursive = toLowerCaseRecursive;
 
@@ -444,7 +563,7 @@ function convertListToArrayRecursive(list) {
 }
 window.convertListToArrayRecursive = convertListToArrayRecursive;
 
-const convertArrayToListRecursive = (array) => {
+function convertArrayToListRecursive (array) {
     if (Array.isArray(array)) {
         for (var i = 0; i < array.length; i++) {
             array[i] = convertArrayToListRecursive(array[i]);
@@ -460,31 +579,31 @@ function _typeOf(value) {
 }
 
 const _isObject = (obj) => {
-  return (typeof obj === "object" || _typeOf(obj) === "Array") && obj !== null;
+    return (typeof obj === "object" || _typeOf(obj) === "Array") && obj !== null;
 }
 
 const _objToArray = (obj) => {
-  return Object.keys(obj).map((key) => {
-    return [key, _isObject(obj[key]) ? 
-        _objToArray(obj[key]) :
-        obj[key]
-    ];
-  });    
+    return Object.keys(obj).map((key) => {
+        return [key, _isObject(obj[key]) ?
+            _objToArray(obj[key]) :
+            obj[key]
+        ];
+    });
 }
 window._objToArray = _objToArray;
 
 function isNumber(myString) {
-  return /^\d+\.\d+$/.test(myString);
+    return /^\d+\.\d+$/.test(myString);
 }
 window.isNumber = isNumber;
 
 function hasNumber(myString) {
-  return /\d/.test(myString);
+    return /\d/.test(myString);
 }
 window.hasNumber = hasNumber;
 
 function deep_copy(array) {
-  return JSON.parse(JSON.stringify(array));
+    return JSON.parse(JSON.stringify(array));
 }
 window.deep_copy = deep_copy;
 
@@ -517,17 +636,17 @@ window._selectFile = _selectFile;
 // play dummy sound to initialize
 
 setTimeout(() => {
-  console.log("playing initialization sound")
-  for (let i = 0; i < instrumentNames.length; i++) {
-    let instrumentName = instrumentNames[i];
-    if (instrumentName === "shakuhachi") return;
-    window.playNote("C4", 1, instrumentName, 0);
-  }
+    console.log("playing initialization sound")
+    for (let i = 0; i < TuneScope.instrumentNames.length; i++) {
+        let instrumentName = TuneScope.instrumentNames[i];
+        if (instrumentName === "shakuhachi") return;
+        TuneScope.playNote("C4", 1, instrumentName, 0);
+    }
 }, 1000 * 3);
 
 // set loaded to true
 
 setTimeout(() => {
-  console.log("TuneScope Loaded")
-  window.parent.loadedTuneScope = true;
+    console.log("TuneScope Loaded")
+    TuneScope.loadedTuneScope = true;
 }, 1000 * 4)
