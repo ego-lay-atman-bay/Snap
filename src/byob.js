@@ -4620,7 +4620,7 @@ BlockExportDialogMorph.prototype.collectDataDependencies = function () {
 
 BlockExportDialogMorph.prototype.buildContents = function () {
     var palette, x, y, block, checkBox, lastCat,
-        padding = 4;
+        padding = 4, catCheckBox;
 
     // create plaette
     palette = new ScrollFrameMorph(
@@ -4706,8 +4706,48 @@ BlockExportDialogMorph.prototype.buildContents = function () {
     SpriteMorph.prototype.allCategories().forEach(category => {
         this.blocks.forEach(definition => {
             if (definition.category === category) {
-                if (lastCat && (category !== lastCat)) {
+                if ((category !== lastCat)) {
                     y += padding;
+                    catCheckBox = new ToggleMorph(
+                        'checkbox',
+                        this,
+                        () => {
+                            var blocks = [];
+                            if (contains(this.blocks.map(b => b.category), category)) {
+                                this.blocks.forEach(block => {
+                                    if (block.category != category) {
+                                        blocks.push(block)
+                                    };
+                                });
+                                this.blocks = blocks;
+                            }
+                            else {
+                                this.body.contents.children.forEach(block => {
+                                    if (
+                                        (block instanceof ToggleMorph) &&
+                                        (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) && 
+                                        (block.element.category == category) &&
+                                        (!contains(this.blocks, block.element.definition))
+                                    ) {
+                                        block.trigger()
+                                    };
+                                });
+                            };
+                            this.collectDependencies();
+                        },
+                        category,
+                        () => contains(this.blocks.map(b => b.category), category),
+                        null,
+                        null
+                    )
+                    catCheckBox.label.setColor(IDE_Morph.prototype.buttonLabelColor);
+                    catCheckBox.setPosition(new Point(
+                        x,
+                        y + (catCheckBox.top())
+                        ));
+                    palette.addContents(catCheckBox);
+                    y += catCheckBox.fullBounds().height()
+                    y += padding
                 }
                 lastCat = category;
                 block = definition.templateInstance();
@@ -4989,7 +5029,7 @@ BlockRemovalDialogMorph.prototype.init = function (blocks, target) {
 
 BlockRemovalDialogMorph.prototype.buildContents = function () {
     var palette, x, y, block, checkBox, lastCat,
-        padding = 4;
+        padding = 4, catCheckBox;
 
     // create plaette
     palette = new ScrollFrameMorph(
@@ -5011,8 +5051,48 @@ BlockRemovalDialogMorph.prototype.buildContents = function () {
     SpriteMorph.prototype.allCategories().forEach(category => {
         this.blocks.forEach(definition => {
             if (definition.category === category) {
-                if (lastCat && (category !== lastCat)) {
+                if ((category !== lastCat)) {
                     y += padding;
+                    catCheckBox = new ToggleMorph(
+                        'checkbox',
+                        this,
+                        () => {
+                            var blocks = [];
+                            if (contains(this.blocks.map(b => b.category), category)) {
+                                this.blocks.forEach(block => {
+                                    if (block.category != category) {
+                                        blocks.push(block)
+                                    };
+                                });
+                                this.blocks = blocks;
+                            }
+                            else {
+                                this.body.contents.children.forEach(block => {
+                                    if (
+                                        (block instanceof ToggleMorph) &&
+                                        (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) && 
+                                        (block.element.category == category) &&
+                                        (!contains(this.blocks, block.element.definition))
+                                    ) {
+                                        block.trigger()
+                                    };
+                                });
+                            };
+                            this.collectDependencies();
+                        },
+                        category,
+                        () => contains(this.blocks.map(b => b.category), category),
+                        null,
+                        null
+                    )
+                    catCheckBox.label.setColor(IDE_Morph.prototype.buttonLabelColor);
+                    catCheckBox.setPosition(new Point(
+                        x,
+                        y + (catCheckBox.top())
+                        ));
+                    palette.addContents(catCheckBox);
+                    y += catCheckBox.fullBounds().height()
+                    y += padding
                 }
                 lastCat = category;
                 block = definition.templateInstance();
