@@ -3761,7 +3761,7 @@ SpriteMorph.prototype.searchBlocks = function (
         if (focus) {focus.destroy(); }
         if (!selection || !scriptFocus) {return; }
         focus = selection.outline(
-            MorphicPreferences.isFlat ? new Color(150, 200, 255) : WHITE,
+            SnapTheme.backgroundColor.hsl()[2] > 0.5 ? new Color(150, 200, 255) : WHITE,
             2
         );
         searchPane.contents.add(focus);

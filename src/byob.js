@@ -2167,7 +2167,7 @@ BlockDialogMorph.prototype.addCategoryButton = function (category) {
         colors = [
             IDE_Morph.prototype.frameColor,
             IDE_Morph.prototype.frameColor.darker
-                (MorphicPreferences.isFlat ? 5 : 50
+                (SnapTheme.frameColor.hsl()[2] > 0.5 ? 5 : 50
             ),
             SpriteMorph.prototype.blockColorFor(category)
         ],
@@ -2199,7 +2199,7 @@ BlockDialogMorph.prototype.addCategoryButton = function (category) {
     button.labelShadowOffset = new Point(-1, -1);
     button.labelShadowColor = colors[1];
     button.labelColor = IDE_Morph.prototype.buttonLabelColor;
-        if (MorphicPreferences.isFlat) {
+        if (SnapTheme.frameColor.hsl()[2] > 0.5) {
             button.labelPressColor = WHITE;
         }
     button.contrast = this.buttonContrast;
@@ -2215,7 +2215,7 @@ BlockDialogMorph.prototype.addCustomCategoryButton = function (category, clr) {
         colors = [
             IDE_Morph.prototype.frameColor,
             IDE_Morph.prototype.frameColor.darker
-                (MorphicPreferences.isFlat ? 5 : 50
+                (SnapTheme.frameColor.hsl()[2] > 0.5 ? 5 : 50
             ),
             clr
         ],
@@ -2247,7 +2247,7 @@ BlockDialogMorph.prototype.addCustomCategoryButton = function (category, clr) {
     button.labelShadowOffset = new Point(-1, -1);
     button.labelShadowColor = colors[1];
     button.labelColor = IDE_Morph.prototype.buttonLabelColor;
-        if (MorphicPreferences.isFlat) {
+        if (SnapTheme.frameColor.hsl()[2] > 0.5) {
             button.labelPressColor = WHITE;
         }
     button.contrast = this.buttonContrast;

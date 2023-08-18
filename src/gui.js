@@ -121,107 +121,251 @@ IDE_Morph.uber = Morph.prototype;
 
 // IDE_Morph preferences settings and skins
 
+// IDE_Theme
+var SnapTheme = {
+    isDark: true,
+    get isFlat () {return MorphicPreferences.isFlat},
+    set isFlat (mode) {return MorphicPreferences.isFlat = mode},
+    buttonContrast: 0,
+    backgroundColor: null,
+    frameColor: null,
+    groupColor: null,
+    sliderColor: null,
+    buttonLabelColor: null,
+    tabColors: [
+        null,
+        null,
+        null,
+    ],
+    rotationStyleColors: null,
+    appModeColor: null,
+    scriptsPaneTexture: null,
+    SpriteMorph: {
+        paletteColor: null,
+        paletteTextColor: null,
+        sliderColor: null,
+    },
+    StageMorph: {
+        paletteColor: null,
+        paletteTextColor: null,
+    },
+    SpriteIconMorph: {
+        labelColor: null,
+    },
+    CostumeIconMorph: {
+        labelColor: null,
+    },
+    SoundIconMorph: {
+        labelColor: null,
+    },
+    TurtleIconMorph: {
+        labelColor: null,
+    },
+    SceneIconMorph: {
+        labelColor: null,
+    },
+    SyntaxElementMorph: {
+        contrast: 0,
+    },
+    ScriptsMorph: {
+        feedbackColor: null,
+    }
+}
+
 IDE_Morph.prototype.setDefaultDesign = function () {
     MorphicPreferences.isFlat = false;
-    SpriteMorph.prototype.paletteColor = new Color(30, 30, 30);
-    SpriteMorph.prototype.paletteTextColor = new Color(230, 230, 230);
-    StageMorph.prototype.paletteTextColor
-        = SpriteMorph.prototype.paletteTextColor;
-    StageMorph.prototype.paletteColor = SpriteMorph.prototype.paletteColor;
-    SpriteMorph.prototype.sliderColor
-        = SpriteMorph.prototype.paletteColor.lighter(30);
-
-    IDE_Morph.prototype.buttonContrast = 30;
-    IDE_Morph.prototype.backgroundColor = new Color(10, 10, 10);
-    IDE_Morph.prototype.frameColor = SpriteMorph.prototype.paletteColor;
-
-    IDE_Morph.prototype.groupColor
-        = SpriteMorph.prototype.paletteColor.lighter(5);
-    IDE_Morph.prototype.sliderColor = SpriteMorph.prototype.sliderColor;
-    IDE_Morph.prototype.buttonLabelColor = WHITE;
-    IDE_Morph.prototype.tabColors = [
-        IDE_Morph.prototype.groupColor.darker(50),
-        IDE_Morph.prototype.groupColor.darker(25),
-        IDE_Morph.prototype.groupColor
-    ];
-    IDE_Morph.prototype.rotationStyleColors = IDE_Morph.prototype.tabColors;
-    IDE_Morph.prototype.appModeColor = BLACK;
-    IDE_Morph.prototype.scriptsPaneTexture = this.scriptsTexture();
-    IDE_Morph.prototype.padding = 1;
-
-    SpriteIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    CostumeIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    SoundIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    TurtleIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    SceneIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-
-    SyntaxElementMorph.prototype.contrast = 65;
-    ScriptsMorph.prototype.feedbackColor = WHITE;
-};
+}
 
 IDE_Morph.prototype.setFlatDesign = function () {
     MorphicPreferences.isFlat = true;
-    SpriteMorph.prototype.paletteColor = WHITE;
-    SpriteMorph.prototype.paletteTextColor = new Color(70, 70, 70);
-    StageMorph.prototype.paletteTextColor
-        = SpriteMorph.prototype.paletteTextColor;
-    StageMorph.prototype.paletteColor = SpriteMorph.prototype.paletteColor;
-    SpriteMorph.prototype.sliderColor = SpriteMorph.prototype.paletteColor;
+}
 
-    IDE_Morph.prototype.buttonContrast = 30;
-    IDE_Morph.prototype.backgroundColor = new Color(220, 220, 230);
-    IDE_Morph.prototype.frameColor = new Color(240, 240, 245);
+IDE_Morph.prototype.setDarkTheme = function () {
+    SnapTheme.isDark = true;
+    SnapTheme.SpriteMorph.paletteColor = new Color(30, 30, 30);
+    SnapTheme.SpriteMorph.paletteTextColor = new Color(230, 230, 230);
+    SnapTheme.StageMorph.paletteTextColor
+        = SnapTheme.SpriteMorph.paletteTextColor;
+    SnapTheme.StageMorph.paletteColor = SnapTheme.SpriteMorph.paletteColor;
+    SnapTheme.SpriteMorph.sliderColor
+        = SnapTheme.SpriteMorph.paletteColor.lighter(30);
 
-    IDE_Morph.prototype.groupColor = WHITE;
-    IDE_Morph.prototype.sliderColor = SpriteMorph.prototype.sliderColor;
-    IDE_Morph.prototype.buttonLabelColor = new Color(70, 70, 70);
-    IDE_Morph.prototype.tabColors = [
-        IDE_Morph.prototype.frameColor,
-        IDE_Morph.prototype.frameColor.lighter(50),
-        IDE_Morph.prototype.groupColor
+    SnapTheme.buttonContrast = 30;
+    SnapTheme.backgroundColor = new Color(10, 10, 10);
+    SnapTheme.frameColor = SnapTheme.SpriteMorph.paletteColor;
+
+    SnapTheme.groupColor
+        = SnapTheme.SpriteMorph.paletteColor.lighter(5);
+    SnapTheme.sliderColor = SnapTheme.SpriteMorph.sliderColor;
+    SnapTheme.buttonLabelColor = WHITE;
+    SnapTheme.tabColors = [
+        SnapTheme.groupColor.darker(50),
+        SnapTheme.groupColor.darker(25),
+        SnapTheme.groupColor
     ];
-    IDE_Morph.prototype.rotationStyleColors = IDE_Morph.prototype.tabColors;
-    IDE_Morph.prototype.appModeColor = IDE_Morph.prototype.frameColor;
-    IDE_Morph.prototype.scriptsPaneTexture = null;
-    IDE_Morph.prototype.padding = 1;
+    SnapTheme.rotationStyleColors = SnapTheme.tabColors;
+    SnapTheme.appModeColor = BLACK;
+    SnapTheme.scriptsPaneTexture = this.scriptsTexture();
+    SnapTheme.padding = 1;
 
-    SpriteIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    CostumeIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    SoundIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    TurtleIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
-    SceneIconMorph.prototype.labelColor
-        = IDE_Morph.prototype.buttonLabelColor;
+    SnapTheme.SpriteIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.CostumeIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.SoundIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.TurtleIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.SceneIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
 
-    SyntaxElementMorph.prototype.contrast = 25;
-    ScriptsMorph.prototype.feedbackColor = new Color(153, 255, 213);
+    SnapTheme.SyntaxElementMorph.contrast = 65;
+    SnapTheme.ScriptsMorph.feedbackColor = WHITE;
 };
+
+IDE_Morph.prototype.setLightTheme = function () {
+    SnapTheme.isDark = false;
+    SnapTheme.SpriteMorph.paletteColor = WHITE;
+    SnapTheme.SpriteMorph.paletteTextColor = new Color(70, 70, 70);
+    SnapTheme.StageMorph.paletteTextColor
+        = SnapTheme.SpriteMorph.paletteTextColor;
+    SnapTheme.StageMorph.paletteColor = SnapTheme.SpriteMorph.paletteColor;
+    SnapTheme.SpriteMorph.sliderColor = SnapTheme.SpriteMorph.paletteColor;
+
+    SnapTheme.buttonContrast = 30;
+    SnapTheme.backgroundColor = new Color(220, 220, 230);
+    SnapTheme.frameColor = new Color(240, 240, 245);
+
+    SnapTheme.groupColor = WHITE;
+    SnapTheme.sliderColor = SnapTheme.SpriteMorph.sliderColor;
+    SnapTheme.buttonLabelColor = new Color(70, 70, 70);
+    SnapTheme.tabColors = [
+        SnapTheme.frameColor,
+        SnapTheme.frameColor.lighter(50),
+        SnapTheme.groupColor
+    ];
+    SnapTheme.rotationStyleColors = SnapTheme.tabColors;
+    SnapTheme.appModeColor = SnapTheme.frameColor;
+    SnapTheme.scriptsPaneTexture = null;
+    SnapTheme.padding = 1;
+
+    SnapTheme.SpriteIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.CostumeIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.SoundIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.TurtleIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+    SnapTheme.SceneIconMorph.labelColor
+        = SnapTheme.buttonLabelColor;
+
+    SnapTheme.SyntaxElementMorph.contrast = 25;
+    SnapTheme.ScriptsMorph.feedbackColor = new Color(153, 255, 213);
+};
+
+IDE_Morph.prototype.applyTheme = function () {
+    SpriteMorph.prototype.paletteColor = SnapTheme.SpriteMorph.paletteColor;
+    SpriteMorph.prototype.paletteTextColor = SnapTheme.SpriteMorph.paletteColor;
+    StageMorph.prototype.paletteTextColor
+        = SnapTheme.StageMorph.paletteTextColor;
+    StageMorph.prototype.paletteColor = SnapTheme.StageMorph.paletteColor;
+    SpriteMorph.prototype.sliderColor
+        = SnapTheme.SpriteMorph.sliderColor;
+    IDE_Morph.prototype.buttonContrast = SnapTheme.buttonContrast;
+    IDE_Morph.prototype.backgroundColor = SnapTheme.backgroundColor;
+    IDE_Morph.prototype.frameColor = SnapTheme.frameColor;
+    IDE_Morph.prototype.groupColor
+        = SnapTheme.groupColor;
+    IDE_Morph.prototype.sliderColor = SnapTheme.sliderColor;
+    IDE_Morph.prototype.buttonLabelColor = SnapTheme.buttonLabelColor;
+    IDE_Morph.prototype.tabColors = SnapTheme.tabColors;
+    IDE_Morph.prototype.rotationStyleColors = SnapTheme.rotationStyleColors;
+    IDE_Morph.prototype.appModeColor = SnapTheme.appModeColor;
+    IDE_Morph.prototype.scriptsPaneTexture = SnapTheme.scriptsPaneTexture;
+    IDE_Morph.prototype.padding = 1;
+    SpriteIconMorph.prototype.labelColor
+        = SnapTheme.SpriteIconMorph.labelColor;
+    CostumeIconMorph.prototype.labelColor
+        = SnapTheme.CostumeIconMorph.labelColor;
+    SoundIconMorph.prototype.labelColor
+        = SnapTheme.SoundIconMorph.labelColor;
+    TurtleIconMorph.prototype.labelColor
+        = SnapTheme.TurtleIconMorph.labelColor;
+    SceneIconMorph.prototype.labelColor
+        = SnapTheme.SceneIconMorph.labelColor;
+    SyntaxElementMorph.prototype.contrast = SnapTheme.SyntaxElementMorph.contrast;
+    ScriptsMorph.prototype.feedbackColor = SnapTheme.ScriptsMorph.feedbackColor;
+
+    PushButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleButtonMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    TabMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+    ToggleElementMorph.prototype.outlineColor = IDE_Morph.prototype.frameColor;
+}
+
+// IDE_Morph.prototype.setDefaultDesign = function () {
+//     MorphicPreferences.isFlat = false;
+//     SpriteMorph.prototype.paletteColor = new Color(30, 30, 30);
+//     SpriteMorph.prototype.paletteTextColor = new Color(230, 230, 230);
+//     StageMorph.prototype.paletteTextColor
+//         = SpriteMorph.prototype.paletteTextColor;
+//     StageMorph.prototype.paletteColor = SpriteMorph.prototype.paletteColor;
+//     SpriteMorph.prototype.sliderColor
+//         = SpriteMorph.prototype.paletteColor.lighter(30);
+
+//     IDE_Morph.prototype.buttonContrast = 30;
+//     IDE_Morph.prototype.backgroundColor = new Color(10, 10, 10);
+//     IDE_Morph.prototype.frameColor = SpriteMorph.prototype.paletteColor;
+
+//     IDE_Morph.prototype.groupColor
+//         = SpriteMorph.prototype.paletteColor.lighter(5);
+//     IDE_Morph.prototype.sliderColor = SpriteMorph.prototype.sliderColor;
+//     IDE_Morph.prototype.buttonLabelColor = WHITE;
+//     IDE_Morph.prototype.tabColors = [
+//         IDE_Morph.prototype.groupColor.darker(50),
+//         IDE_Morph.prototype.groupColor.darker(25),
+//         IDE_Morph.prototype.groupColor
+//     ];
+//     IDE_Morph.prototype.rotationStyleColors = IDE_Morph.prototype.tabColors;
+//     IDE_Morph.prototype.appModeColor = BLACK;
+//     IDE_Morph.prototype.scriptsPaneTexture = this.scriptsTexture();
+//     IDE_Morph.prototype.padding = 1;
+
+//     SpriteIconMorph.prototype.labelColor
+//         = IDE_Morph.prototype.buttonLabelColor;
+//     CostumeIconMorph.prototype.labelColor
+//         = IDE_Morph.prototype.buttonLabelColor;
+//     SoundIconMorph.prototype.labelColor
+//         = IDE_Morph.prototype.buttonLabelColor;
+//     TurtleIconMorph.prototype.labelColor
+//         = IDE_Morph.prototype.buttonLabelColor;
+//     SceneIconMorph.prototype.labelColor
+//         = IDE_Morph.prototype.buttonLabelColor;
+
+//     SyntaxElementMorph.prototype.contrast = 65;
+//     ScriptsMorph.prototype.feedbackColor = WHITE;
+// };
 
 IDE_Morph.prototype.scriptsTexture = function () {
     var pic = newCanvas(new Point(100, 100)), // bigger scales faster
         ctx = pic.getContext('2d'),
         i;
     for (i = 0; i < 100; i += 4) {
-        ctx.fillStyle = this.frameColor.toString();
+        ctx.fillStyle = SnapTheme.frameColor.toString();
         ctx.fillRect(i, 0, 1, 100);
-        ctx.fillStyle = this.groupColor.lighter(2).toString();
+        ctx.fillStyle = SnapTheme.groupColor.lighter(2).toString();
         ctx.fillRect(i + 1, 0, 1, 100);
         ctx.fillRect(i + 3, 0, 1, 100);
-        ctx.fillStyle = this.groupColor.darker(2).toString();
+        ctx.fillStyle = SnapTheme.groupColor.darker(2).toString();
         ctx.fillRect(i + 2, 0, 1, 100);
     }
     return pic;
 };
 
-IDE_Morph.prototype.setDefaultDesign();
+IDE_Morph.prototype.set3DDesign
+IDE_Morph.prototype.setDarkTheme();
+IDE_Morph.prototype.applyTheme();
 
 // IDE_Morph instance creation:
 
@@ -825,6 +969,16 @@ IDE_Morph.prototype.applyConfigurations = function () {
         SpriteMorph.prototype.initBlocks();
     }
 
+    if (cnf.theme) {
+        if (cnf.theme === 'light') {
+            this.setLightTheme();
+        } else if (cnf.theme === 'dark') {
+            this.setDarkTheme();
+        }
+        SpriteMorph.prototype.initBlocks();
+        this.applyTheme();
+    }
+
     // interaction mode
     if (cnf.mode === "presentation") {
         this.toggleAppMode(true);
@@ -1021,7 +1175,7 @@ IDE_Morph.prototype.createLogo = function () {
                 this.width(),
                 0
             );
-        gradient.addColorStop(0, 'black');
+        gradient.addColorStop(0, SnapTheme.appModeColor.toString());
         gradient.addColorStop(0.5, myself.frameColor.toString());
         ctx.fillStyle = MorphicPreferences.isFlat ?
                 myself.frameColor.toString() : gradient;
@@ -1066,7 +1220,7 @@ IDE_Morph.prototype.createControlBar = function () {
         steppingButton,
         cloudButton,
         x,
-        colors = MorphicPreferences.isFlat ? this.tabColors
+        colors = SnapTheme.backgroundColor.hsl()[2] > 0.5 ? this.tabColors
         : [
             this.groupColor,
             this.frameColor.darker(50),
@@ -1117,7 +1271,7 @@ IDE_Morph.prototype.createControlBar = function () {
     button.padding = 0;
     button.labelShadowOffset = new Point(-1, -1);
     button.labelShadowColor = colors[1];
-    button.labelColor = MorphicPreferences.isFlat ?
+    button.labelColor = this.frameColor.hsl()[2] > 0.5 ?
         WHITE
         : this.buttonLabelColor;
     button.contrast = this.buttonContrast;
@@ -1211,7 +1365,7 @@ IDE_Morph.prototype.createControlBar = function () {
     button.labelShadowOffset = new Point(-1, -1);
     button.labelShadowColor = colors[1];
     button.labelColor = new Color(
-        MorphicPreferences.isFlat ? 128 : 200,
+        SnapTheme.frameColor.hsl[2] > 0.5 ? 128 : 200,
         0,
         0
     );
@@ -1244,7 +1398,7 @@ IDE_Morph.prototype.createControlBar = function () {
     button.padding = 0;
     button.labelShadowOffset = new Point(-1, -1);
     button.labelShadowColor = colors[1];
-    button.labelColor = MorphicPreferences.isFlat ?
+    button.labelColor = SnapTheme.frameColor.hsl()[2] > 0.5 ?
         new Color(220, 185, 0)
             : new Color(255, 220, 0);
     button.contrast = this.buttonContrast;
@@ -1296,7 +1450,7 @@ IDE_Morph.prototype.createControlBar = function () {
 
     button.labelColor = new Color(
         0,
-        MorphicPreferences.isFlat ? 100 : 200,
+        SnapTheme.frameColor.hsl()[2] > 0.5 ? 100 : 200,
         0
     );
     button.contrast = this.buttonContrast;
@@ -1601,7 +1755,7 @@ IDE_Morph.prototype.createCategories = function () {
         var labelWidth = 75,
             colors = [
                 myself.frameColor,
-                myself.frameColor.darker(MorphicPreferences.isFlat ? 5 : 50),
+                myself.frameColor.darker(SnapTheme.frameColor.hsl()[2] > 0.5 ? 5 : 50),
                 SpriteMorph.prototype.blockColor[category]
             ],
             button;
@@ -1624,7 +1778,7 @@ IDE_Morph.prototype.createCategories = function () {
         button.labelShadowOffset = new Point(-1, -1);
         button.labelShadowColor = colors[1];
         button.labelColor = myself.buttonLabelColor;
-        if (MorphicPreferences.isFlat) {
+        if (SnapTheme.frameColor.hsl()[2] > 0.5) {
             button.labelPressColor = WHITE;
         }
         button.fixLayout();
@@ -1638,7 +1792,7 @@ IDE_Morph.prototype.createCategories = function () {
         var labelWidth = 168,
             colors = [
                 myself.frameColor,
-                myself.frameColor.darker(MorphicPreferences.isFlat ? 5 : 50),
+                myself.frameColor.darker(SnapTheme.frameColor.hsl()[2] > 0.5 ? 5 : 50),
                 color
             ],
             button;
@@ -1661,7 +1815,7 @@ IDE_Morph.prototype.createCategories = function () {
         button.labelShadowOffset = new Point(-1, -1);
         button.labelShadowColor = colors[1];
         button.labelColor = myself.buttonLabelColor;
-        if (MorphicPreferences.isFlat) {
+        if (SnapTheme.frameColor.hsl()[2] > 0.5) {
             button.labelPressColor = WHITE;
         }
         button.fixLayout();
@@ -2080,7 +2234,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
         }
         return this.pressColor.mixed(
             Math.max(SyntaxElementMorph.prototype.alpha - 0.15, 0),
-            SpriteMorph.prototype.paletteColor
+            SnapTheme.SpriteMorph.paletteColor
         );
     };
 
@@ -3277,6 +3431,20 @@ IDE_Morph.prototype.flatDesign = function () {
     this.setFlatDesign();
     this.refreshIDE();
     this.saveSetting('design', 'flat');
+};
+
+IDE_Morph.prototype.darkTheme = function () {
+    this.setDarkTheme();
+    this.applyTheme();
+    this.refreshIDE();
+    this.removeSetting('theme');
+};
+
+IDE_Morph.prototype.lightTheme = function () {
+    this.setLightTheme();
+    this.applyTheme();
+    this.refreshIDE();
+    this.saveSetting('theme', 'light');
 };
 
 IDE_Morph.prototype.refreshIDE = function () {
@@ -4503,6 +4671,19 @@ IDE_Morph.prototype.settingsMenu = function () {
             this.flatDesign();
         },
         MorphicPreferences.isFlat,
+        'uncheck for default\nGUI design',
+        'check for alternative\nGUI design',
+        false
+    );
+    addPreference(
+        'Dark design',
+        () => {
+            if (SnapTheme.isDark) {
+                return this.lightTheme();
+            }
+            this.darkTheme();
+        },
+        SnapTheme.isDark,
         'uncheck for default\nGUI design',
         'check for alternative\nGUI design',
         false
@@ -9859,7 +10040,7 @@ LibraryImportDialogMorph.prototype.initializePalette = function () {
         null,
         SpriteMorph.prototype.sliderColor
     );
-    this.palette.color = SpriteMorph.prototype.paletteColor;
+    this.palette.color = SnapTheme.SpriteMorph.paletteColor;
     this.palette.padding = 4;
     this.palette.isDraggable = false;
     this.palette.acceptsDrops = false;
@@ -11292,7 +11473,7 @@ WardrobeMorph.prototype.updateList = function () {
         "costumes tab help" // look up long string in translator
     ));
     txt.fontSize = 9;
-    txt.setColor(SpriteMorph.prototype.paletteTextColor);
+    txt.setColor(SnapTheme.SpriteMorph.paletteTextColor);
 
     txt.setPosition(new Point(x, y));
     this.addContents(txt);
@@ -11713,7 +11894,7 @@ JukeboxMorph.prototype.updateList = function () {
         'import a sound from your computer\nby dragging it into here'
     ));
     txt.fontSize = 9;
-    txt.setColor(SpriteMorph.prototype.paletteTextColor);
+    txt.setColor(SnapTheme.SpriteMorph.paletteTextColor);
     txt.setPosition(new Point(x, y));
     this.addContents(txt);
 
@@ -12187,7 +12368,7 @@ StageHandleMorph.prototype.init = function (target) {
     this.target = target || null;
     this.userState = 'normal'; // or 'highlight'
     HandleMorph.uber.init.call(this);
-    this.color = MorphicPreferences.isFlat ?
+    this.color = SnapTheme.backgroundColor.hsl()[2] > 0.5 ?
             IDE_Morph.prototype.backgroundColor : new Color(190, 190, 190);
     this.isDraggable = false;
     this.setExtent(new Point(12, 50));
@@ -12199,7 +12380,7 @@ StageHandleMorph.prototype.render = function (ctx) {
     if (this.userState === 'highlight') {
         this.renderOn(
             ctx,
-            MorphicPreferences.isFlat ?
+            SnapTheme.frameColor.hsl()[2] > 0.5 ?
                     new Color(245, 245, 255) : new Color(100, 100, 255),
             this.color
         );
@@ -12331,7 +12512,7 @@ PaletteHandleMorph.prototype.init = function (target) {
     this.target = target || null;
     this.userState = 'normal';
     HandleMorph.uber.init.call(this);
-    this.color = MorphicPreferences.isFlat ?
+    this.color = SnapTheme.frameColor.hsl()[2] > 0.5 ?
             IDE_Morph.prototype.backgroundColor : new Color(190, 190, 190);
     this.isDraggable = false;
     this.setExtent(new Point(12, 50));
