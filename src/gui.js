@@ -4157,7 +4157,7 @@ IDE_Morph.prototype.userCut = function (event) {
             return
         }
 
-        if ((event === 'ctrl shift c') && (content instanceof CommandBlockMorph || content instanceof HatBlockMorph)) {
+        if (content instanceof CommandBlockMorph || content instanceof HatBlockMorph) {
             var nb = content.nextBlock();
             if (nb) {
                 nb.destroy();
