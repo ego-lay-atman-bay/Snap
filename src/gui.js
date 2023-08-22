@@ -4094,7 +4094,8 @@ IDE_Morph.prototype.userCopy = function (event) {
     var world = this.world();
     var underHand,
         hand,
-        mouseOverList;
+        mouseOverList,
+        isComment;
 
     hand = world.hand;
     mouseOverList = hand.mouseOverList;
@@ -4103,13 +4104,30 @@ IDE_Morph.prototype.userCopy = function (event) {
                 mouseOverList[0].parentThatIsA(CommentMorph);
     
     if (underHand && !underHand.isTemplate && !(underHand instanceof PrototypeHatBlockMorph)) {
-        this.scene.clipboard = underHand.fullCopy();
-        if ((this.scene.clipboard instanceof CommandBlockMorph || this.scene.clipboard instanceof HatBlockMorph) && event === 'ctrl shift c') {
-            var nb = this.scene.clipboard.nextBlock()
+        let content = underHand.fullCopy();
+        isComment = content instanceof CommentMorph;
+
+        if (isComment) {
+            this.clipboard = {
+                type: 'comment',
+                content: content.text()
+            }
+            return
+        }
+
+        if ((event === 'ctrl shift c') && (content instanceof CommandBlockMorph || content instanceof HatBlockMorph)) {
+            var nb = content.nextBlock();
             if (nb) {
                 nb.destroy();
             }
         }
+
+        content.parent = this;
+        this.clipboard = {
+            type: 'xml',
+            content: content.toXMLString()
+        };
+        content.destroy();
     }
 }
 
@@ -4117,7 +4135,8 @@ IDE_Morph.prototype.userCut = function (event) {
     var world = this.world();
     var underHand,
         hand,
-        mouseOverList;
+        mouseOverList,
+        isComment;
 
     hand = world.hand;
     mouseOverList = hand.mouseOverList;
@@ -4126,31 +4145,55 @@ IDE_Morph.prototype.userCut = function (event) {
                 mouseOverList[0].parentThatIsA(CommentMorph);
     
     if (underHand && !underHand.isTemplate && !(underHand instanceof PrototypeHatBlockMorph)) {
-        this.scene.clipboard = underHand.fullCopy();
-        if (underHand instanceof CommandBlockMorph ||
-            underHand instanceof HatBlockMorph) {
-            var nb = this.scene.clipboard.nextBlock();
+        let content = underHand.fullCopy();
+        isComment = content instanceof CommentMorph;
+
+        if (isComment) {
+            this.clipboard = {
+                type: 'comment',
+                content: content.text()
+            }
+            underHand.userDestroy()
+            return
+        }
+
+        if ((event === 'ctrl shift c') && (content instanceof CommandBlockMorph || content instanceof HatBlockMorph)) {
+            var nb = content.nextBlock();
             if (nb) {
                 nb.destroy();
             }
         }
-        underHand.userDestroy();
+
+        content.parent = this;
+        this.clipboard = {
+            type: 'xml',
+            content: content.toXMLString()
+        };
+        content.destroy();
+
+        underHand.userDestroy()
     }
 }
 
 IDE_Morph.prototype.userPaste = function (event) {
     var world = this.world();
 
-    if (this.scene.clipboard) {
-        var cpy = this.scene.clipboard.fullCopy();
-        cpy.pickUp(world);
-        // register the drop-origin, so the block can
-        // slide back to its former situation if dropped
-        // somewhere where it gets rejected
-        world.hand.grabOrigin = {
-            origin: this.palette,
-            position: this.palette.center()
-        };
+    if (this.clipboard) {
+        switch (this.clipboard.type) {
+            case 'xml':
+                this.droppedText(this.clipboard.content);
+                break;
+            case 'comment':
+                let comment = new CommentMorph(this.clipboard.content);
+                comment.pickUp(world);
+                world.hand.grabOrigin = {
+                    origin: this.palette,
+                    position: this.palette.center()
+                };
+                break;
+            default:
+                break;
+        }
     }
 }
 

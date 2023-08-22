@@ -3569,7 +3569,10 @@ BlockMorph.prototype.userMenu = function () {
         menu.addItem(
             'copy all',
             () => {
-                ide.scene.clipboard = this.fullCopy();
+                ide.clipboard = {
+                    type: 'xml',
+                    content: this.toXMLString()
+                };
             },
             'Send this block and all\nblocks underneath to the clipboard.'
         );
@@ -3577,26 +3580,41 @@ BlockMorph.prototype.userMenu = function () {
     menu.addItem(
         'copy block',
         () => {
-            ide.scene.clipboard = this.fullCopy();
-            var nb = ide.scene.clipboard.nextBlock();
-            if (nb) {
-                nb.destroy();
+            let block = this.fullCopy();
+            if (this instanceof CommandBlockMorph || this instanceof HatBlockMorph) {
+                var nb = block.nextBlock();
+                if (nb) {
+                    nb.destroy();
+                }
             }
+
+            block.parent = ide;
+            ide.clipboard = {
+                type: 'xml',
+                content: block.toXMLString()
+            };
+            block.destroy();
         },
         'Send this block to the clipboard.'
     );
     menu.addItem(
         'cut block',
         () => {
-            ide.scene.clipboard = this.fullCopy();
-            if (this instanceof CommandBlockMorph ||
-                this instanceof HatBlockMorph) {
-                var nb = ide.scene.clipboard.nextBlock();
+            let block = this.fullCopy();
+            if (this instanceof CommandBlockMorph || this instanceof HatBlockMorph) {
+                var nb = block.nextBlock();
                 if (nb) {
                     nb.destroy();
                 }
             }
-            
+
+            block.parent = ide;
+            ide.clipboard = {
+                type: 'xml',
+                content: block.toXMLString()
+            };
+            block.destroy();
+
             this.userDestroy();
         },
         'Send this block to the\nclipboard and delete this block.'
@@ -8672,26 +8690,12 @@ ScriptsMorph.prototype.userMenu = function () {
             );
         }
     }
-    if (ide.scene.clipboard) {
+    if (ide.clipboard) {
         menu.addLine();
         menu.addItem(
             "paste",
             () => {
-                var cpy = ide.scene.clipboard.fullCopy(),
-                    blockEditor = this.parentThatIsA(BlockEditorMorph);
-                cpy.pickUp(world);
-                // register the drop-origin, so the block can
-                // slide back to its former situation if dropped
-                // somewhere where it gets rejected
-                if (!ide && blockEditor) {
-                    ide = blockEditor.target.parentThatIsA(IDE_Morph);
-                }
-                if (ide) {
-                    world.hand.grabOrigin = {
-                        origin: ide.palette,
-                        position: ide.palette.center()
-                    };
-                }
+                ide.userPaste();
             },
             'Retrieve script\nfrom clipboard'
         );
@@ -15496,7 +15500,13 @@ CommentMorph.prototype.fixLayout = function () {
 // CommentMorph menu:
 
 CommentMorph.prototype.userMenu = function () {
-    var menu = new MenuMorph(this);
+    var menu = new MenuMorph(this),
+        ide = this.parentThatIsA(IDE_Morph),
+        blockEditor = this.parentThatIsA(BlockEditorMorph);
+    
+    if (!ide && blockEditor) {
+        ide = blockEditor.target.parentThatIsA(IDE_Morph);
+    }
 
     menu.addItem(
         "duplicate",
@@ -15548,14 +15558,20 @@ CommentMorph.prototype.userMenu = function () {
     menu.addItem(
         'copy comment',
         () => {
-            ide.scene.clipboard = this.fullCopy()
+            ide.clipboard = {
+                type: 'comment',
+                content: this.text()
+            };
         },
         'Send this comment\nto the clipboard'
     );
     menu.addItem(
         'cut comment',
         () => {
-            ide.scene.clipboard = this.fullCopy()
+            ide.clipboard = {
+                type: 'comment',
+                content: this.text()
+            };
 
             this.userDestroy()
         },
