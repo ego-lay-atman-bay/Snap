@@ -87,6 +87,8 @@ BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions, snapEquals
 
 // Global stuff ////////////////////////////////////////////////////////
 
+var database = new Database()
+
 modules.gui = '2023-August-01';
 
 // Declarations
@@ -5936,6 +5938,32 @@ IDE_Morph.prototype.exportProject = function (name) {
     }
 };
 
+IDE_Morph.prototype.saveIndexedDBProject = function (name) {
+    // Export project XML, saving a file to indexedDb
+    var menu, str;
+    if (name) {
+        name = this.setProjectName(name);
+        this.scene.captureGlobalSettings();
+        try {
+            menu = this.showMessage('Exporting');
+            str = this.serializer.serialize(
+                new Project(this.scenes, this.scene)
+            );
+            database.saveProject(name, str).then((result) => {
+                menu.destroy();
+                this.recordSavedChanges();
+                this.showMessage('Exported!', 1);
+            })
+        } catch (err) {
+            if (Process.prototype.isCatchingErrors) {
+                this.showMessage('Export failed: ' + err);
+            } else {
+                throw err;
+            }
+        }
+    }
+};
+
 IDE_Morph.prototype.exportGlobalBlocks = function () {
     if (this.stage.globalBlocks.length > 0) {
         new BlockExportDialogMorph(
@@ -8693,11 +8721,10 @@ ProjectDialogMorph.prototype.init = function (ide, task) {
     // build contents
     if ((task === 'open' || task === 'add') && this.source === 'disk') {
         // give the user a chance to switch to another source
-        this.source = null;
+        this.setSource('indexedDB');
         this.buildContents();
         this.projectList = [];
         this.listField.hide();
-        this.source = 'disk';
     } else {
         this.buildContents();
         this.onNextStep = () => // yield to show "updating" message
@@ -8739,9 +8766,10 @@ ProjectDialogMorph.prototype.buildContents = function () {
         this.addSourceButton('examples', localize('Examples'), 'poster');
         if (this.hasLocalProjects() || this.ide.world().currentKey === 16) {
             // shift- clicked
-            this.addSourceButton('local', localize('Browser'), 'globe');
+            this.addSourceButton('local', localize('Browser Storage'), 'globe');
         }
     }
+    this.addSourceButton('indexedDB', localize('Browser'), 'storage')
     this.addSourceButton('disk', localize('Computer'), 'storage');
 
     this.srcBar.fixLayout();
@@ -9110,6 +9138,24 @@ ProjectDialogMorph.prototype.setSource = function (source) {
             return;
         }
         break;
+    case 'indexedDB':
+        console.log('indexedDB')
+        msg = this.ide.showMessage('Updating\nproject list...');
+        this.projectList = [];
+        this.getIndexDBProjectList(
+            projects => {
+                console.log('projects:', projects)
+                // Don't show cloud projects if user has since switched panes.
+                if (this.source === 'indexedDB') {
+                    this.installIndexDBProjectList(projects);
+                }
+                msg.destroy();
+            },
+            (err, lbl) => {
+                msg.destroy();
+            }
+        );
+        return;
     }
 
     this.listField.destroy();
@@ -9229,6 +9275,26 @@ ProjectDialogMorph.prototype.getLocalProjectList = function () {
     return projects;
 };
 
+ProjectDialogMorph.prototype.getIndexDBProjectList = function (callback) {
+    var stored, name, dta,
+        projects = [];
+
+    if (database) {
+        database.getAllProjects().then((result) => {
+            for (const project of result) {
+                projects.push({
+                    name: project.name,
+                    thumb: null,
+                    notes: null,
+                })
+            }
+
+            callback(projects)
+        })
+    }
+    return projects;
+};
+
 ProjectDialogMorph.prototype.getExamplesProjectList = function () {
     return this.ide.getMediaList('Examples');
 };
@@ -9332,6 +9398,68 @@ ProjectDialogMorph.prototype.installCloudProjectList = function (pl) {
     }
 };
 
+ProjectDialogMorph.prototype.installIndexDBProjectList = function (pl) {
+    this.projectList = pl[0] ? pl : [];
+    this.projectList.sort((x, y) =>
+        x.name.toLowerCase() < y.name.toLowerCase() ? -1 : 1
+    );
+
+    this.listField.destroy();
+    this.listField = new ListMorph(
+        this.projectList,
+        this.projectList.length > 0 ?
+            (element) => {return element.name || element; }
+                : null,
+                null,
+        () => this.ok()
+    );
+    this.fixListFieldItemColors();
+    this.listField.fixLayout = nop;
+    this.listField.edge = InputFieldMorph.prototype.edge;
+    this.listField.fontSize = InputFieldMorph.prototype.fontSize;
+    this.listField.typeInPadding = InputFieldMorph.prototype.typeInPadding;
+    this.listField.contrast = InputFieldMorph.prototype.contrast;
+    this.listField.render = InputFieldMorph.prototype.render;
+    this.listField.drawRectBorder = InputFieldMorph.prototype.drawRectBorder;
+
+    
+    console.log('indexedDB source')
+    this.listField.action = (item) => {
+        console.log('item', item)
+        var src, xml;
+        if (item === undefined) {return; }
+        if (this.nameField) {
+            this.nameField.setContents(item.name || '');
+        }
+        if (this.task === 'open') {
+            database.getProject(item.name).then((result) => {
+                console.log('result', result)
+                if (result) {
+                    xml = this.ide.serializer.parse(result.xml);
+                    this.notesText.text =
+                        xml.childNamed('notes').contents || '';
+                    this.notesText.rerender();
+                    this.notesField.contents.adjustBounds();
+                    this.preview.texture =
+                        xml.childNamed('thumbnail').contents || null;
+                    this.preview.cachedTexture = null;
+                    this.preview.rerender();
+                }
+            });
+        }
+        this.edit();
+    }
+    this.body.add(this.listField);
+    this.shareButton.hide();
+    this.unshareButton.hide();
+    this.deleteButton.show();
+    this.buttons.fixLayout();
+    this.fixLayout();
+    if (this.task === 'open' || this.task === 'add') {
+        this.clearDetails();
+    }
+};
+
 ProjectDialogMorph.prototype.clearDetails = function () {
     this.notesText.text = '';
     this.notesText.rerender();
@@ -9362,7 +9490,10 @@ ProjectDialogMorph.prototype.addScene = function () {
         src = this.ide.getURL(this.ide.resourceURL('Examples', proj.fileName));
         this.ide.openProjectString(src);
         this.destroy();
-
+    } else if (this.source === 'indexedDB') {
+        this.ide.isAddingScenes = true
+        this.addIndexedDBScene(proj);
+        this.destroy();
     } else { // 'local'
         this.ide.source = null;
         this.ide.openProjectName(proj.name);
@@ -9382,7 +9513,9 @@ ProjectDialogMorph.prototype.openProject = function () {
         src = this.ide.getURL(this.ide.resourceURL('Examples', proj.fileName));
         this.ide.backup(() => this.ide.openProjectString(src));
         this.destroy();
-
+    
+    } else if (this.source === 'indexedDB') {
+        this.openIndexedDBProject(proj)
     } else { // 'local'
         this.ide.source = null;
         this.ide.backup(() => this.ide.openProjectName(proj.name));
@@ -9407,6 +9540,34 @@ ProjectDialogMorph.prototype.openCloudProject = function (project, delta) {
             ]);
         }
     );
+};
+
+ProjectDialogMorph.prototype.openIndexedDBProject = function (project, delta) {
+    this.ide.backup(
+        () => {
+            this.ide.nextSteps([
+                () => this.ide.showMessage('Fetching project\nfrom the browser...'),
+                () => {
+                    database.getProject(project.name)
+                        .then((result) => {
+                            this.ide.openProjectString(result.xml)
+                        })
+                }
+            ]);
+        }
+    );
+};
+
+ProjectDialogMorph.prototype.addIndexedDBScene = function (project, delta) {
+    this.ide.nextSteps([
+        () => this.ide.showMessage('Fetching project\nfrom the browser...'),
+        () => {
+            database.getProject(project.name)
+                .then((result) => {
+                    this.ide.openProjectString(result.xml)
+                })
+        }
+    ]);
 };
 
 ProjectDialogMorph.prototype.rawOpenCloudProject = function (proj, delta) {
@@ -9458,6 +9619,27 @@ ProjectDialogMorph.prototype.saveProject = function () {
                 this.ide.setProjectName(name);
                 this.saveCloudProject();
             }
+        } else if (this.source === 'indexedDB') {
+            if (detect(
+                    this.projectList,
+                    item => item.name === name
+                )) {
+                this.ide.confirm(
+                    localize(
+                        'Are you sure you want to replace'
+                    ) + '\n"' + name + '"?',
+                    'Replace Project',
+                    () => {
+                        this.ide.setProjectName(name);
+                        this.ide.saveIndexedDBProject(name);
+                        this.destroy()
+                    }
+                );
+            } else {
+                this.ide.setProjectName(name);
+                this.ide.saveIndexedDBProject(name);
+                this.destroy()
+            }
         } else if (this.source === 'disk') {
             this.ide.exportProject(name);
             this.ide.source = 'disk';
@@ -9498,6 +9680,26 @@ ProjectDialogMorph.prototype.deleteProject = function () {
                     },
                     this.ide.cloudError()
                 )
+            );
+        }
+    } else if (this.source === 'indexedDB') {
+        proj = this.listField.selected;
+        if (proj) {
+            this.ide.confirm(
+                localize(
+                    'Are you sure you want to delete'
+                ) + '\n"' + proj.name + '"?',
+                'Delete Project',
+                () => database.deleteProject(
+                    proj.name,
+                ).then((result) => {
+                    this.ide.hasChangedMedia = true;
+                    idx = this.projectList.indexOf(proj);
+                    this.projectList.splice(idx, 1);
+                    this.installIndexDBProjectList( // refresh list
+                        this.projectList
+                    );
+                })
             );
         }
     } else { // 'local, examples'
@@ -12591,7 +12793,7 @@ PaletteHandleMorph.prototype.init = function (target) {
     this.setExtent(new Point(12, 50));
 
     this.cursorStyle = 'ew-resize';
-};
+ };
 
 // PaletteHandleMorph drawing:
 
