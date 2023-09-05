@@ -1,9 +1,9 @@
 ![Snap! Logo](src/snap_logo_sm.png)
 # Snap<em>!</em> Build Your Own Blocks
 
-[https://snap.berkeley.edu][snap]
+[https://ego-lay-atman-bay.github.io/Snap][snap]
 
-**[Try Snap<em>!</em> Now](https://snap.berkeley.edu/snap/)**
+**[Try Snap<em>!</em> Now]([https://snap.berkeley.edu/snap/](https://ego-lay-atman-bay.github.io/Snap))**
 
 a visual, blocks based programming language
 inspired by Scratch
