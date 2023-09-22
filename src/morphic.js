@@ -920,7 +920,7 @@
 
     it renders the morph as a solid rectangle completely filling its
     area with its current color.
-    
+
     Notice how the coordinates for the fillRect() call are relative
     to the morph's own position: The rendered rectangle's origin is always
     located at (0, 0) regardless of the morph's actual position in the World.
@@ -931,20 +931,20 @@
     If your new morph also needs to determine its extent and, e.g. to
     encompass one or several other morphs, or arrange the layout of its
     submorphs, make sure to also override the default
-    
+
         fixLayout()
-    
+
     method.
-    
+
     NOTE: If you need to set the morph's extent inside, in order to avoid
     infinite recursion instead of calling morph.setExtent() - which will
     in turn call morph.fixLayout() again - directly modify the morph's
-    
+
         bounds
 
     property. Bounds is a rectable on which you can also use the same
     size-setters, e.g. by calling:
-    
+
         this.bounds.setExtent()
 
 
@@ -953,9 +953,9 @@
     In case your new morph needs to support pixel-perfect collision detection
     with other morphs or pointing devices such as the mouse or a stylus you
     can set the inherited attribute
-    
+
         isFreeForm = bool
-    
+
     to "true" (default is "false"). This makes sense the more your morph's
     visual shape diverges from a rectangle. For example, if you create a
     circular filled morph the default setting will register mouse-events
@@ -978,14 +978,14 @@
     cache your morph's current shape, so it doesn't have to be re-drawn onto a
     new Canvas element every time the mouse moves over its bounding box.
     For this you can set then inherited
-    
+
         isCachingImage = bool
-        
+
     attribute to "true" instead of the default "false" value. This will
     significantly speed up collision detection and smoothen animations that
     continuously perform collision detection. However, it will also consume
     more memory. Therefore it's best to use this setting with caution.
-    
+
     Snap! caches the shapes of sprites but not those of blocks. Instead it
     manages the insides of C- and E-shaped blocks through the morphic "holes"
     mechanism.
@@ -999,20 +999,20 @@
     registered.
 
     By default the inherited
-    
+
         holes = []
 
     property is an empty array. You can add one or more morphic Rectangle
     objects to this list, representing regions, in which occurring events will
     instead be passed on to the morph underneath.
-    
+
     Note that, same with the render() method, the coordinates of these
     rectangular holes must be specified relative to your morph's position.
 
     If you specify holes you might find the need to adjust their layout
     depending on the layout of your morph. To accomplish this you can override
     the inherited
-    
+
         fixHolesLayout()
 
     method.
@@ -1026,13 +1026,13 @@
     on a touch screen device, or you want the user to be able to "pinch" or
     otherwise distort a shape interactively. In all of these situations you'll
     want your morph to frequently rerender its shape.
-    
+
     You can accomplish this, by calling
 
         rerender()
 
     after every change to your morph's appearance that requires rerendering.
-    
+
     Such changes are usually only happening when the morph's dimensions or
     other visual properties - such as its color - changes.
 
@@ -4907,7 +4907,7 @@ HandleMorph.prototype.renderCrosshairsOn = function (ctx, fract) {
         false
     );
     ctx.fill();
-    
+
     // solid black ring
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 1;
@@ -5627,7 +5627,7 @@ CursorMorph.prototype.init = function (aStringOrTextMorph, aTextarea) {
     // override inherited defaults
     ls = fontHeight(this.target.fontSize);
     this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
-    
+
     if (this.target instanceof TextMorph &&
             (this.target.alignment !== 'left')) {
         this.target.setAlignmentToLeft();
@@ -5672,7 +5672,7 @@ CursorMorph.prototype.processKeyDown = function (event) {
         shift = event.shiftKey,
         singleLineText = this.target instanceof StringMorph,
         dest;
- 
+
     if (!isNil(this.target.receiver) && (event.ctrlKey || event.metaKey)) {
         if (keyName === 'd') {
             event.preventDefault();
@@ -5820,7 +5820,7 @@ CursorMorph.prototype.processInput = function (event) {
 CursorMorph.prototype.updateTextAreaPosition = function () {
     var pos = getDocumentPositionOf(this.target.world().worldCanvas),
         origin = this.target.bounds.origin.add(new Point(pos.x, pos.y));
- 
+
     function number2px (n) {
         return Math.ceil(n) + 'px';
     }
@@ -8587,6 +8587,7 @@ StringMorph.prototype.init = function (
 ) {
     // additional properties:
     this.text = text || ((text === '') ? '' : 'StringMorph');
+    this.placeholder = null;
     this.fontSize = fontSize || 12;
     this.fontName = fontName || MorphicPreferences.globalFontFamily;
     this.fontStyle = fontStyle || 'sans-serif';
@@ -8634,13 +8635,19 @@ StringMorph.prototype.password = function (letter, length) {
     return ans;
 };
 
+StringMorph.prototype.getRenderColor = function () {
+    let color = this.color.copy();
+
+    return this.placeholder && this.text == '' ? color.lighter(30) : color;
+}
+
 StringMorph.prototype.font = function () {
     // answer a font string, e.g. 'bold italic 12px sans-serif'
     var font = '';
     if (this.isBold) {
         font = font + 'bold ';
     }
-    if (this.isItalic) {
+    if (this.isItalic || this.placeholder && this.text == '') {
         font = font + 'italic ';
     }
     return font +
@@ -8659,7 +8666,8 @@ StringMorph.prototype.fixLayout = function (justMe) {
     var width,
         shadowOffset = this.shadowOffset || ZERO,
         txt = this.isPassword ?
-            this.password('*', this.text.length) : this.text;
+            this.password('*', this.text.length) : this.placeholder && this.text == '' ?
+            this.placeholder : this.text;
 
     this.measureCtx.font = this.font();
     width = Math.max(
@@ -8686,7 +8694,8 @@ StringMorph.prototype.render = function (ctx) {
         shadowOffset = this.shadowOffset || ZERO,
         shadowColor = this.getShadowRenderColor(),
         txt = this.isPassword ?
-                this.password('*', this.text.length) : this.text;
+            this.password('*', this.text.length) : this.placeholder && this.text == '' ?
+            this.placeholder : this.text;
 
     // prepare context for drawing text
     ctx.font = this.font();
@@ -9291,6 +9300,7 @@ TextMorph.prototype.init = function (
 ) {
     // additional properties:
     this.text = text || (text === '' ? text : 'TextMorph');
+    this.placeholder = null;
     this.words = [];
     this.lines = [];
     this.lineSlots = [];
@@ -9331,6 +9341,8 @@ TextMorph.prototype.toString = function () {
     // e.g. 'a TextMorph("Hello World")'
     return 'a TextMorph' + '("' + this.text.slice(0, 30) + '...")';
 };
+
+TextMorph.prototype.getRenderColor = StringMorph.prototype.getRenderColor;
 
 TextMorph.prototype.font = StringMorph.prototype.font;
 
@@ -9401,6 +9413,13 @@ TextMorph.prototype.parse = function () {
             slot += word.length + 1;
         }
     });
+
+    if (this.placeholder && (this.lines.length <= 1 && this.lines[0] == ' ')) {
+        this.maxLineWidth = Math.max(
+            this.maxLineWidth,
+            context.measureText(this.placeholder).width
+        );
+    }
 };
 
 TextMorph.prototype.fixLayout = function () {
@@ -9409,10 +9428,13 @@ TextMorph.prototype.fixLayout = function () {
 
     this.parse();
 
+    var lines = this.placeholder && (this.lines.length <= 1 && this.lines[0] == ' ') ?
+                    [this.placeholder] : this.lines;
+
     // set my extent
     shadowWidth = Math.abs(this.shadowOffset.x);
     shadowHeight = Math.abs(this.shadowOffset.y);
-    height = this.lines.length * (fontHeight(this.fontSize) + shadowHeight);
+    height = lines.length * (fontHeight(this.fontSize) + shadowHeight);
     if (this.maxWidth === 0) {
         this.bounds = this.bounds.origin.extent(
             new Point(this.maxLineWidth + shadowWidth, height)
@@ -9443,6 +9465,9 @@ TextMorph.prototype.render = function (ctx) {
         shadowColor = this.getShadowRenderColor(),
         i, line, width, offx, offy, x, y, start, stop, p, c;
 
+let lines = this.placeholder && (this.lines.length <= 1 && this.lines[0] == ' ') ?
+                [this.placeholder] : this.lines;
+
     // prepare context for drawing text
     ctx.font = this.font();
     ctx.textAlign = 'left';
@@ -9460,8 +9485,8 @@ TextMorph.prototype.render = function (ctx) {
         offy = Math.max(this.shadowOffset.y, 0);
         ctx.fillStyle = shadowColor.toString();
 
-        for (i = 0; i < this.lines.length; i = i + 1) {
-            line = this.lines[i];
+        for (i = 0; i < lines.length; i = i + 1) {
+            line = lines[i];
             width = ctx.measureText(line).width + shadowWidth;
             if (this.alignment === 'right') {
                 x = this.width() - width;
@@ -9481,8 +9506,8 @@ TextMorph.prototype.render = function (ctx) {
     offy = Math.abs(Math.min(this.shadowOffset.y, 0));
     ctx.fillStyle = this.getRenderColor().toString();
 
-    for (i = 0; i < this.lines.length; i = i + 1) {
-        line = this.lines[i];
+    for (i = 0; i < lines.length; i = i + 1) {
+        line = lines[i];
         width = ctx.measureText(line).width + shadowWidth;
         if (this.alignment === 'right') {
             x = this.width() - width;
@@ -10322,7 +10347,7 @@ MenuItemMorph.prototype.popUpSubmenu = function () {
         scroller.setHeight(world.bottom() - scroller.top() - 6);
         scroller.adjustScrollBars(); // ?
      }
-    
+
     menu.add(this.action);
     menu.submenu = this.action;
     menu.submenu.world = menu.world; // keyboard control
@@ -11618,7 +11643,7 @@ HandMorph.prototype.processMouseMove = function (event) {
         mouseOverBoundsNew,
         morph,
         topMorph;
-    
+
     this.cursorStyle = null;
 
     pos = new Point(
@@ -11729,7 +11754,7 @@ HandMorph.prototype.processMouseMove = function (event) {
         this.cursorStyle = this.morphToGrab.cursorGrabStyle || this.morphToGrab.cursorStyle;
     }
     if (this.cursorStyle == null) {
-    
+
         for (const morph of this.mouseOverList) {
             if (morph.cursorStyle != null) {
                 this.cursorStyle = morph.cursorStyle;
@@ -11836,7 +11861,7 @@ HandMorph.prototype.processDrop = function (event) {
         while (!trg.droppedImage) {
             trg = trg.parent;
         }
-                
+
         pic.onload = () => {
             (async () => {
                 // extract embedded data (e.g. blocks)
@@ -12197,7 +12222,7 @@ WorldMorph.prototype.condenseDamages = function () {
     /* // overly eager reduction algorithm, commented out for performance
     var again = true,
         size = this.broken.length;
-    
+
     while (again) {
         this.broken = condense(this.broken);
         again = (this.broken.length < size);

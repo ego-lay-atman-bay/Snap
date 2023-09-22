@@ -5749,7 +5749,7 @@ BlockMorph.prototype.mouseEnterBounds = function (dragged) {
         }
     }
 
-    
+
 };
 
 BlockMorph.prototype.mouseLeaveBounds = function (dragged) {
@@ -6164,7 +6164,7 @@ BlockMorph.prototype.rewind = function (scriptOnly = false) {
 
     return trace;
 };
- 
+
  BlockMorph.prototype.getVarName = function () {
     // return the name of the (first) variable accessed by this block or null
     // if it doesn't access any variable.
@@ -6181,7 +6181,7 @@ BlockMorph.prototype.rewind = function (scriptOnly = false) {
     }
     return null;
  };
- 
+
 // CommandBlockMorph ///////////////////////////////////////////////////
 
 /*
@@ -13859,7 +13859,7 @@ MultiArgMorph.prototype.insertNewInputBefore = function (anInput, contents) {
     var idx = this.children.indexOf(anInput),
         newPart = this.labelPart(this.slotSpec),
         infix;
-    
+
     if (this.maxInputs && (this.inputs().length >= this.maxInputs)) {
         return;
     }
@@ -15334,9 +15334,10 @@ CommentMorph.prototype.init = function (contents) {
     );
     this.arrow.mouseClickLeft = () => this.toggleExpand();
     this.contents = new TextMorph(
-        contents || localize('add comment here...'),
+        contents || '',
         this.fontSize
     );
+    this.contents.placeholder = localize('add comment here...')
     this.contents.isEditable = true;
     this.contents.enableSelecting();
     this.contents.maxWidth = 90 * scale;
@@ -15503,7 +15504,7 @@ CommentMorph.prototype.userMenu = function () {
     var menu = new MenuMorph(this),
         ide = this.parentThatIsA(IDE_Morph),
         blockEditor = this.parentThatIsA(BlockEditorMorph);
-    
+
     if (!ide && blockEditor) {
         ide = blockEditor.target.parentThatIsA(IDE_Morph);
     }
