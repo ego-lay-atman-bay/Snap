@@ -912,28 +912,10 @@ IDE_Morph.prototype.applyConfigurations = function () {
             }
         };
 
+    console.log('apply config', cnf)
+
     if (!Object.keys(cnf).length) {
         return;
-    }
-
-    // design
-    if (cnf.design) {
-        if (cnf.design === 'flat') {
-            this.setFlatDesign();
-        } else if (cnf.design === 'classic') {
-            this.setDefaultDesign();
-        }
-        SpriteMorph.prototype.initBlocks();
-    }
-
-    if (cnf.theme) {
-        if (cnf.theme === 'light') {
-            this.setLightTheme();
-        } else if (cnf.theme === 'dark') {
-            this.setDarkTheme();
-        }
-        SpriteMorph.prototype.initBlocks();
-        this.applyTheme();
     }
 
     // interaction mode
@@ -1911,6 +1893,8 @@ IDE_Morph.prototype.createPalette = function (forSearching) {
     this.palette.acceptsDrops = true;
     this.palette.enableAutoScrolling = false;
     this.palette.contents.acceptsDrops = false;
+
+    this.palette.cursorGrabStyle = 'grabbing';
 
     if (this.scene.unifiedPalette) {
         this.palette.adjustScrollBars = function () {
@@ -3437,6 +3421,7 @@ IDE_Morph.prototype.applySavedSettings = function () {
     if (this.config.noUserSettings) {return; }
 
     var design = this.getSetting('design'),
+        theme = this.getSetting('theme')
         zoom = this.getSetting('zoom'),
         fade = this.getSetting('fade'),
         language = this.getSetting('language'),
@@ -3450,10 +3435,23 @@ IDE_Morph.prototype.applySavedSettings = function () {
         solidshadow = this.getSetting('solidshadow');
 
     // design
-    if (design === 'flat') {
-        this.setFlatDesign();
-    } else {
-        this.setDefaultDesign();
+    console.log('theme', theme)
+    if (theme) {
+        if (theme === 'light') {
+            this.setLightTheme();
+        } else if (theme === 'dark') {
+            this.setDarkTheme();
+        }
+        this.applyTheme();
+    }
+
+    if (design) {
+        if (design === 'flat') {
+            this.setFlatDesign();
+        } else if (design === 'classic') {
+            this.setDefaultDesign();
+        }
+        this.applyTheme();
     }
 
     // blocks zoom
@@ -4084,6 +4082,115 @@ IDE_Morph.prototype.removeBlock = function (aBlock, justThis) {
     this.stage.threads.stopAllForBlock(aBlock);
     aBlock.destroy(justThis);
 };
+
+// IDE_Morph copy / paste at hand
+
+IDE_Morph.prototype.userCopy = function (event) {
+    var world = this.world();
+    var underHand,
+        hand,
+        mouseOverList,
+        isComment;
+
+    hand = world.hand;
+    mouseOverList = hand.mouseOverList;
+
+    underHand = mouseOverList[0].parentThatIsA(BlockMorph) ||
+                mouseOverList[0].parentThatIsA(CommentMorph);
+
+    if (underHand && !underHand.isTemplate && !(underHand instanceof PrototypeHatBlockMorph)) {
+        let content = underHand.fullCopy();
+        isComment = content instanceof CommentMorph;
+
+        if (isComment) {
+            this.clipboard = {
+                type: 'comment',
+                content: content.text()
+            }
+            return
+        }
+
+        if ((event === 'ctrl shift c') && (content instanceof CommandBlockMorph || content instanceof HatBlockMorph)) {
+            var nb = content.nextBlock();
+            if (nb) {
+                nb.destroy();
+            }
+        }
+
+        content.parent = this;
+        this.clipboard = {
+            type: 'xml',
+            content: content.toXMLString()
+        };
+        content.destroy();
+    }
+}
+
+IDE_Morph.prototype.userCut = function (event) {
+    var world = this.world();
+    var underHand,
+        hand,
+        mouseOverList,
+        isComment;
+
+    hand = world.hand;
+    mouseOverList = hand.mouseOverList;
+
+    underHand = mouseOverList[0].parentThatIsA(BlockMorph) ||
+                mouseOverList[0].parentThatIsA(CommentMorph);
+
+    if (underHand && !underHand.isTemplate && !(underHand instanceof PrototypeHatBlockMorph)) {
+        let content = underHand.fullCopy();
+        isComment = content instanceof CommentMorph;
+
+        if (isComment) {
+            this.clipboard = {
+                type: 'comment',
+                content: content.text()
+            }
+            underHand.userDestroy()
+            return
+        }
+
+        if (content instanceof CommandBlockMorph || content instanceof HatBlockMorph) {
+            var nb = content.nextBlock();
+            if (nb) {
+                nb.destroy();
+            }
+        }
+
+        content.parent = this;
+        this.clipboard = {
+            type: 'xml',
+            content: content.toXMLString()
+        };
+        content.destroy();
+
+        underHand.userDestroy()
+    }
+}
+
+IDE_Morph.prototype.userPaste = function (event) {
+    var world = this.world();
+
+    if (this.clipboard) {
+        switch (this.clipboard.type) {
+            case 'xml':
+                this.droppedText(this.clipboard.content);
+                break;
+            case 'comment':
+                let comment = new CommentMorph(this.clipboard.content);
+                comment.pickUp(world);
+                world.hand.grabOrigin = {
+                    origin: this.palette,
+                    position: this.palette.center()
+                };
+                break;
+            default:
+                break;
+        }
+    }
+}
 
 // IDE_Morph menus
 
@@ -9218,6 +9325,68 @@ ProjectDialogMorph.prototype.installCloudProjectList = function (pl) {
     }
 };
 
+ProjectDialogMorph.prototype.installIndexDBProjectList = function (pl) {
+    this.projectList = pl[0] ? pl : [];
+    this.projectList.sort((x, y) =>
+        x.name.toLowerCase() < y.name.toLowerCase() ? -1 : 1
+    );
+
+    this.listField.destroy();
+    this.listField = new ListMorph(
+        this.projectList,
+        this.projectList.length > 0 ?
+            (element) => {return element.name || element; }
+                : null,
+                null,
+        () => this.ok()
+    );
+    this.fixListFieldItemColors();
+    this.listField.fixLayout = nop;
+    this.listField.edge = InputFieldMorph.prototype.edge;
+    this.listField.fontSize = InputFieldMorph.prototype.fontSize;
+    this.listField.typeInPadding = InputFieldMorph.prototype.typeInPadding;
+    this.listField.contrast = InputFieldMorph.prototype.contrast;
+    this.listField.render = InputFieldMorph.prototype.render;
+    this.listField.drawRectBorder = InputFieldMorph.prototype.drawRectBorder;
+
+
+    console.log('indexedDB source')
+    this.listField.action = (item) => {
+        console.log('item', item)
+        var src, xml;
+        if (item === undefined) {return; }
+        if (this.nameField) {
+            this.nameField.setContents(item.name || '');
+        }
+        if (this.task === 'open') {
+            database.getProject(item.name).then((result) => {
+                console.log('result', result)
+                if (result) {
+                    xml = this.ide.serializer.parse(result.xml);
+                    this.notesText.text =
+                        xml.childNamed('notes').contents || '';
+                    this.notesText.rerender();
+                    this.notesField.contents.adjustBounds();
+                    this.preview.texture =
+                        xml.childNamed('thumbnail').contents || null;
+                    this.preview.cachedTexture = null;
+                    this.preview.rerender();
+                }
+            });
+        }
+        this.edit();
+    }
+    this.body.add(this.listField);
+    this.shareButton.hide();
+    this.unshareButton.hide();
+    this.deleteButton.show();
+    this.buttons.fixLayout();
+    this.fixLayout();
+    if (this.task === 'open' || this.task === 'add') {
+        this.clearDetails();
+    }
+};
+
 ProjectDialogMorph.prototype.clearDetails = function () {
     this.notesText.text = '';
     this.notesText.rerender();
@@ -9269,6 +9438,8 @@ ProjectDialogMorph.prototype.openProject = function () {
         this.ide.backup(() => this.ide.openProjectString(src));
         this.destroy();
 
+    } else if (this.source === 'indexedDB') {
+        this.openIndexedDBProject(proj)
     } else { // 'local'
         this.ide.source = null;
         this.ide.backup(() => this.ide.openProjectName(proj.name));
