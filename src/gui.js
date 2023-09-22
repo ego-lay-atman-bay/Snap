@@ -89,11 +89,12 @@ BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions, snapEquals
 
 var database = new Database()
 
-modules.gui = '2023-August-01';
+var database = new Database()
 
+modules.gui = '2023-September-14';
 // Declarations
 
-var SnapVersion = '9.0.5';
+var SnapVersion = '9.0.6';
 
 var IDE_Morph;
 var ProjectDialogMorph;
@@ -1913,7 +1914,7 @@ IDE_Morph.prototype.createPalette = function (forSearching) {
     this.palette.acceptsDrops = true;
     this.palette.enableAutoScrolling = false;
     this.palette.contents.acceptsDrops = false;
-    
+
     this.palette.cursorGrabStyle = 'grabbing';
 
     if (this.scene.unifiedPalette) {
@@ -4102,9 +4103,9 @@ IDE_Morph.prototype.userCopy = function (event) {
     hand = world.hand;
     mouseOverList = hand.mouseOverList;
 
-    underHand = mouseOverList[0].parentThatIsA(BlockMorph) || 
+    underHand = mouseOverList[0].parentThatIsA(BlockMorph) ||
                 mouseOverList[0].parentThatIsA(CommentMorph);
-    
+
     if (underHand && !underHand.isTemplate && !(underHand instanceof PrototypeHatBlockMorph)) {
         let content = underHand.fullCopy();
         isComment = content instanceof CommentMorph;
@@ -4143,9 +4144,9 @@ IDE_Morph.prototype.userCut = function (event) {
     hand = world.hand;
     mouseOverList = hand.mouseOverList;
 
-    underHand = mouseOverList[0].parentThatIsA(BlockMorph) || 
+    underHand = mouseOverList[0].parentThatIsA(BlockMorph) ||
                 mouseOverList[0].parentThatIsA(CommentMorph);
-    
+
     if (underHand && !underHand.isTemplate && !(underHand instanceof PrototypeHatBlockMorph)) {
         let content = underHand.fullCopy();
         isComment = content instanceof CommentMorph;
@@ -9422,7 +9423,7 @@ ProjectDialogMorph.prototype.installIndexDBProjectList = function (pl) {
     this.listField.render = InputFieldMorph.prototype.render;
     this.listField.drawRectBorder = InputFieldMorph.prototype.drawRectBorder;
 
-    
+
     console.log('indexedDB source')
     this.listField.action = (item) => {
         console.log('item', item)
@@ -9513,7 +9514,7 @@ ProjectDialogMorph.prototype.openProject = function () {
         src = this.ide.getURL(this.ide.resourceURL('Examples', proj.fileName));
         this.ide.backup(() => this.ide.openProjectString(src));
         this.destroy();
-    
+
     } else if (this.source === 'indexedDB') {
         this.openIndexedDBProject(proj)
     } else { // 'local'
