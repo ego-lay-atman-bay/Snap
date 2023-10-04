@@ -420,7 +420,7 @@ SnapTheme.setCustomTheme = function (theme) {
 
 SnapTheme.applyTheme = function () {
     SpriteMorph.prototype.paletteColor = SnapTheme.SpriteMorph.paletteColor;
-    SpriteMorph.prototype.paletteTextColor = SnapTheme.SpriteMorph.paletteColor;
+    SpriteMorph.prototype.paletteTextColor = SnapTheme.SpriteMorph.paletteTextColor;
     StageMorph.prototype.paletteTextColor
         = SnapTheme.StageMorph.paletteTextColor;
     StageMorph.prototype.paletteColor = SnapTheme.StageMorph.paletteColor;
@@ -2054,8 +2054,6 @@ IDE_Morph.prototype.createPalette = function (forSearching) {
     this.palette.acceptsDrops = true;
     this.palette.enableAutoScrolling = false;
     this.palette.contents.acceptsDrops = false;
-
-    this.palette.cursorGrabStyle = 'grabbing';
 
     if (this.scene.unifiedPalette) {
         this.palette.adjustScrollBars = function () {
