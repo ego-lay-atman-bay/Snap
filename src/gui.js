@@ -231,7 +231,7 @@ SnapTheme.getTheme = function (
     ) {
     var theme;
     if (customTheme && Object.keys(this.customTheme).length > 0) {
-        theme = this.customTheme;
+        theme = copy(this.customTheme);
     } else {
         theme = {
             isFlat: this.isFlat,

@@ -5496,7 +5496,6 @@ ThemeCustomizationDialogMorph.prototype.buildContents = function () {
 
     Object.entries(this.theme).forEach(([key, value]) => {
         var row = createRow(key, value)
-        console.log('row color:', this.color)
         row.setColor(this.color)
         column.add(row)
     })
@@ -5533,8 +5532,6 @@ ThemeCustomizationDialogMorph.prototype.popUp = function () {
 };
 
 ThemeCustomizationDialogMorph.prototype.ok = function () {
-    console.log(this.theme);
-
     var world = this.target.world();
 
     if (world) {
@@ -5545,87 +5542,3 @@ ThemeCustomizationDialogMorph.prototype.ok = function () {
         world.childThatIsA(IDE_Morph).refreshIDE();
     }
 }
-
-// ThemeCustomizationDialogMorph layout
-
-// ThemeCustomizationDialogMorph.prototype.fixLayout = function () {
-//     var th = fontHeight(this.titleFontSize) + this.titlePadding * 2,
-//         w;
-
-//     if (this.head) {
-//         this.head.setPosition(this.position().add(new Point(
-//             this.padding,
-//             th + this.padding
-//         )));
-//         this.bounds.setWidth(this.head.width() + this.padding * 2);
-//         this.bounds.setHeight(
-//             this.head.height() +
-//             this.padding * 2 +
-//             th
-//         );
-//     }
-
-//     if (this.body) {
-//         if (this.head) {
-//             this.body.setPosition(this.head.bottomLeft().add(new Point(
-//                 0,
-//                 this.padding
-//             )));
-//             this.bounds.setWidth(Math.max(
-//                 this.width(),
-//                 this.body.width() + this.padding * 2
-//             ));
-//             this.bounds.setHeight(
-//                 this.height() +
-//                 this.body.height() +
-//                 this.padding
-//             );
-//             w = this.width();
-//             this.head.setLeft(
-//                 this.left() +
-//                 Math.round((w - this.head.width()) / 2)
-//             );
-//             this.body.setLeft(
-//                 this.left() +
-//                 Math.round((w - this.body.width()) / 2)
-//             );
-//         } else {
-//             this.body.setPosition(this.position().add(new Point(
-//                 this.padding,
-//                 th + this.padding
-//             )));
-//             this.bounds.setWidth(this.body.width() + this.padding * 2);
-//             this.bounds.setHeight(
-//                 this.body.height() +
-//                 this.padding * 2 +
-//                 th
-//             );
-//         }
-//     }
-
-//     if (this.label) {
-//         this.label.setCenter(this.center());
-//         this.label.setTop(this.top() + (th - this.label.height()) / 2);
-//     }
-
-//     if (this.buttons && (this.buttons.children.length > 0)) {
-//         this.buttons.fixLayout();
-//         this.bounds.setHeight(
-//             this.height() +
-//             this.buttons.height() +
-//             this.padding
-//         );
-//         this.bounds.setWidth(Math.max(
-//             this.width(),
-//             this.buttons.width() +
-//             (2 * this.padding)
-//         ));
-//         this.buttons.setCenter(this.center());
-//         this.buttons.setBottom(this.bottom() - this.padding);
-//     }
-
-//     // refresh a shallow shadow
-//     this.removeShadow();
-//     this.addShadow();
-// }
-
