@@ -172,6 +172,7 @@ var SnapTheme = {
         feedbackColor: null,
     },
 
+    customTheme: {},
     customThemeValues: {
         isFlat: {
             name: 'flat',
@@ -224,30 +225,32 @@ var SnapTheme = {
     }
 }
 
-SnapTheme.getTheme = function () {
-    var theme = {
-        isFlat: this.isFlat,
-        buttonContrast: this.buttonContrast,
-        backgroundColor: this.backgroundColor,
-        frameColor: this.frameColor,
-        groupColor: this.groupColor,
-        paletteColor: this.SpriteMorph.paletteColor,
-        paletteTextColor: this.SpriteMorph.paletteTextColor,
-        buttonLabelColor: this.buttonLabelColor,
-        appModeColor: this.appModeColor,
-        scriptsPaneTexture: this.scriptsPaneTexture != null,
-        syntaxContrast: this.SyntaxElementMorph.contrast,
-        feedbackColor: this.ScriptsMorph.feedbackColor,
-    };
+SnapTheme.getTheme = function (
+    customTheme = false,
+    colorsAsLists = false,
+    ) {
+    var theme;
+    if (customTheme && Object.keys(this.customTheme).length > 0) {
+        theme = this.customTheme;
+    } else {
+        theme = {
+            isFlat: this.isFlat,
+            buttonContrast: this.buttonContrast,
+            backgroundColor: this.backgroundColor,
+            frameColor: this.frameColor,
+            groupColor: this.groupColor,
+            paletteColor: this.SpriteMorph.paletteColor,
+            paletteTextColor: this.SpriteMorph.paletteTextColor,
+            buttonLabelColor: this.buttonLabelColor,
+            appModeColor: this.appModeColor,
+            scriptsPaneTexture: this.scriptsPaneTexture != null,
+            syntaxContrast: this.SyntaxElementMorph.contrast,
+            feedbackColor: this.ScriptsMorph.feedbackColor,
+        };
+    }
 
-    return theme;
-}
-
-SnapTheme.getThemeJson = function () {
-    var saved_theme = {},
-        original_theme = this.getTheme();
-
-    Object.entries(this.getTheme()).forEach(([key, value]) => {
+    if (colorsAsLists) {
+        Object.entries(theme).forEach(([key, value]) => {
         if (value instanceof Color) {
             value = [
                 value.r,
@@ -256,20 +259,30 @@ SnapTheme.getThemeJson = function () {
             ];
         };
 
-        saved_theme[key] = value;
+        theme[key] = value;
+        })
+    }
+
+    return theme;
+}
+
+SnapTheme.parseTheme = function (theme) {
+    var result = {}
+    Object.entries(theme).forEach(([key, value]) => {
+        if (value instanceof Array) {
+            value = new Color(...value);
+        };
+
+        result[key] = value;
     })
 
-    return saved_theme;
+    return result
 }
 
-SnapTheme.fromJson = function () {
-}
-
-SnapTheme.saveTheme = function () {
-    console.log(window.world)
-    if (window.world) {
-        var ide = window.world.childThatIsA(IDE_Morph),
-            theme = this.getThemeJson();
+SnapTheme.saveTheme = function (world) {
+    if (world) {
+        var ide = world.childThatIsA(IDE_Morph),
+            theme = this.getTheme(true, true);
 
         if (this.custom) {
             ide.saveSetting('theme', 'custom');
@@ -282,6 +295,12 @@ SnapTheme.saveTheme = function () {
         }
 
         ide.saveSetting('custom-theme', JSON.stringify(theme));
+    }
+}
+
+SnapTheme.applySavedSetting = function (world) {
+    if (world) {
+        var ide = world.childThatIsA(IDE_Morph);
     }
 }
 
@@ -380,6 +399,8 @@ SnapTheme.setLightTheme = function () {
 };
 
 SnapTheme.setCustomTheme = function (theme) {
+    SnapTheme.customTheme = theme;
+
     SnapTheme.custom = true;
     SnapTheme.isDark = false;
 
@@ -3580,7 +3601,8 @@ IDE_Morph.prototype.applySavedSettings = function () {
     if (this.config.noUserSettings) {return; }
 
     var design = this.getSetting('design'),
-        theme = this.getSetting('theme')
+        theme = this.getSetting('theme'),
+        customTheme = this.getSetting('custom-theme'),
         zoom = this.getSetting('zoom'),
         fade = this.getSetting('fade'),
         language = this.getSetting('language'),
@@ -3595,11 +3617,18 @@ IDE_Morph.prototype.applySavedSettings = function () {
 
     // design
     console.log('theme', theme)
+    if (customTheme) {
+        SnapTheme.customTheme = SnapTheme.parseTheme(JSON.parse(customTheme));
+    }
     if (theme) {
         if (theme === 'light') {
             SnapTheme.setLightTheme();
         } else if (theme === 'dark') {
             SnapTheme.setDarkTheme();
+        } else if (theme === 'custom') {
+            if (customTheme) {
+                SnapTheme.setCustomTheme(SnapTheme.getTheme(true));
+            }
         }
         SnapTheme.applyTheme();
     }

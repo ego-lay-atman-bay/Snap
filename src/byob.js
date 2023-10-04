@@ -5340,7 +5340,7 @@ ThemeCustomizationDialogMorph.prototype.init = function (serializer, target) {
     this.labelString = 'Customize Theme';
     this.createLabel();
 
-    this.theme = SnapTheme.getTheme();
+    this.theme = SnapTheme.getTheme(true);
 
     this.buildContents();
 };
@@ -5539,12 +5539,11 @@ ThemeCustomizationDialogMorph.prototype.ok = function () {
 
     if (world) {
         SnapTheme.setCustomTheme(this.theme);
+        SnapTheme.saveTheme(this.target.world())
         SnapTheme.applyTheme();
 
         world.childThatIsA(IDE_Morph).refreshIDE();
     }
-
-    this.close();
 }
 
 // ThemeCustomizationDialogMorph layout
