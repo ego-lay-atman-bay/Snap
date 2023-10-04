@@ -3337,7 +3337,7 @@ InputFieldMorph.prototype.fixLayout = function () {
         this.right() - arrow.width() - this.edge,
         contents.top()
     ));
-    
+
     if (this.isReadOnly) {
         this.cursorStyle = null;
     } else {

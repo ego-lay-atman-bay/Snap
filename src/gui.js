@@ -555,6 +555,7 @@ IDE_Morph.prototype.init = function (config) {
 
     // additional properties:
     this.cloud = new Cloud();
+    this.cloud.disable();
     this.cloudMsg = null;
     this.source = null;
     this.serializer = new SnapSerializer();
