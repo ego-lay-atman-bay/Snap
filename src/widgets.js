@@ -260,7 +260,7 @@ PushButtonMorph.prototype.drawOutline = function (ctx) {
     var outlineStyle,
         isFlat = MorphicPreferences.isFlat && !this.is3D;
 
-    if (!this.outline || isFlat) {return null; }
+    if (!this.outline) {return null; }
     if (this.outlineGradient) {
         outlineStyle = ctx.createLinearGradient(
             0,
@@ -1109,6 +1109,7 @@ ToggleMorph.prototype.init = function (
     this.element = element || null;
     this.builder = builder || null;
     this.toggleElement = null;
+    this.outline = true;
 
     // initialize inherited properties:
     ToggleMorph.uber.init.call(
@@ -1532,6 +1533,7 @@ DialogBoxMorph.prototype.init = function (target, action, environment) {
     this.environment = environment || null;
     this.key = null; // keep track of my purpose to prevent mulitple instances
     this.nag = false; // enable nag boxes that cannot be closed by the user
+    this.buttonOutlineGradient = !MorphicPreferences.isFlat;
 
     this.labelString = null;
     this.label = null;
@@ -3480,7 +3482,7 @@ InputFieldMorph.prototype.drawRectBorder = function (ctx) {
 };
 
 // PianoMenuMorph //////////////////////////////////////////////////////
-/* 
+/*
     I am a menu that looks like a piano keyboard.
 */
 
