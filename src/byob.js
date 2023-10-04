@@ -132,6 +132,7 @@ var BlockExportDialogMorph;
 var BlockImportDialogMorph;
 var BlockRemovalDialogMorph;
 var BlockVisibilityDialogMorph;
+var ThemeCustomizationDialogMorph;
 
 // CustomBlockDefinition ///////////////////////////////////////////////
 
@@ -1632,7 +1633,7 @@ CustomCommandBlockMorph.prototype.duplicateBlockDefinition = function () {
     if (exp instanceof BlockMorph) {
         rebindRecursiveCalls(exp);
     }
- 
+
 
     ide.flushPaletteCache();
     ide.refreshPalette();
@@ -5398,3 +5399,327 @@ BlockVisibilityDialogMorph.prototype.hideBlocks = function () {
 
 BlockVisibilityDialogMorph.prototype.fixLayout
     = BlockEditorMorph.prototype.fixLayout;
+
+
+// ThemeCustomizationDialogMorph //////////////////////////////////////////////////
+
+// ThemeCustomizationDialogMorph inherits from DialogBoxMorph
+
+ThemeCustomizationDialogMorph.prototype = new DialogBoxMorph();
+ThemeCustomizationDialogMorph.prototype.constructor = ThemeCustomizationDialogMorph;
+ThemeCustomizationDialogMorph.uber = DialogBoxMorph.prototype;
+
+// ThemeCustomizationDialogMorph constants:
+
+ThemeCustomizationDialogMorph.prototype.key = 'customizeTheme';
+
+// ThemeCustomizationDialogMorph instance creation:
+
+function ThemeCustomizationDialogMorph(serializer, target) {
+    this.init(serializer, target);
+}
+
+ThemeCustomizationDialogMorph.prototype.init = function (serializer, target) {
+    this.serializer = serializer;
+
+    // this.resizable = true;
+
+    ThemeCustomizationDialogMorph.uber.init.call(
+        this,
+        target, // target
+        () => console.log('test'),
+        null // environment
+    );
+
+    this.labelString = 'Customize Theme';
+    this.createLabel();
+
+    this.theme = SnapTheme.getTheme(true);
+
+    this.buildContents();
+};
+
+ThemeCustomizationDialogMorph.prototype.buildContents = function () {
+    var body,
+        padding = 4;
+
+    var column = new AlignmentMorph('column', padding);
+    column.alignment = 'left';
+
+    function labelText(string) {
+        return new TextMorph(
+            localize(string),
+            10,
+            null, // style
+            false, // bold
+            null, // italic
+            null, // alignment
+            null, // width
+            null, // font name
+            MorphicPreferences.isFlat ? null : new Point(1, 1),
+            WHITE // shadowColor
+        );
+    }
+
+    var colorPicker = (key) => {
+        var picker = new BoxMorph(2, 1);
+
+        picker.setExtent(new Point(20, 20));
+        picker.setColor(this.theme[key]);
+
+        picker.mouseClickLeft = () => {
+            var hand = world.hand,
+                posInDocument = getDocumentPositionOf(world.worldCanvas),
+                mouseMoveBak = hand.processMouseMove,
+                mouseDownBak = hand.processMouseDown,
+                mouseUpBak = hand.processMouseUp,
+                pal = new ColorPaletteMorph(null, new Point(160, 100));
+
+            world.add(pal);
+            pal.setPosition(picker.topRight().add(new Point(this.edge, 0)));
+
+            hand.processMouseMove = (event) => {
+                var clr = world.getGlobalPixelColor(hand.position());
+                hand.setPosition(new Point(
+                    event.pageX - posInDocument.x,
+                    event.pageY - posInDocument.y
+                ));
+                if (!clr.a) {
+                    // ignore transparent,
+                    // needed for retina-display support
+                    return;
+                }
+                picker.setColor(clr);
+            };
+
+            hand.processMouseDown = nop;
+
+            hand.processMouseUp = () => {
+                pal.destroy();
+                hand.processMouseMove = mouseMoveBak;
+                hand.processMouseDown = mouseDownBak;
+                hand.processMouseUp = mouseUpBak;
+                this.theme[key] = picker.color;
+            };
+        };
+
+        picker.mouseClickRight = () => {
+            new DialogBoxMorph(
+                this,
+                (clr) => {
+                    picker.setColor(clr);
+                    this.theme[key] = clr;
+                },
+                this
+            ).promptRGB(
+                "Color",
+                picker.color,
+                this.target.world(),
+                null, // pic
+                null // msg
+            );
+        };
+        return picker;
+    }
+
+    var checkBox = (key) => {
+        return new ToggleMorph(
+            'checkbox',
+            null,
+            () => this.theme[key] = !this.theme[key],
+            null,
+            () => this.theme[key],
+        )
+    }
+
+    var numberInput = (key) => {
+        var field = new InputFieldMorph(String(this.theme[key]), true)
+
+        field.reactToInput = () => {
+            this.theme[key] = field.getValue();
+        }
+
+        return field
+    }
+
+    function createRow(key, value) {
+        var row = new AlignmentMorph('row', padding),
+            label = labelText(SnapTheme.customThemeValues[key].name),
+            type = SnapTheme.customThemeValues[key].type,
+            input;
+
+        switch (type) {
+            case 'color':
+                input = colorPicker(key);
+                break;
+
+            case 'boolean':
+                input = checkBox(key);
+                break;
+
+            case 'number':
+                input = numberInput(key);
+                break;
+
+            default:
+                break;
+        }
+        row.add(label)
+
+        if (input) {
+            row.add(input)
+        }
+
+        row.fixLayout()
+        return row;
+    }
+
+    // create body
+    body = new ScrollFrameMorph(
+        null,
+        null,
+        SpriteMorph.prototype.sliderColor
+    );
+    body.color = SpriteMorph.prototype.paletteColor;
+    body.padding = padding;
+    body.isDraggable = false;
+    body.acceptsDrops = false;
+    body.contents.acceptsDrops = false;
+
+    column.setColor(this.color)
+
+    Object.entries(this.theme).forEach(([key, value]) => {
+        var row = createRow(key, value)
+        console.log('row color:', this.color)
+        row.setColor(this.color)
+        column.add(row)
+    })
+
+    // body.setWidth(250)
+
+    column.fixLayout()
+
+    body.addContents(column)
+
+    body.scrollX(padding)
+    body.scrollY(padding)
+
+    this.addBody(column);
+
+    this.addButton('ok', 'OK');
+    this.addButton('cancel', 'Cancel');
+
+    this.setExtent(new Point(480, 400));
+    this.fixLayout();
+};
+
+// ThemeCustomizationDialogMorph.prototype.popUp = DialogBoxMorph.prototype.popUp;
+
+// ThemeCustomizationDialogMorph men
+
+ThemeCustomizationDialogMorph.prototype.popUp = function () {
+    var world = this.target.world();
+
+    if (world) {
+        BlockEditorMorph.uber.popUp.call(this, world);
+        world.keyboardFocus = null;
+    }
+};
+
+ThemeCustomizationDialogMorph.prototype.ok = function () {
+    console.log(this.theme);
+
+    var world = this.target.world();
+
+    if (world) {
+        SnapTheme.setCustomTheme(this.theme);
+        SnapTheme.saveTheme(this.target.world())
+        SnapTheme.applyTheme();
+
+        world.childThatIsA(IDE_Morph).refreshIDE();
+    }
+}
+
+// ThemeCustomizationDialogMorph layout
+
+// ThemeCustomizationDialogMorph.prototype.fixLayout = function () {
+//     var th = fontHeight(this.titleFontSize) + this.titlePadding * 2,
+//         w;
+
+//     if (this.head) {
+//         this.head.setPosition(this.position().add(new Point(
+//             this.padding,
+//             th + this.padding
+//         )));
+//         this.bounds.setWidth(this.head.width() + this.padding * 2);
+//         this.bounds.setHeight(
+//             this.head.height() +
+//             this.padding * 2 +
+//             th
+//         );
+//     }
+
+//     if (this.body) {
+//         if (this.head) {
+//             this.body.setPosition(this.head.bottomLeft().add(new Point(
+//                 0,
+//                 this.padding
+//             )));
+//             this.bounds.setWidth(Math.max(
+//                 this.width(),
+//                 this.body.width() + this.padding * 2
+//             ));
+//             this.bounds.setHeight(
+//                 this.height() +
+//                 this.body.height() +
+//                 this.padding
+//             );
+//             w = this.width();
+//             this.head.setLeft(
+//                 this.left() +
+//                 Math.round((w - this.head.width()) / 2)
+//             );
+//             this.body.setLeft(
+//                 this.left() +
+//                 Math.round((w - this.body.width()) / 2)
+//             );
+//         } else {
+//             this.body.setPosition(this.position().add(new Point(
+//                 this.padding,
+//                 th + this.padding
+//             )));
+//             this.bounds.setWidth(this.body.width() + this.padding * 2);
+//             this.bounds.setHeight(
+//                 this.body.height() +
+//                 this.padding * 2 +
+//                 th
+//             );
+//         }
+//     }
+
+//     if (this.label) {
+//         this.label.setCenter(this.center());
+//         this.label.setTop(this.top() + (th - this.label.height()) / 2);
+//     }
+
+//     if (this.buttons && (this.buttons.children.length > 0)) {
+//         this.buttons.fixLayout();
+//         this.bounds.setHeight(
+//             this.height() +
+//             this.buttons.height() +
+//             this.padding
+//         );
+//         this.bounds.setWidth(Math.max(
+//             this.width(),
+//             this.buttons.width() +
+//             (2 * this.padding)
+//         ));
+//         this.buttons.setCenter(this.center());
+//         this.buttons.setBottom(this.bottom() - this.padding);
+//     }
+
+//     // refresh a shallow shadow
+//     this.removeShadow();
+//     this.addShadow();
+// }
+

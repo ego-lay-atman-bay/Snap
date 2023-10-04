@@ -126,6 +126,7 @@ IDE_Morph.uber = Morph.prototype;
 
 // IDE_Theme
 var SnapTheme = {
+    custom: false,
     isDark: true,
     get isFlat () {return MorphicPreferences.isFlat},
     set isFlat (mode) {return MorphicPreferences.isFlat = mode},
@@ -172,18 +173,150 @@ var SnapTheme = {
     },
     ScriptsMorph: {
         feedbackColor: null,
+    },
+
+    customTheme: {},
+    customThemeValues: {
+        isFlat: {
+            name: 'flat',
+            type: 'boolean',
+        },
+        buttonContrast: {
+            name: 'button contrast',
+            type: 'number',
+        },
+        backgroundColor: {
+            name: 'background color',
+            type: 'color',
+        },
+        frameColor: {
+            name: 'frame color',
+            type: 'color',
+        },
+        groupColor: {
+            name: 'group color',
+            type: 'color',
+        },
+        paletteColor: {
+            name: 'palette color',
+            type: 'color',
+        },
+        paletteTextColor: {
+            name: 'palette text color',
+            type: 'color',
+        },
+        buttonLabelColor: {
+            name: 'button label color',
+            type: 'color',
+        },
+        appModeColor: {
+            name: 'app mode color',
+            type: 'color',
+        },
+        scriptsPaneTexture: {
+            name: 'scripts pane texture',
+            type: 'boolean',
+        },
+        syntaxContrast: {
+            name: 'syntax contrast',
+            type: 'number',
+        },
+        feedbackColor: {
+            name: 'feedback color',
+            type: 'color',
+        },
     }
 }
 
-IDE_Morph.prototype.setDefaultDesign = function () {
-    MorphicPreferences.isFlat = false;
+SnapTheme.getTheme = function (
+    customTheme = false,
+    colorsAsLists = false,
+    ) {
+    var theme;
+    if (customTheme && Object.keys(this.customTheme).length > 0) {
+        theme = this.customTheme;
+    } else {
+        theme = {
+            isFlat: this.isFlat,
+            buttonContrast: this.buttonContrast,
+            backgroundColor: this.backgroundColor,
+            frameColor: this.frameColor,
+            groupColor: this.groupColor,
+            paletteColor: this.SpriteMorph.paletteColor,
+            paletteTextColor: this.SpriteMorph.paletteTextColor,
+            buttonLabelColor: this.buttonLabelColor,
+            appModeColor: this.appModeColor,
+            scriptsPaneTexture: this.scriptsPaneTexture != null,
+            syntaxContrast: this.SyntaxElementMorph.contrast,
+            feedbackColor: this.ScriptsMorph.feedbackColor,
+        };
+    }
+
+    if (colorsAsLists) {
+        Object.entries(theme).forEach(([key, value]) => {
+        if (value instanceof Color) {
+            value = [
+                value.r,
+                value.g,
+                value.b,
+            ];
+        };
+
+        theme[key] = value;
+        })
+    }
+
+    return theme;
 }
 
-IDE_Morph.prototype.setFlatDesign = function () {
-    MorphicPreferences.isFlat = true;
+SnapTheme.parseTheme = function (theme) {
+    var result = {}
+    Object.entries(theme).forEach(([key, value]) => {
+        if (value instanceof Array) {
+            value = new Color(...value);
+        };
+
+        result[key] = value;
+    })
+
+    return result
 }
 
-IDE_Morph.prototype.setDarkTheme = function () {
+SnapTheme.saveTheme = function (world) {
+    if (world) {
+        var ide = world.childThatIsA(IDE_Morph),
+            theme = this.getTheme(true, true);
+
+        if (this.custom) {
+            ide.saveSetting('theme', 'custom');
+        } else {
+            if (!this.isDark) {
+                ide.saveSetting('theme', 'light');
+            } else {
+                ide.removeSetting('theme');
+            }
+        }
+
+        ide.saveSetting('custom-theme', JSON.stringify(theme));
+    }
+}
+
+SnapTheme.applySavedSetting = function (world) {
+    if (world) {
+        var ide = world.childThatIsA(IDE_Morph);
+    }
+}
+
+SnapTheme.setDefaultDesign = function () {
+    this.isFlat = false;
+}
+
+SnapTheme.setFlatDesign = function () {
+    this.isFlat = true;
+}
+
+SnapTheme.setDarkTheme = function () {
+    SnapTheme.custom = false;
     SnapTheme.isDark = true;
     SnapTheme.SpriteMorph.paletteColor = new Color(30, 30, 30);
     SnapTheme.SpriteMorph.paletteTextColor = new Color(230, 230, 230);
@@ -208,7 +341,7 @@ IDE_Morph.prototype.setDarkTheme = function () {
     ];
     SnapTheme.rotationStyleColors = SnapTheme.tabColors;
     SnapTheme.appModeColor = BLACK;
-    SnapTheme.scriptsPaneTexture = this.scriptsTexture();
+    SnapTheme.scriptsPaneTexture = IDE_Morph.prototype.scriptsTexture();
     SnapTheme.padding = 1;
 
     SnapTheme.SpriteIconMorph.labelColor
@@ -226,7 +359,8 @@ IDE_Morph.prototype.setDarkTheme = function () {
     SnapTheme.ScriptsMorph.feedbackColor = WHITE;
 };
 
-IDE_Morph.prototype.setLightTheme = function () {
+SnapTheme.setLightTheme = function () {
+    SnapTheme.custom = false;
     SnapTheme.isDark = false;
     SnapTheme.SpriteMorph.paletteColor = WHITE;
     SnapTheme.SpriteMorph.paletteTextColor = new Color(70, 70, 70);
@@ -267,9 +401,50 @@ IDE_Morph.prototype.setLightTheme = function () {
     SnapTheme.ScriptsMorph.feedbackColor = new Color(153, 255, 213);
 };
 
-IDE_Morph.prototype.applyTheme = function () {
+SnapTheme.setCustomTheme = function (theme) {
+    SnapTheme.customTheme = theme;
+
+    SnapTheme.custom = true;
+    SnapTheme.isDark = false;
+
+    SnapTheme.isFlat = theme.isFlat;
+
+    SnapTheme.SpriteMorph.paletteColor = theme.paletteColor;
+    SnapTheme.SpriteMorph.paletteTextColor = theme.paletteTextColor;
+    SnapTheme.StageMorph.paletteTextColor = SnapTheme.SpriteMorph.paletteTextColor;
+    SnapTheme.StageMorph.paletteColor = SnapTheme.SpriteMorph.paletteColor;
+    SnapTheme.SpriteMorph.sliderColor = SnapTheme.SpriteMorph.paletteColor;
+
+    SnapTheme.buttonContrast = theme.buttonContrast;
+    SnapTheme.backgroundColor = theme.backgroundColor;
+    SnapTheme.frameColor = theme.frameColor;
+
+    SnapTheme.groupColor = theme.groupColor;
+    SnapTheme.sliderColor = SnapTheme.SpriteMorph.sliderColor;
+    SnapTheme.buttonLabelColor = theme.buttonLabelColor;
+    SnapTheme.tabColors = [
+        SnapTheme.frameColor,
+        SnapTheme.frameColor.lighter(50),
+        SnapTheme.groupColor
+    ];
+    SnapTheme.rotationStyleColors = SnapTheme.tabColors;
+    SnapTheme.appModeColor = theme.appModeColor;
+    SnapTheme.scriptsPaneTexture = theme.scriptsPaneTexture ? IDE_Morph.prototype.scriptsTexture() : null;
+    SnapTheme.padding = theme.padding;
+
+    SnapTheme.SpriteIconMorph.labelColor = SnapTheme.buttonLabelColor;
+    SnapTheme.CostumeIconMorph.labelColor = SnapTheme.buttonLabelColor;
+    SnapTheme.SoundIconMorph.labelColor = SnapTheme.buttonLabelColor;
+    SnapTheme.TurtleIconMorph.labelColor = SnapTheme.buttonLabelColor;
+    SnapTheme.SceneIconMorph.labelColor = SnapTheme.buttonLabelColor;
+
+    SnapTheme.SyntaxElementMorph.contrast = theme.syntaxContrast;
+    SnapTheme.ScriptsMorph.feedbackColor = theme.feedbackColor;
+};
+
+SnapTheme.applyTheme = function () {
     SpriteMorph.prototype.paletteColor = SnapTheme.SpriteMorph.paletteColor;
-    SpriteMorph.prototype.paletteTextColor = SnapTheme.SpriteMorph.paletteColor;
+    SpriteMorph.prototype.paletteTextColor = SnapTheme.SpriteMorph.paletteTextColor;
     StageMorph.prototype.paletteTextColor
         = SnapTheme.StageMorph.paletteTextColor;
     StageMorph.prototype.paletteColor = SnapTheme.StageMorph.paletteColor;
@@ -323,9 +498,16 @@ IDE_Morph.prototype.scriptsTexture = function () {
     return pic;
 };
 
-IDE_Morph.prototype.set3DDesign
-IDE_Morph.prototype.setDarkTheme();
-IDE_Morph.prototype.applyTheme();
+SnapTheme.setDefaultDesign();
+SnapTheme.setDarkTheme();
+SnapTheme.applyTheme();
+
+IDE_Morph.prototype.customizeTheme = function () {
+    new ThemeCustomizationDialogMorph(
+        null,
+        this.world()
+    ).popUp();
+}
 
 // IDE_Morph instance creation:
 
@@ -915,28 +1097,10 @@ IDE_Morph.prototype.applyConfigurations = function () {
             }
         };
 
+    console.log('apply config', cnf)
+
     if (!Object.keys(cnf).length) {
         return;
-    }
-
-    // design
-    if (cnf.design) {
-        if (cnf.design === 'flat') {
-            this.setFlatDesign();
-        } else if (cnf.design === 'classic') {
-            this.setDefaultDesign();
-        }
-        SpriteMorph.prototype.initBlocks();
-    }
-
-    if (cnf.theme) {
-        if (cnf.theme === 'light') {
-            this.setLightTheme();
-        } else if (cnf.theme === 'dark') {
-            this.setDarkTheme();
-        }
-        SpriteMorph.prototype.initBlocks();
-        this.applyTheme();
     }
 
     // interaction mode
@@ -3385,27 +3549,27 @@ IDE_Morph.prototype.toggleRetina = function () {
 // IDE_Morph skins
 
 IDE_Morph.prototype.defaultDesign = function () {
-    this.setDefaultDesign();
+    SnapTheme.setDefaultDesign();
     this.refreshIDE();
     this.removeSetting('design');
 };
 
 IDE_Morph.prototype.flatDesign = function () {
-    this.setFlatDesign();
+    SnapTheme.setFlatDesign();
     this.refreshIDE();
     this.saveSetting('design', 'flat');
 };
 
 IDE_Morph.prototype.darkTheme = function () {
-    this.setDarkTheme();
-    this.applyTheme();
+    SnapTheme.setDarkTheme();
+    SnapTheme.applyTheme();
     this.refreshIDE();
     this.removeSetting('theme');
 };
 
 IDE_Morph.prototype.lightTheme = function () {
-    this.setLightTheme();
-    this.applyTheme();
+    SnapTheme.setLightTheme();
+    SnapTheme.applyTheme();
     this.refreshIDE();
     this.saveSetting('theme', 'light');
 };
@@ -3443,6 +3607,8 @@ IDE_Morph.prototype.applySavedSettings = function () {
     if (this.config.noUserSettings) {return; }
 
     var design = this.getSetting('design'),
+        theme = this.getSetting('theme'),
+        customTheme = this.getSetting('custom-theme'),
         zoom = this.getSetting('zoom'),
         fade = this.getSetting('fade'),
         language = this.getSetting('language'),
@@ -3456,10 +3622,30 @@ IDE_Morph.prototype.applySavedSettings = function () {
         solidshadow = this.getSetting('solidshadow');
 
     // design
-    if (design === 'flat') {
-        this.setFlatDesign();
-    } else {
-        this.setDefaultDesign();
+    console.log('theme', theme)
+    if (customTheme) {
+        SnapTheme.customTheme = SnapTheme.parseTheme(JSON.parse(customTheme));
+    }
+    if (theme) {
+        if (theme === 'light') {
+            SnapTheme.setLightTheme();
+        } else if (theme === 'dark') {
+            SnapTheme.setDarkTheme();
+        } else if (theme === 'custom') {
+            if (customTheme) {
+                SnapTheme.setCustomTheme(SnapTheme.getTheme(true));
+            }
+        }
+        SnapTheme.applyTheme();
+    }
+
+    if (design) {
+        if (design === 'flat') {
+            SnapTheme.setFlatDesign();
+        } else if (design === 'classic') {
+            SnapTheme.setDefaultDesign();
+        }
+        SnapTheme.applyTheme();
     }
 
     // blocks zoom
@@ -4760,6 +4946,10 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check for dark\nGUI theme',
         false
     );
+    menu.addItem(
+        'Customize theme',
+        () => this.customizeTheme(),
+    );
     addPreference(
         'Nested auto-wrapping',
         () => {
@@ -5967,8 +6157,8 @@ IDE_Morph.prototype.saveIndexedDBProject = function (name) {
 
 IDE_Morph.prototype.exportGlobalBlocks = function () {
     if (this.stage.globalBlocks.length > 0) {
+        this.serializer,
         new BlockExportDialogMorph(
-            this.serializer,
             this.stage.globalBlocks,
             this
         ).popUp(this.world());
