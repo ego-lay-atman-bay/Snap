@@ -3181,7 +3181,7 @@ PrototypeHatBlockMorph.prototype.enableBlockVars = function (choice) {
 
 // PrototypeHatBlockMorph.prototype.fixLayout = function () {
 //     // this.uber.fixLayout()
-    
+
     // this.cursorStyle = 'default';
     // this.cursorGrabStyle = null;
 // }
@@ -4726,7 +4726,7 @@ BlockExportDialogMorph.prototype.buildContents = function () {
                                 this.body.contents.children.forEach(block => {
                                     if (
                                         (block instanceof ToggleMorph) &&
-                                        (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) && 
+                                        (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) &&
                                         (block.element.category == category) &&
                                         (!contains(this.blocks, block.element.definition))
                                     ) {
@@ -5071,7 +5071,7 @@ BlockRemovalDialogMorph.prototype.buildContents = function () {
                                 this.body.contents.children.forEach(block => {
                                     if (
                                         (block instanceof ToggleMorph) &&
-                                        (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) && 
+                                        (block.element instanceof CustomReporterBlockMorph || block.element instanceof CustomCommandBlockMorph) &&
                                         (block.element.category == category) &&
                                         (!contains(this.blocks, block.element.definition))
                                     ) {
@@ -5464,6 +5464,8 @@ ThemeCustomizationDialogMorph.prototype.buildContents = function () {
     var colorPicker = (key) => {
         var picker = new BoxMorph(2, 1);
 
+        picker.cursorStyle = 'pointer';
+
         picker.setExtent(new Point(20, 20));
         picker.setColor(this.theme[key]);
 
@@ -5582,6 +5584,7 @@ ThemeCustomizationDialogMorph.prototype.buildContents = function () {
     );
     body.color = this.color;
     body.padding = padding;
+    body.setColor(this.color);
     body.isDraggable = false;
     body.acceptsDrops = false;
     body.contents.acceptsDrops = false;
@@ -5593,8 +5596,6 @@ ThemeCustomizationDialogMorph.prototype.buildContents = function () {
         row.setColor(this.color)
         column.add(row)
     })
-
-    // body.setWidth(250)
 
     column.fixLayout()
 
@@ -5613,8 +5614,6 @@ ThemeCustomizationDialogMorph.prototype.buildContents = function () {
     this.setExtent(new Point(480, 400));
     this.fixLayout();
 };
-
-// ThemeCustomizationDialogMorph.prototype.popUp = DialogBoxMorph.prototype.popUp;
 
 // ThemeCustomizationDialogMorph men
 
