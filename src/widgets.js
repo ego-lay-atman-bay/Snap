@@ -2046,6 +2046,8 @@ DialogBoxMorph.prototype.promptCategory = function (
         );
     }
 
+    picker.cursorStyle = 'pointer';
+
     field.setWidth(160);
     side = field.height() * 0.8;
     picker.setExtent(new Point(side, side));
