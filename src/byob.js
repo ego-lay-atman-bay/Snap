@@ -5486,7 +5486,7 @@ ThemeCustomizationDialogMorph.prototype.buildContents = function () {
         null,
         SpriteMorph.prototype.sliderColor
     );
-    body.color = SpriteMorph.prototype.paletteColor;
+    body.color = this.color;
     body.padding = padding;
     body.isDraggable = false;
     body.acceptsDrops = false;
@@ -5509,7 +5509,9 @@ ThemeCustomizationDialogMorph.prototype.buildContents = function () {
     body.scrollX(padding)
     body.scrollY(padding)
 
-    this.addBody(column);
+    body.setWidth(200);
+    body.setHeight(250)
+    this.addBody(body);
 
     this.addButton('ok', 'OK');
     this.addButton('cancel', 'Cancel');
