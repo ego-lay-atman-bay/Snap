@@ -4416,7 +4416,7 @@ IDE_Morph.prototype.snapMenu = function () {
     menu.addItem(
         'Download source',
         () => window.open(
-                'https://github.com/jmoenig/Snap/releases/latest',
+                'https://github.com/ego-lay-atman-bay/Snap/',
                 'SnapSource'
             )
     );
