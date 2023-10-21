@@ -8830,7 +8830,7 @@ IDE_Morph.prototype.isIE = function () {
 // IDE_Morph warn about saving project in the dev version
 
 IDE_Morph.prototype.warnAboutDev = function () {
-    if (!SnapVersion.includes('-dev') || this.config.noDevWarning) {
+    if (!SnapVersion.includes('-dev') && this.config.noDevWarning) {
         return;
     }
     this.inform(
