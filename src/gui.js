@@ -87,15 +87,18 @@ BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions, snapEquals
 
 // Global stuff ////////////////////////////////////////////////////////
 
-var database = new Database()
+<<<<<<< HEAD
+=======
+modules.gui = '2023-October-20';
+>>>>>>> upstream/master
 
-var database = new Database()
 
 modules.gui = '2023-September-14';
 // Declarations
 
-var SnapVersion = '9.0.6';
+var SnapVersion = '9.0.8';
 
+var database = new Database()
 var IDE_Morph;
 var ProjectDialogMorph;
 var LibraryImportDialogMorph;
@@ -531,7 +534,7 @@ function IDE_Morph(config = {}) {
         mode:           str, currently "presentation" or "edit"
         hideControls:   bool, hide/show the tool bar
         hideCategories: bool, hide/show the palette block category buttons
-        hideDefaultCat: bool, hide/show the buit-in bloc category buttons
+        noDefaultCat:   bool, hide/show the buit-in bloc category buttons
         noSpriteEdits:  bool, hide/show the corral & sprite controls/menus
         noSprites:      bool, hide/show the stage, corral, sprite editor
         noPalette:      bool, hide/show the palette including the categories
@@ -1816,7 +1819,7 @@ IDE_Morph.prototype.createCategories = function () {
             : changePalette,
         categoryQueryAction = this.scene.unifiedPalette ? queryTopCategory
             : queryCurrentCategory,
-        shift = this.config.hideDefaultCat ? 4 : 0,
+        shift = this.config.noDefaultCat ? 4 : 0,
         flag = true;
 
     if (this.categories) {
