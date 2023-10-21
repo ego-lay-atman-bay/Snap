@@ -8626,8 +8626,9 @@ StringMorph.prototype.init = function (
 
     // initialize inherited properties:
     StringMorph.uber.init.call(this, true);
-
+    
     // override inherited properites:
+    this._autoCursor = true;
     this.color = color || new Color(0, 0, 0);
     this.fixLayout(); // determine my extent
 };
@@ -8639,6 +8640,28 @@ StringMorph.prototype.toString = function () {
             this.constructor.toString().split(' ')[1].split('(')[0]) +
         '("' + this.text.slice(0, 30) + '...")';
 };
+
+Object.defineProperty(StringMorph.prototype, 'cursorStyle', {
+    get() {
+        return this._cursorStyle || null;
+    },
+
+    set(style) {
+        this._cursorStyle = style;
+        this._autoCursor = false;
+    }
+})
+
+Object.defineProperty(StringMorph.prototype, 'cursorGrabStyle', {
+    get() {
+        return this._cursorGrabStyle || null;
+    },
+
+    set(style) {
+        this._cursorGrabStyle = style;
+        this._autoCursor = false;
+    }
+})
 
 StringMorph.prototype.password = function (letter, length) {
     var ans = '',
@@ -8702,9 +8725,10 @@ StringMorph.prototype.fixLayout = function (justMe) {
         }
     }
 
-    if (this.cursorStyle == null && this.isEditable) {
+    if (this._autoCursor && this.cursorStyle == null && this.isEditable) {
         this.cursorStyle = 'text';
         this.cursorGrabStyle = 'grabbing';
+        this._autoCursor = true;
     }
 };
 
@@ -9336,7 +9360,7 @@ TextMorph.prototype.init = function (
     this.backgroundColor = null;
     this.isEditable = false;
     this.enableLinks = false; // set to "true" if I can contain clickable URLs
-
+    
     //additional properties for ad-hoc evaluation:
     this.receiver = null;
 
@@ -9347,11 +9371,12 @@ TextMorph.prototype.init = function (
     this.endMark = 0;
     this.markedTextColor = WHITE;
     this.markedBackgoundColor = new Color(60, 60, 120);
-
+    
     // initialize inherited properties:
     TextMorph.uber.init.call(this);
-
+    
     // override inherited properites:
+    this._autoCursor = true;
     this.color = new Color(0, 0, 0);
     this.fixLayout(); // determine my extent
 };
@@ -9360,6 +9385,28 @@ TextMorph.prototype.toString = function () {
     // e.g. 'a TextMorph("Hello World")'
     return 'a TextMorph' + '("' + this.text.slice(0, 30) + '...")';
 };
+
+Object.defineProperty(TextMorph.prototype, 'cursorStyle', {
+    get() {
+        return this._cursorStyle || null;
+    },
+
+    set(style) {
+        this._cursorStyle = style;
+        this._autoCursor = false;
+    }
+})
+
+Object.defineProperty(TextMorph.prototype, 'cursorGrabStyle', {
+    get() {
+        return this._cursorGrabStyle || null;
+    },
+
+    set(style) {
+        this._cursorGrabStyle = style;
+        this._autoCursor = false;
+    }
+})
 
 TextMorph.prototype.getRenderColor = StringMorph.prototype.getRenderColor;
 
@@ -9465,9 +9512,10 @@ TextMorph.prototype.fixLayout = function () {
         }
     }
     
-    if (this.cursorStyle == null && this.isEditable) {
+    if (this._autoCursor && this.cursorStyle == null && this.isEditable) {
         this.cursorStyle = 'text';
         this.cursorGrabStyle = 'grabbing';
+        this._autoCursor = true;
     }
 };
 
