@@ -1,4 +1,4 @@
-var snapVersion = '9.0.1',
+var snapVersion = '9.0.9',
     cacheName = `snap-pwa-${snapVersion}`,
     filesToCache = [
         'snap.html',
@@ -69,6 +69,7 @@ var snapVersion = '9.0.1',
         'locale/lang-sv.js',
         'locale/lang-ta.js',
         'locale/lang-te.js',
+        'locale/lang-ti.js',
         'locale/lang-tr.js',
         'locale/lang-ua.js',
         'locale/lang-zh_CN.js',
