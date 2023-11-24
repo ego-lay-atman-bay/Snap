@@ -94,7 +94,7 @@ embedMetadataPNG, SnapExtensions, SnapSerializer, snapEquals*/
 
 /*jshint esversion: 11*/
 
-modules.objects = '2023-November-02';
+modules.objects = '2023-November-24';
 
 var SpriteMorph;
 var StageMorph;
@@ -1842,6 +1842,13 @@ SpriteMorph.prototype.initBlockMigrations = function () {
 
 SpriteMorph.prototype.newPrimitivesSince = function (version) {
     var selectors = ['reportJSFunction'];
+    if (version < 9.1) {
+        selectors.push(
+            'reportAtan2',
+            'reportVariadicMin',
+            'reportVariadicMax'
+        );
+    }
     // 9: no new primitives
     // 8.2: no new primitives
     if (version < 8.1) {
@@ -2900,8 +2907,12 @@ SpriteMorph.prototype.blockTemplates = function (
         blocks.push(block('reportPower'));
         blocks.push('-');
         blocks.push(block('reportModulus'));
+        blocks.push(block('reportVariadicMin'));
+        blocks.push(block('reportVariadicMax'));
+        blocks.push('-');
         blocks.push(block('reportRound'));
         blocks.push(block('reportMonadic'));
+        blocks.push(block('reportAtan2'));
         blocks.push(block('reportRandom'));
         blocks.push('-');
         blocks.push(block('reportVariadicLessThan'));
@@ -9651,6 +9662,8 @@ StageMorph.prototype.blockTemplates = function (
         blocks.push(block('changeBackgroundColorDimension'));
         blocks.push(block('setBackgroundColorDimension'));
         blocks.push('-');
+        blocks.push(block('write'));
+        blocks.push('-');
         blocks.push(block('reportPenTrailsAsCostume'));
         blocks.push('-');
         blocks.push(block('doPasteOn'));
@@ -9783,8 +9796,12 @@ StageMorph.prototype.blockTemplates = function (
         blocks.push(block('reportPower'));
         blocks.push('-');
         blocks.push(block('reportModulus'));
+        blocks.push(block('reportVariadicMin'));
+        blocks.push(block('reportVariadicMax'));
+        blocks.push('-');
         blocks.push(block('reportRound'));
         blocks.push(block('reportMonadic'));
+        blocks.push(block('reportAtan2'));
         blocks.push(block('reportRandom'));
         blocks.push('-');
         blocks.push(block('reportVariadicLessThan'));
@@ -10162,6 +10179,55 @@ StageMorph.prototype.setColorDimension = function (idx, num) {
     }
     this.rerender();
 };
+
+// StageMorph writing on the trails canvas
+
+StageMorph.prototype.write = function (text, size) { // +++
+    var fontSize = Math.max(3, +size || 1) * this.scale,
+        textMorph, ctx, img;
+
+    // make sure text can be printed
+    if (typeof text !== 'string' && typeof text !== 'number') {
+        throw new Error(
+            localize('can only write text or numbers, not a') + ' ' +
+            typeof text
+        );
+    }
+
+    // use a TextMorph for layout
+    textMorph = new TextMorph(
+        text,
+        fontSize,
+        null, // fontStyle
+        null, // bold - this.bubbleFontIsBold,
+        null, // italic
+        null, // alignment 'center'
+        this.width() - fontSize
+    );
+
+    // try to contrast the background
+    textMorph.setColor(this.getColorDimension(2) > 50 ? BLACK : WHITE);
+
+    // stamp the text onstage
+    ctx = this.penTrails().getContext('2d');
+    img = textMorph.getImage();
+    if (img.width < 1 || (img.height < 1)) {
+        // too small to draw
+        return;
+    }
+    ctx.save();
+    ctx.scale(1 / this.scale, 1 / this.scale);
+    ctx.drawImage(
+        img,
+        fontSize / 2,
+        Math.min(0, (this.height() - img.height))
+    );
+    ctx.restore();
+    this.changed();
+    this.cachedPenTrailsMorph = null;
+};
+
+// StageMorph "pen" attributes for the background
 
 StageMorph.prototype.getColorDimension =
     SpriteMorph.prototype.getColorDimension;
@@ -10561,13 +10627,15 @@ StageMorph.prototype.allContextsUsing = function (definition) {
     function scanList(list) {
         if (!charted.includes(list)) {
             charted.push(list);
-            list.map(each => {
-                if (each instanceof Context) {
-                    scanContext(each);
-                } else if (each instanceof List) {
-                    scanList(each);
-                }
-            });
+            if (!list.canBeJSON()) {
+                list.map(each => {
+                    if (each instanceof Context) {
+                        scanContext(each);
+                    } else if (each instanceof List) {
+                        scanList(each);
+                    }
+                });
+            }
         }
     }
 
