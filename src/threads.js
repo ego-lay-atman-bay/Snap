@@ -9,7 +9,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2023 by Jens Mönig
+    Copyright (C) 2024 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -65,7 +65,7 @@ StagePickerMorph, CustomBlockDefinition, CommentMorph*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2024-January-03';
+modules.threads = '2024-April-17';
 
 var ThreadManager;
 var Process;
@@ -1869,6 +1869,7 @@ Process.prototype.evaluateCustomBlock = function () {
     outer.variables.addVar(Symbol.for('self'), context);
     outer.variables.addVar(Symbol.for('caller'), this.context);
     outer.variables.addVar(Symbol.for('continuation'), cont);
+    outer.variables.addVar(Symbol.for('arguments'), args);
 
     runnable.expression = runnable.expression.blockSequence();
 };
@@ -2266,7 +2267,7 @@ Process.prototype.reportListAttribute = function (choice, list) {
     case 'rank':
         return this.reportRank(list);
     case 'dimensions':
-        return list instanceof List ? list.shape() : new List();
+        return this.reportDimensions(list);
     case 'flatten':
         return list instanceof List ? list.ravel() : new List([list]);
     case 'columns':
@@ -2317,6 +2318,9 @@ Process.prototype.reportListAttribute = function (choice, list) {
     case 'reverse':
         this.assertType(list, 'list');
         return list.reversed();
+    case '\u03a3':
+        this.assertType(list, 'list');
+        return list.ssum();
     case 'text':
         this.assertType(list, 'list');
         if (list.canBeWords()) {
@@ -2376,6 +2380,15 @@ Process.prototype.reportListIsEmpty = function (list) {
 
 Process.prototype.reportRank = function (data) {
     return data instanceof List ? data.rank() : 0;
+};
+
+Process.prototype.reportQuickRank = function (data) {
+    // private - assume a regularly shaped nested list
+    return data instanceof List ? data.quickRank() : 0;
+};
+
+Process.prototype.reportDimensions = function (data) {
+    return data instanceof List ? data.shape() : new List();
 };
 
 Process.prototype.doShowTable = function (list) {
@@ -3689,7 +3702,13 @@ Process.prototype.blockReceiver = function () {
 
 Process.prototype.playSound = function (name) {
     if (name instanceof List) {
-        return this.doPlaySoundAtRate(name, 44100);
+        // use the microphone's default sample rate in case it has been
+        // initialized before, otherwise 44.1 kHz
+        return this.doPlaySoundAtRate(
+            name,
+            this.blockReceiver().parentThatIsA(StageMorph)
+                .microphone?.audioContext?.sampleRate || 44100
+        );
     }
     return this.blockReceiver().doPlaySound(name);
 };
@@ -4508,13 +4527,28 @@ Process.prototype.hyperMonadic = function (baseOp, arg) {
 };
 
 Process.prototype.hyperDyadic = function (baseOp, a, b) {
+    var match = Math.min(this.reportQuickRank(a), this.reportQuickRank(b));
+    return this.hyperZip(baseOp, a, b, match, match);
+};
+
+Process.prototype.hyperZip = function (baseOp, a, b, zipa, zipb) {
     // enable dyadic operations to be performed on lists and tables
-    var arank = this.reportRank(a),
-        brank = this.reportRank(b),
+    // allowing to specify the ranks that are to be matched.
+    // this allows to write 2d matrix convolutions for 3+d inputs with
+    // 2d kernels e.g. for image processing without having to first
+    // reshape the kernel matrix to match the broadcast shape.
+    var arank = this.reportQuickRank(a),
+        brank = this.reportQuickRank(b),
         len, i, result;
-    if (arank === brank) {
+    if (arank === brank || (arank <= zipa && brank <= zipb)) {
         if (arank + brank === 0) {
             return baseOp(a, b);
+        }
+        if (brank === 0) {
+            return a.map(each => this.hyperZip(baseOp, each, b, zipa, zipb));
+        }
+        if (arank === 0) {
+            return b.map(each => this.hyperZip(baseOp, a, each, zipa, zipb));
         }
         // zip both arguments ignoring out-of-bounds indices
         a = a.itemsArray();
@@ -4522,14 +4556,20 @@ Process.prototype.hyperDyadic = function (baseOp, a, b) {
         len = Math.min(a.length, b.length);
         result = new Array(len);
         for (i = 0; i < len; i += 1) {
-            result[i] = this.hyperDyadic(baseOp, a[i], b[i]);
+            result[i] = this.hyperZip(baseOp, a[i], b[i], zipa, zipb);
         }
         return new List(result);
     }
-    if (arank > brank) {
-        return a.map(each => this.hyperDyadic(baseOp, each, b));
+    if (arank > zipa) {
+        return a.map(each => this.hyperZip(baseOp, each, b, zipa, zipb));
     }
-    return b.map(each => this.hyperDyadic(baseOp, a, each));
+    if (brank > zipb) {
+        return b.map(each => this.hyperZip(baseOp, a, each, zipa, zipb));
+    }
+    if (arank > brank) {
+        return a.map(each => this.hyperZip(baseOp, each, b, zipa, zipb));
+    }
+    return b.map(each => this.hyperZip(baseOp, a, each, zipa, zipb));
 };
 
 Process.prototype.packCoordinates = function (list) {
@@ -4550,6 +4590,7 @@ Process.prototype.packCoordinates = function (list) {
 */
 
 Process.prototype.reportVariadicSum = function (numbers) {
+    if (!isNaN(+numbers)) {return +numbers; }
     this.assertType(numbers, 'list');
     return this.reportListAggregation(numbers, 'reportSum');
 };
@@ -6081,7 +6122,7 @@ Process.prototype.reportRayLengthTo = function (name, relativeAngle = 0) {
     top = targetBounds.top();
     bottom = targetBounds.bottom();
     left = targetBounds.left();
-    right = targetBounds.right();
+    right = targetBounds.right() - 1;
 
     // test if already inside the target
     if (targetBounds.containsPoint(rc)) {
@@ -6437,7 +6478,7 @@ Process.prototype.reportGet = function (query) {
                         each => each instanceof BlockMorph
                     ).map(
                         each => new List([
-                            each?.comment.text() || '',
+                            each?.comment?.text() || '',
                             each.fullCopy().reify()
                         ])
                     )
@@ -7120,7 +7161,10 @@ Process.prototype.reportNewCostumeStretched = function (name, xP, yP) {
     }
     cst = this.costumeNamed(name);
     if (!cst) {
-        return new Costume();
+        throw new Error(
+            'expecting a costume\nbut getting none'
+        );
+        // return new Costume();
     }
     if (!isFinite(+xP * +yP) || isNaN(+xP * +yP)) {
         throw new Error(
@@ -7151,7 +7195,7 @@ Process.prototype.costumeNamed = function (name) {
 };
 
 Process.prototype.reportNewCostume = function (pixels, width, height, name) {
-    var rcvr, stage, canvas, ctx, src, dta, i, k, px;
+    var rcvr, stage, canvas, ctx, shp, dim, src, dta, i, k, px;
 
     this.assertType(pixels, 'list');
     if (this.inputOption(width) === 'current') {
@@ -7166,15 +7210,27 @@ Process.prototype.reportNewCostume = function (pixels, width, height, name) {
     }
     width = Math.abs(Math.floor(+width));
     height = Math.abs(Math.floor(+height));
-    if (width <= 0 || height <= 0) {
-        throw new Error(
-            'cannot handle zero width or height'
-        );
-    }
     if (!isFinite(width * height) || isNaN(width * height)) {
        throw new Error(
            'expecting a finite number\nbut getting Infinity or NaN'
        );
+    }
+    if (width <= 0 || height <= 0) {
+        // try to interpret the pixels as matrix
+        shp = pixels.quickShape();
+        if (shp.at(2) > 4) {
+            height = shp.at(1);
+            width = shp.at(2);
+            dim = new List([height * width]);
+            if (shp.length() === 3) {
+                dim.add(shp.at(3));
+            }
+            pixels = pixels.reshape(dim);
+        } else {
+            throw new Error(
+                'cannot handle zero width or height'
+            );
+        }
     }
 
     canvas = newCanvas(new Point(width, height), true);
