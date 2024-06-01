@@ -3194,7 +3194,8 @@ SpriteMorph.prototype.render = function (ctx) {
         cst,
         pic, // (flipped copy of) actual costume based on my rotation style
         stageScale,
-        handle;
+        handle,
+        isSmooth;
 
     isLoadingCostume = this.costume &&
         typeof this.costume.loaded === 'function';
@@ -3210,12 +3211,15 @@ SpriteMorph.prototype.render = function (ctx) {
     }
     if (this.costume && !isLoadingCostume) {
         pic = isFlipped ? this.costume.flipped() : this.costume;
+        isSmooth = ctx.imageSmoothingEnabled
+        ctx.imageSmoothingEnabled = false
         ctx.save();
         ctx.scale(this.scale * stageScale, this.scale * stageScale);
         ctx.translate(this.imageOffset.x, this.imageOffset.y);
         ctx.rotate(radians(facing - 90));
         ctx.drawImage(pic.contents, 0, 0);
         ctx.restore();
+        ctx.imageSmoothingEnabled = isSmooth
 
     } else {
         facing = isFlipped ? -90 : facing;
