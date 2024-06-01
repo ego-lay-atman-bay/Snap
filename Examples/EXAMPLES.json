@@ -1,5 +1,9 @@
 [
   {
+    "fileName": "image-smoothing.xml",
+    "name": "Image Smoothing"
+  },
+  {
     "fileName": "animal-game.xml",
     "name": "Animal Game"
   },
