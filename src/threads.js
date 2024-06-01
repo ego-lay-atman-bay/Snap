@@ -6883,6 +6883,8 @@ Process.prototype.reportGet = function (query) {
             }
             stage = thisObj.parentThatIsA(StageMorph);
             return stage ? thisObj.height() / stage.scale : 0;
+        case 'image smoothing':
+            return thisObj.imageSmoothing;
         }
     }
     return '';
@@ -7037,6 +7039,21 @@ Process.prototype.doSet = function (attribute, value) {
         break;
     case 'microphone modifier':
         this.setMicrophoneModifier(value);
+        break;
+    case 'image smoothing':
+    case 'my image smoothing':
+        this.assertType(rcvr, ['sprite', 'stage']);
+        this.assertType(value, 'Boolean');
+        ide = rcvr.parentThatIsA(IDE_Morph);
+        rcvr.setImageSmoothing(value)
+        // if (ide) {
+        //     rcvr.setName(
+        //         ide.newSpriteName(value.toString(), rcvr)
+        //     );
+        //     ide.spriteBar.nameField.setContents(
+        //         ide.currentSprite.name.toString()
+        //     );
+        // }
         break;
     default:
         throw new Error(
