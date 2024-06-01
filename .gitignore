@@ -2,3 +2,4 @@
 *.swp
 .tern-port
 .vscode/settings.json
+/src/.vscode

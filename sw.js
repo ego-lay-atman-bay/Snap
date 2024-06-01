@@ -1,4 +1,4 @@
-var snapVersion = '9.1.0-dev',
+var snapVersion = '10-240531-dev',
     cacheName = `snap-pwa-${snapVersion}`,
     filesToCache = [
         'snap.html',
@@ -25,6 +25,7 @@ var snapVersion = '9.1.0-dev',
         'src/locale.js',
         'src/cloud.js',
         'src/api.js',
+        'src/embroider.js',
         'src/sha512.js',
         'src/FileSaver.min.js',
 
@@ -76,20 +77,44 @@ var snapVersion = '9.1.0-dev',
         'locale/lang-zh_TW.js',
 
         //libraries
-        'libraries/LIBRARIES',
+        'libraries/LIBRARIES.json',
 
         'libraries/animation_module.xml',
         'libraries/apl.xml',
         'libraries/audioComp_module.xml',
         'libraries/bar-charts.xml',
+
+        'libraries/beetle.xml',
+
+            // Beetle coordinate images
+            'libraries/beetle/x.png',
+            'libraries/beetle/y.png',
+            'libraries/beetle/z.png',
+
+            // Beetle dependencies
+            'libraries/beetle/beetle.js',
+            'libraries/beetle/earcut.min.js',
+            'libraries/beetle/babylonjs.loaders.min.js',
+            'libraries/beetle/babylon.js.map',
+            'libraries/beetle/babylon.js',
+            'libraries/beetle/babylon.gridMaterial.min.js',
+
+            // Beetle shapes
+            'libraries/beetle/meshes/beetle-gray.obj',
+            'libraries/beetle/meshes/beetle-color.obj',
+            'libraries/beetle/meshes/beetle-black.obj',
+            'libraries/beetle/meshes/beetle-black.mtl',
+
         'libraries/biginteger.js',
         'libraries/bignumbers.xml',
         'libraries/bignums.js',
         'libraries/bitwise.xml',
         'libraries/bbtSnapExtension.js',
+        'libraries/code2blocks_module.xml',
         'libraries/colors.xml',
         'libraries/crayons.xml',
         'libraries/Eisenbergification.xml',
+        'libraries/embroidery_module.xml',
         'libraries/frequency_distribution_module.xml',
         'libraries/httpBlocks.xml',
         'libraries/HummingbirdBlocks.xml',
@@ -165,12 +190,13 @@ var snapVersion = '9.1.0-dev',
         'libraries/stream-tools.xml',
         'libraries/strings.xml',
         'libraries/textCostumes_module.xml',
+        'libraries/textformat_module.xml',
         'libraries/try-catch.xml',
         'libraries/word-sentence.xml',
         'libraries/words_module.xml',
 
         //costumes
-        'Costumes/COSTUMES',
+        'Costumes/COSTUMES.json',
 
         'Costumes/abby-a.svg',
         'Costumes/abby-b.svg',
@@ -556,6 +582,12 @@ var snapVersion = '9.1.0-dev',
         'Costumes/lb_top_R_leg.png',
         'Costumes/lb_top_stand.png',
         'Costumes/lightning.svg',
+        'Costumes/lirin01.png',
+        'Costumes/lirin02.png',
+        'Costumes/lirin03.png',
+        'Costumes/lirin04.png',
+        'Costumes/lirin05.png',
+        'Costumes/lirin06.png',
         'Costumes/lion-a.svg',
         'Costumes/lion-b.svg',
         'Costumes/lioness.svg',
@@ -729,7 +761,7 @@ var snapVersion = '9.1.0-dev',
         'Backgrounds/xy-grid.gif',
 
         // Sounds
-        'Sounds/SOUNDS',
+        'Sounds/SOUNDS.json',
 
         'Sounds/Cat.mp3',
         'Sounds/Chord.wav',
@@ -745,7 +777,7 @@ var snapVersion = '9.1.0-dev',
         'Sounds/Pop.wav',
 
         // Examples
-        'Examples/EXAMPLES',
+        'Examples/EXAMPLES.json',
 
         'Examples/animal-game.xml',
         'Examples/Codification.xml',
