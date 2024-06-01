@@ -1652,7 +1652,8 @@ SyntaxElementMorph.prototype.getVarNamesDict = function () {
                 'draggable?' : ['my draggable?'],
                 'rotation style' : ['my rotation style'],
                 'rotation x' : ['my rotation x'],
-                'rotation y' : ['my rotation y']
+                'rotation y' : ['my rotation y'],
+                'image smoothing': ['my image smoothing'],
             }];
             if (this.world().currentKey === 16) { // shift
                 dict.my[0]['~'] = null; // don't forget we're inside an array...
@@ -11632,6 +11633,7 @@ InputSlotMorph.prototype.gettablesMenu = function () {
     dict['rotation y'] = ['rotation y'];
     dict['center x'] = ['center x'];
     dict['center y'] = ['center y'];
+    dict['image smoothing'] = ['image smoothing'];
     return dict;
 };
 

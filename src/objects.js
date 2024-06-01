@@ -2869,6 +2869,7 @@ SpriteMorph.prototype.init = function (globals) {
     this.isTemporary = false; // indicate a temporary Scratch-style clone
     this.isCorpse = false; // indicate whether a sprite/clone has been deleted
     this.cloneOriginName = '';
+    this.imageSmoothing = false;
 
     // volume and stereo-pan support
     this.volume = 100;
@@ -3057,6 +3058,15 @@ SpriteMorph.prototype.setName = function (string) {
     this.recordUserEdit('sprite', 'name', old);
 };
 
+SpriteMorph.prototype.setImageSmoothing = function(imageSmoothing) {
+    var old = this.imageSmoothing;
+    if (old === imageSmoothing) {return; }
+    this.imageSmoothing = imageSmoothing;
+    this.version = Date.now()
+    this.recordUserEdit('sprite', 'imageSmoothing', old);
+    this.rerender()
+}
+
 // SpriteMorph rendering
 
 SpriteMorph.prototype.getImage = function () {
@@ -3194,8 +3204,7 @@ SpriteMorph.prototype.render = function (ctx) {
         cst,
         pic, // (flipped copy of) actual costume based on my rotation style
         stageScale,
-        handle,
-        isSmooth;
+        handle;
 
     isLoadingCostume = this.costume &&
         typeof this.costume.loaded === 'function';
@@ -3211,15 +3220,13 @@ SpriteMorph.prototype.render = function (ctx) {
     }
     if (this.costume && !isLoadingCostume) {
         pic = isFlipped ? this.costume.flipped() : this.costume;
-        isSmooth = ctx.imageSmoothingEnabled
-        ctx.imageSmoothingEnabled = false
         ctx.save();
+        ctx.imageSmoothingEnabled = this.imageSmoothing
         ctx.scale(this.scale * stageScale, this.scale * stageScale);
         ctx.translate(this.imageOffset.x, this.imageOffset.y);
         ctx.rotate(radians(facing - 90));
         ctx.drawImage(pic.contents, 0, 0);
         ctx.restore();
-        ctx.imageSmoothingEnabled = isSmooth
 
     } else {
         facing = isFlipped ? -90 : facing;
@@ -6354,10 +6361,11 @@ SpriteMorph.prototype.doStamp = function () {
     ctx.save();
     ctx.scale(1 / stage.scale, 1 / stage.scale);
     ctx.globalAlpha = this.alpha;
+    ctx.imageSmoothingEnabled = this.imageSmoothing;
     ctx.drawImage(
         img,
-        this.left() - stage.left(),
-        this.top() - stage.top()
+        Math.round(this.left() - stage.left()),
+        Math.round(this.top() - stage.top())
     );
     ctx.restore();
     this.changed();
@@ -7236,13 +7244,13 @@ SpriteMorph.prototype.floodFill = function () {
 
 SpriteMorph.prototype.reportPenTrailsAsCostume = function () {
     var cst = new Costume(
-        this.parentThatIsA(StageMorph).trailsCanvas,
+        this.parentThatIsA(StageMorph).penTrails(),
         this.newCostumeName(localize('Costume'))
     );
-    cst.shrinkWrap();
-    cst.rotationCenter = cst.rotationCenter.translateBy(
-        new Point(this.xPosition(), -this.yPosition())
-    );
+    // cst.shrinkWrap();
+    // cst.rotationCenter = cst.rotationCenter.translateBy(
+    //     new Point(this.xPosition(), -this.yPosition())
+    // );
     return cst;
 };
 
@@ -9550,6 +9558,7 @@ StageMorph.prototype.init = function (globals) {
     this.isFastTracked = false;
     this.enableCustomHatBlocks = true;
     this.cloneCount = 0;
+    this.imageSmoothing = false;
 
     this.timerStart = Date.now();
     this.tempo = 60; // bpm
@@ -9757,6 +9766,7 @@ StageMorph.prototype.drawOn = function (ctx, rect) {
 
     // pen trails
     ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = false
     ctx.drawImage(
         this.penTrails(),
         sl / this.scale,
@@ -9768,6 +9778,7 @@ StageMorph.prototype.drawOn = function (ctx, rect) {
         ws,
         hs
     );
+    ctx.imageSmoothingEnabled = true
 
     ctx.restore();
 };
@@ -11425,6 +11436,7 @@ StageMorph.prototype.categories = SpriteMorph.prototype.categories;
 StageMorph.prototype.blockColor = SpriteMorph.prototype.blockColor;
 StageMorph.prototype.paletteColor = SpriteMorph.prototype.paletteColor;
 StageMorph.prototype.setName = SpriteMorph.prototype.setName;
+StageMorph.prototype.setImageSmoothing = SpriteMorph.prototype.setImageSmoothing;
 StageMorph.prototype.reporterize = SpriteMorph.prototype.reporterize;
 StageMorph.prototype.variableBlock = SpriteMorph.prototype.variableBlock;
 StageMorph.prototype.showingWatcher = SpriteMorph.prototype.showingWatcher;
