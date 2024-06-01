@@ -798,6 +798,7 @@ SnapSerializer.prototype.loadSpritesModel = function (xmlNode, ide) {
         sprite.isDraggable = model.attributes.draggable !== 'false';
         sprite.isVisible = model.attributes.hidden !== 'true';
         sprite.heading = parseFloat(model.attributes.heading) || 0;
+        sprite.imageSmoothing = model.attributes.imageSmoothing !== 'false';
         sprite.gotoXY(+model.attributes.x || 0, +model.attributes.y || 0);
         this.loadObject(sprite, model);
         sprite.fixLayout();
@@ -1742,6 +1743,7 @@ SnapSerializer.prototype.loadValue = function (model, object, silently) {
         v.isDraggable = model.attributes.draggable !== 'false';
         v.isVisible = model.attributes.hidden !== 'true';
         v.heading = parseFloat(model.attributes.heading) || 0;
+        v.imageSmoothing = model.attributes.imageSmoothing !== 'false';
         if (!silently) {
             v.gotoXY(+model.attributes.x || 0, +model.attributes.y || 0);
         }
@@ -2174,6 +2176,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
             ' volume="@"' +
             ' pan="@"' +
             ' rotation="@"' +
+            ' imageSmoothing="@"' +
             '%' +
             ' draggable="@"' +
             '%' +
@@ -2198,6 +2201,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
         this.volume,
         this.pan,
         this.rotationStyle,
+        this.imageSmoothing,
         this.instrument ?
                 ' instrument="' + parseInt(this.instrument) + '" ' : '',
         this.isDraggable,
