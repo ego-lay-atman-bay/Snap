@@ -161,7 +161,7 @@ SVG_Costume, embedMetadataPNG, ThreadManager, snapEquals, display*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.blocks = '2024-May-29';
+modules.blocks = '2024-June-10';
 
 var SyntaxElementMorph;
 var BlockMorph;
@@ -737,6 +737,8 @@ SyntaxElementMorph.prototype.labelParts = {
         type: 'input',
         tags: 'read-only static',
         menu: {
+            'select' : ['select'],
+            'unselect' : ['unselect'],
             'encode URI' : ['encode URI'],
             'decode URI' : ['decode URI'],
             'encode URI component' : ['encode URI component'],
@@ -851,6 +853,7 @@ SyntaxElementMorph.prototype.labelParts = {
         menu: {
             'label': ['label'],
             'definition': ['definition'],
+            'primitive' : ['primitive'],
             'comment': ['comment'],
             'category': ['category'],
             'custom?': ['custom?'],
@@ -880,6 +883,7 @@ SyntaxElementMorph.prototype.labelParts = {
         menu: {
             'label': ['label'],
             'definition': ['definition'],
+            'primitive' : ['primitive'],
             'comment': ['comment'],
             'category': ['category'],
             'type': ['type'],
@@ -4548,7 +4552,7 @@ BlockMorph.prototype.dependencies = function (onlyGlobal, receiver) {
             if (!onlyGlobal || (onlyGlobal && morph.isGlobal)) {
                 def = morph.isGlobal ? morph.definition
                     : rcvr.getMethod(morph.semanticSpec);
-                if (!def.isQuasiPrimitive()) {
+                if (!def.isBootstrapped()) {
                     [def].concat(def.collectDependencies(
                         quasiPrims,
                         [],
@@ -6311,7 +6315,9 @@ BlockMorph.prototype.editPrimitive = function () {
         def = SpriteMorph.prototype.customBlockDefinitionFor(this.selector),
         editor;
     proc.pushContext();
-    def.setBlockDefinition(proc.assemble(proc.parseCode(info.src)));
+    if (info.src) {
+        def.setBlockDefinition(proc.assemble(proc.parseCode(info.src)));
+    }
     editor = new BlockEditorMorph(def, rcvr);
     editor.primitive = this.selector;
     editor.popUp();
@@ -6583,12 +6589,6 @@ CommandBlockMorph.prototype.snap = function (hand) {
         return;
     }
     scripts.lastDropTarget = target;
-    scripts.scriptTarget().recordUserEdit(
-        'scripts',
-        'block',
-        'snap',
-        this.abstractBlockSpec()
-    );
     if (target.loc === 'bottom') {
         if (target.type === 'slot') {
             this.removeHighlight();
@@ -6649,6 +6649,12 @@ CommandBlockMorph.prototype.snap = function (hand) {
     }
     this.fixBlockColor();
     CommandBlockMorph.uber.snap.call(this); // align stuck comments
+    scripts.scriptTarget().recordUserEdit(
+        'scripts',
+        'block',
+        'snap',
+        this.abstractBlockSpec()
+    );
     if (hand) {
         scripts.recordDrop(hand.grabOrigin);
     }

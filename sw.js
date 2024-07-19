@@ -1,4 +1,4 @@
-var snapVersion = '10-240531-dev',
+var snapVersion = '10-rc3',
     cacheName = `snap-pwa-${snapVersion}`,
     filesToCache = [
         'snap.html',
@@ -110,6 +110,11 @@ var snapVersion = '10-240531-dev',
         'libraries/bignums.js',
         'libraries/bitwise.xml',
         'libraries/bbtSnapExtension.js',
+
+        // BLE
+        'libraries/ble/ble.js',
+        'libraries/ble/init.js',
+
         'libraries/code2blocks_module.xml',
         'libraries/colors.xml',
         'libraries/crayons.xml',
@@ -128,6 +133,7 @@ var snapVersion = '10-240531-dev',
         'libraries/make-variables.xml',
         'libraries/maps_module.xml',
         'libraries/menu_module.xml',
+        'libraries/microblocks.xml',
         'libraries/mqttExtension.js',
         'libraries/mqtt.js',
         'libraries/mqtt.xml',

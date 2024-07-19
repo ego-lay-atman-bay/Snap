@@ -87,11 +87,11 @@ BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions, snapEquals
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.gui = '2024-May-31';
+modules.gui = '2024-July-18';
 
 // Declarations
 
-var SnapVersion = '10-240531-dev';
+var SnapVersion = '10-rc3';
 
 var database = new Database()
 var IDE_Morph;
@@ -3753,6 +3753,7 @@ IDE_Morph.prototype.refreshIDE = function () {
             new Project(this.scenes, this.scene)
         );
     }
+    SpriteMorph.prototype.initBlocks();
     this.buildPanes();
     this.fixLayout();
     if (this.loadNewProject) {
@@ -4852,13 +4853,28 @@ IDE_Morph.prototype.settingsMenu = function () {
         'Microphone resolution...',
         'microphoneMenu'
     );
+    menu.addLine();
     if (shiftClicked) {
+        menu.addItem(
+            'Primitives palette',
+            () => this.stage.restorePrimitives(),
+            'EXPERIMENTAL - switch (back) to\n' +
+                'primitive blocks in the palette',
+            new Color(100, 0, 0)
+        );
+        menu.addItem(
+            'Customize primitives',
+            () => this.stage.customizeBlocks(),
+            'EXPERIMENTAL - overload primitives\n' +
+                'with custom block definitions',
+            new Color(100, 0, 0)
+        );
         menu.addLine();
         addPreference(
             'Blocks all the way',
             () => {
                 if (SpriteMorph.prototype.isBlocksAllTheWay()) {
-                    this.userCustomizePalette(nop);
+                    this.stage.restorePrimitives();
                 } else {
                     this.bootstrapCustomizedPrimitives(
                         this.stage.customizeBlocks()
@@ -4872,51 +4888,30 @@ IDE_Morph.prototype.settingsMenu = function () {
             new Color(100, 0, 0)
 
         );
-        menu.addItem(
-            'Primitives palette',
-            () => this.userCustomizePalette(),
-            'EXPERIMENTAL - switch (back) to\n' +
-            'primitive blocks in the palette',
-            new Color(100, 0, 0)
-        );
-        menu.addItem(
-            'Customize primitives',
-            () => this.stage.customizeBlocks(),
-            'EXPERIMENTAL - overload primitives\n' +
-            'with custom block definitions',
-            new Color(100, 0, 0)
-        );
-        menu.addItem(
-            'Bootstrap palette',
-            () => this.bootstrapCustomizedPrimitives(
-                this.stage.customizeBlocks()
-            ),
-            'EXPERIMENTAL - overload primitives\n' +
-            'with custom block definitions',
-            new Color(100, 0, 0)
-        );
-        menu.addItem(
-            'Use custom blocks',
-            () => SpriteMorph.prototype.toggleAllCustomizedPrimitives(
-                this.stage,
-                false
-            ),
-            'EXPERIMENTAL - use custom blocks\n' +
-            'in all palette blocks',
-            new Color(100, 0, 0)
-        );
-        menu.addItem(
-            'Use primitives',
-            () => SpriteMorph.prototype.toggleAllCustomizedPrimitives(
-                this.stage,
-                true
-            ),
-            'EXPERIMENTAL - use primitives\n' +
-            'in all palette blocks',
-            new Color(100, 0, 0)
-        );
+        if (SpriteMorph.prototype.hasCustomizedPrimitives()) {
+            menu.addItem(
+                'Use custom blocks',
+                () => SpriteMorph.prototype.toggleAllCustomizedPrimitives(
+                    this.stage,
+                    false
+                ),
+                'EXPERIMENTAL - use custom blocks\n' +
+                    'in all palette blocks',
+                new Color(100, 0, 0)
+            );
+            menu.addItem(
+                'Use primitives',
+                () => SpriteMorph.prototype.toggleAllCustomizedPrimitives(
+                    this.stage,
+                    true
+                ),
+                'EXPERIMENTAL - use primitives\n' +
+                    'in all palette blocks',
+                new Color(100, 0, 0)
+            );
+            menu.addLine();
+        }
     }
-    menu.addLine();
     addPreference(
         'JavaScript extensions',
         () => {
@@ -5048,6 +5043,14 @@ IDE_Morph.prototype.settingsMenu = function () {
         'uncheck to render\nsprites dynamically',
         'check to cache\nsprite renderings',
         true
+    );
+    addPreference(
+        'Performer mode',
+        () => this.togglePerformerMode(),
+        this.performerMode,
+        'uncheck to go back to regular\nlayout',
+        'check to have the stage use up\nall space and go behind the\n' +
+        'scripting area'
     );
     menu.addLine(); // everything visible below is persistent
     addPreference(
@@ -5281,14 +5284,6 @@ IDE_Morph.prototype.settingsMenu = function () {
         Process.prototype.enableCompiling,
         'EXPERIMENTAL! uncheck to disable live\nsupport for compiling',
         'EXPERIMENTAL! check to enable\nsupport for compiling',
-        true
-    );
-    addPreference(
-        'Performer mode',
-        () => this.togglePerformerMode(),
-        this.performerMode,
-        'uncheck to go back to regular\nlayout',
-        'check to have the stage use up\nall space and go behind the\nscripting area',
         true
     );
     menu.addLine(); // everything below this line is stored in the project
@@ -5556,15 +5551,17 @@ IDE_Morph.prototype.projectMenu = function () {
                 'export pen trails\nas PNG image'
             );
         }
-
-
         menu.addLine();
-        if (this.stage.globalBlocks.length) {
+        if (this.stage.globalBlocks.length ||
+            SpriteMorph.prototype.hasCustomizedPrimitives()
+        ) {
             menu.addItem(
                 'Export blocks...',
                 () => this.exportGlobalBlocks(),
                 'save global custom block\ndefinitions as XML'
             );
+        }
+        if (this.stage.globalBlocks.length) {
             menu.addItem(
                 'Unused blocks...',
                 () => this.removeUnusedBlocks(),
@@ -5572,7 +5569,7 @@ IDE_Morph.prototype.projectMenu = function () {
                 '\nand remove their definitions'
             );
         }
-        if (shiftClicked) {
+        if (shiftClicked && SpriteMorph.prototype.hasCustomizedPrimitives()) {
             menu.addItem(
                 'Export customized primitives...',
                 () => this.exportCustomizedPrimitives(),
@@ -6468,12 +6465,14 @@ IDE_Morph.prototype.saveIndexedDBProject = function (name) {
 };
 
 IDE_Morph.prototype.exportGlobalBlocks = function () {
-    if (this.stage.globalBlocks.length > 0) {
-        this.serializer,
-            new BlockExportDialogMorph(
-                this.stage.globalBlocks,
-                this
-            ).popUp(this.world());
+    var blocks = SpriteMorph.prototype.bootstrappedBlocks().concat(
+        this.stage.globalBlocks);
+    if (blocks.length > 0) {
+        new BlockExportDialogMorph(
+            this.serializer,
+            blocks,
+            this
+        ).popUp(this.world());
     } else {
         this.inform(
             'Export blocks',
@@ -7047,7 +7046,7 @@ IDE_Morph.prototype.openProjectString = function (str, callback, noPrims) {
     var msg;
     if (this.bulkDropInProgress || this.isAddingScenes) {
         this.rawOpenProjectString(str, noPrims);
-        if (callback) { callback(); }
+        if (callback) {callback(); }
         return;
     }
     this.nextSteps([
@@ -8254,6 +8253,7 @@ IDE_Morph.prototype.reflectLanguage = function (lang, callback, noSave) {
             );
         }
     }
+    SpriteMorph.prototype.initBlocks();
     this.spriteBar.tabBar.tabTo('scripts');
     this.createCategories();
     this.categories.refreshEmpty();
@@ -11187,6 +11187,7 @@ LibraryImportDialogMorph.prototype.importLibrary = function () {
             }
         );
     }
+    ide.refreshIDE();
 };
 
 LibraryImportDialogMorph.prototype.displayBlocks = function (libraryKey) {

@@ -30,12 +30,12 @@
 /*global modules, List, StageMorph, Costume, SpeechSynthesisUtterance, Sound,
 IDE_Morph, CamSnapshotDialogMorph, SoundRecorderDialogMorph, isSnapObject, nop,
 Color, Process, contains, localize, SnapTranslator, isString, detect, Point,
-SVG_Costume, newCanvas, WatcherMorph, BlockMorph, HatBlockMorph, SpriteMorph,
+SVG_Costume, newCanvas, WatcherMorph, BlockMorph, HatBlockMorph, invoke,
 BigUint64Array*/
 
 /*jshint esversion: 11, bitwise: false*/
 
-modules.extensions = '2024-May-23';
+modules.extensions = '2024-July-17';
 
 // Global stuff
 
@@ -53,7 +53,8 @@ var SnapExtensions = {
         'https://cs10.org/',
         'https://ecraft2learn.github.io/ai/', // Uni-Oxford, Ken Kahn
         'https://microworld.edc.org/', // EDC, E. Paul Goldenberg
-        'https://birdbraintechnologies.com/' // BirdBrain technologies, Tom Lauwers
+        'https://birdbraintechnologies.com/', // BirdBrain technologies, Tom Lauwers
+        'https://www.birdbraintechnologies.com/' // compatibility
     ]
 };
 
@@ -237,6 +238,31 @@ var SnapExtensions = {
 // meta utils (snap_):
 
 SnapExtensions.primitives.set(
+    'snap_yield',
+    function (proc) {
+        if (!proc.isAtomic) {
+            proc.readyToYield = true;
+        }
+    }
+);
+
+SnapExtensions.primitives.set(
+    'snap_xml_encode(script)',
+    function (script, proc) {
+        proc.assertType(script, ['command', 'reporter', 'predicate']);
+        return script.expression.toXMLString(this);
+    }
+);
+
+SnapExtensions.primitives.set(
+    'snap_xml_decode(txt)',
+    function (xml, proc) {
+        proc.assertType(xml, 'text');
+        return this.parentThatIsA(IDE_Morph).deserializeScriptString(xml).reify();
+    }
+);
+
+SnapExtensions.primitives.set(
     'snap_bootstrap(block)',
     function (script, proc) {
         proc.assertType(script, ['command', 'reporter', 'predicate']);
@@ -306,31 +332,6 @@ SnapExtensions.primitives.set(
             ['max slots'],
             ['translations']
         ]);
-    }
-);
-
-SnapExtensions.primitives.set(
-    'snap_yield',
-    function (proc) {
-        if (!proc.isAtomic) {
-            proc.readyToYield = true;
-        }
-    }
-);
-
-SnapExtensions.primitives.set(
-    'snap_xml_encode(script)',
-    function (script, proc) {
-        proc.assertType(script, ['command', 'reporter', 'predicate']);
-        return script.expression.toXMLString(this);
-    }
-);
-
-SnapExtensions.primitives.set(
-    'snap_xml_decode(txt)',
-    function (xml, proc) {
-        proc.assertType(xml, 'text');
-        return this.parentThatIsA(IDE_Morph).deserializeScriptString(xml).reify();
     }
 );
 
@@ -419,6 +420,8 @@ SnapExtensions.primitives.set(
     /*
         supported transformation names:
         -------------------------------
+        select
+        unselect
         encode URI
         decode URI
         encode URI component
@@ -1358,7 +1361,29 @@ SnapExtensions.primitives.set(
 SnapExtensions.primitives.set(
     'srl_open(baud, buffer)',
     function (baud, buf, proc) {
-        var acc = proc.context.accumulator;
+        var acc = proc.context.accumulator,
+            stage = this.parentThatIsA(StageMorph),
+            snapProcessBlockDef =
+                stage.globalBlocks.find(
+                    def => def.spec == '__mb_process_data__'
+                );
+
+        function readCallback (port) {
+            var block = snapProcessBlockDef.blockInstance();
+            if (block && port?.writable) {
+                block.parent = stage;
+                try {
+                    invoke(
+                        block,
+                        null,  // args
+                        stage  // receiver
+                    );
+                } catch (err) {
+                    throw(err);
+                }
+            }
+            setTimeout(function() { readCallback(port); }, 25);
+        }
 
         async function forceClose(port){
             try {
@@ -1394,6 +1419,9 @@ SnapExtensions.primitives.set(
         } else if (acc.result !== false) {
             if (acc.result instanceof  Error) {
                 throw acc.result;
+            }
+            if (snapProcessBlockDef) {
+                setTimeout(function(){ readCallback(acc.result); }, 25); 
             }
             return acc.result;
         }

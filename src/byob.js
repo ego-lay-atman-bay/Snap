@@ -111,7 +111,7 @@ ArgLabelMorph, embedMetadataPNG, ArgMorph, RingMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.byob = '2024-May-29';
+modules.byob = '2024-June-12';
 
 // Declarations
 
@@ -1312,7 +1312,7 @@ CustomCommandBlockMorph.prototype.refresh = function (aDefinition, offset) {
 CustomCommandBlockMorph.prototype.restoreInputs = function (oldInputs, offset) {
     // try to restore my previous inputs when my spec has been changed
 
-    if (offset || this.definition?.primitive) {
+    if (offset) { // || this.definition?.primitive) {
         // assuming a "relabel" action that needs to shift inputs
         this.refreshDefaults();
         BlockMorph.prototype.restoreInputs.call(this, oldInputs, offset);
@@ -1863,12 +1863,10 @@ CustomCommandBlockMorph.prototype.userMenu = function () {
                         );
                     }
                 }
-                if (!this.definition.isBootstrapped()) {
-                    menu.addItem(
-                        "delete block definition...",
-                        'deleteBlockDefinition'
-                    );
-                }
+                menu.addItem(
+                    "delete block definition...",
+                    'deleteBlockDefinition'
+                );
             } else { // local method
                 if (contains(
                         Object.keys(rcvr.inheritedBlocks()),
@@ -1976,8 +1974,7 @@ CustomCommandBlockMorph.prototype.userMenu = function () {
             }
         } else { // inside a script
             // if global or own method - let the user delete the definition
-            if (this.isGlobal && !this.definition.isBootstrapped() ||
-                contains(
+            if (this.isGlobal && contains(
                     Object.keys(rcvr.ownBlocks()),
                     this.blockSpec
                 )
@@ -2114,6 +2111,10 @@ CustomCommandBlockMorph.prototype.deleteBlockDefinition = function () {
     }
     method = this.isGlobal? this.definition
             : rcvr.getLocalMethod(this.blockSpec);
+    if (method.isBootstrapped()) {
+        rcvr.restorePrimitive(method);
+        return;
+    }
     block = method.blockInstance();
     new DialogBoxMorph(
         this,
@@ -5548,9 +5549,24 @@ BlockExportDialogMorph.prototype.popUp = function (wrrld) {
 // BlockExportDialogMorph menu
 
 BlockExportDialogMorph.prototype.userMenu = function () {
-    var menu = new MenuMorph(this, 'select');
+    var menu = new MenuMorph(this, 'select'),
+        on = new SymbolMorph(
+            'checkedBox',
+            MorphicPreferences.menuFontSize * 0.75
+        );
     menu.addItem('all', 'selectAll');
     menu.addItem('none', 'selectNone');
+    if (this.blocks.some(any => any.isBootstrapped()) &&
+        this.blocks.some(any => !any.isBootstrapped())
+    ) {
+        menu.addItem(
+            [
+                on,
+                localize('primitives')
+            ],
+            'noPrims'
+        );
+    }
     return menu;
 };
 
@@ -5564,6 +5580,13 @@ BlockExportDialogMorph.prototype.selectAll = function () {
 
 BlockExportDialogMorph.prototype.selectNone = function () {
     this.blocks = [];
+    this.body.contents.children.forEach(checkBox => {
+        checkBox.refresh();
+    });
+};
+
+BlockExportDialogMorph.prototype.noPrims = function () {
+    this.blocks = this.blocks.filter(def => !def.isBootstrapped());
     this.body.contents.children.forEach(checkBox => {
         checkBox.refresh();
     });

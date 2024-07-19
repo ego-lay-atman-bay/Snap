@@ -63,7 +63,7 @@ Project*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.store = '2024-May-31';
+modules.store = '2024-July-17';
 
 // XML_Serializer ///////////////////////////////////////////////////////
 /*
@@ -259,7 +259,7 @@ SnapSerializer.uber = XML_Serializer.prototype;
 
 // SnapSerializer constants:
 
-SnapSerializer.prototype.app = 'Snap!-mod-(ego-lay-atman-bay) 10-dev, https://ego-lay-atman-bay.github.io/Snap';
+SnapSerializer.prototype.app = 'Snap!-mod-(ego-lay-atman-bay) 10-rc, https://ego-lay-atman-bay.github.io/Snap';
 
 SnapSerializer.prototype.thumbnailSize = new Point(160, 120);
 
@@ -536,6 +536,7 @@ SnapSerializer.prototype.loadScene = function (xmlNode, appVersion, remixID) {
 
     model.primitives = model.scene.childNamed('primitives');
     if (model.primitives && !this.noPrims) {
+        SpriteMorph.prototype.initBlocks();
         this.loadCustomizedPrimitives(scene.stage, model.primitives);
         scene.blocks = SpriteMorph.prototype.blocks;
     }
@@ -1152,7 +1153,12 @@ SnapSerializer.prototype.loadCustomizedPrimitives = function (
         }
         definition = SpriteMorph.prototype.blocks[sel].definition;
         if (!(definition instanceof CustomBlockDefinition)) {
-            (stage || object).customizePrimitive(sel);
+            (stage || object).customizePrimitive(
+                sel,
+                null,
+                null,
+                this.scene.stage
+            );
             definition = SpriteMorph.prototype.blocks[sel].definition;
             if (!(definition instanceof CustomBlockDefinition)) {
                 console.log('unable to overload primitive "' + sel + '"');
@@ -1181,6 +1187,7 @@ SnapSerializer.prototype.loadCustomizedPrimitives = function (
         inputs = child.childNamed('inputs');
         if (inputs) {
             i = -1;
+            definition.declarations = new Map();
             inputs.children.forEach(child => {
                 var options = child.childNamed('options');
                 if (child.tag !== 'input') {
@@ -1257,8 +1264,31 @@ SnapSerializer.prototype.loadCustomizedPrimitives = function (
                     context.changed();
                 }
             );
+        } else { // at least update instances found in customized prims
+            SpriteMorph.prototype.everyBlock().forEach(block => {
+                if (block.definition === definition) {
+                    block.refresh();
+                }
+            });
         }
 
+        // update global custom blocks
+        this.scene.stage.globalBlocks.forEach(def => {
+            def.scripts.forEach(eachScript =>
+                eachScript.allChildren().forEach(m => {
+                    if (m.definition === definition) {
+                        m.refresh();
+                    }
+                })
+            );
+            if (def.body) {
+                def.body.expression.allChildren().forEach(m => {
+                    if (m.definition === definition) {
+                        m.refresh();
+                    }
+                });
+            }
+        });
     });
 };
 
@@ -2527,7 +2557,7 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
             ' primitive="' + this.primitive + '"'
             : '',
         this.isHelper ? ' helper="true"' : '',
-        this.spaceAbove ? 'space="true"' : '',
+        this.spaceAbove ? ' space="true"' : '',
         this.comment ? this.comment.toXML(serializer) : '',
         (this.variableNames.length ?
                 serializer.store(new List(this.variableNames)) : ''),

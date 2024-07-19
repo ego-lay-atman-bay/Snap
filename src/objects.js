@@ -96,7 +96,7 @@ CustomBlockDefinition, exportEmbroidery*/
 
 /*jshint esversion: 11*/
 
-modules.objects = '2024-May-31';
+modules.objects = '2024-July-11';
 
 var SpriteMorph;
 var StageMorph;
@@ -2369,7 +2369,8 @@ SpriteMorph.prototype.customizeBlocks = function () {
 SpriteMorph.prototype.customizePrimitive = function (
     selector,
     withCode,
-    ersatz // optional alternative definition, e.g. when editing a primitive
+    ersatz, // optional alternative definition, e.g. when editing a primitive
+    alsoIn // optional alternative stage to scan when deserializing
 ) {
     var info = SpriteMorph.prototype.blocks[selector],
         ide = this.parentThatIsA(IDE_Morph),
@@ -2382,7 +2383,7 @@ SpriteMorph.prototype.customizePrimitive = function (
     if (isNil(def)) {return false; }
     info.definition = def;
     prot = Object.getPrototypeOf(def.blockInstance());
-    this.allPrimitiveBlockInstances(selector).forEach(block => {
+    this.allPrimitiveBlockInstances(selector, alsoIn).forEach(block => {
         Object.setPrototypeOf(block, prot);
         block.selector = def.primitive || 'evaluateCustomBlock';
         block.definition = def;
@@ -2393,11 +2394,50 @@ SpriteMorph.prototype.customizePrimitive = function (
         block.initializeVariables();
         block.refresh();
     });
-    if (withCode) {
+    if (withCode && info.src) {
         proc = new Process(null, this.parentThatIsA(StageMorph));
         proc.pushContext();
         def.setBlockDefinition(proc.assemble(proc.parseCode(info.src)));
     }
+    if (ide) {
+        ide.flushBlocksCache();
+    }
+    return true;
+};
+
+SpriteMorph.prototype.restorePrimitives = function () {
+    Object.keys(SpriteMorph.prototype.blocks).forEach(key => {
+        let def = SpriteMorph.prototype.blocks[key].definition;
+        if (def instanceof CustomBlockDefinition) {
+            this.restorePrimitive(def);
+        }
+    });
+    this.parentThatIsA(IDE_Morph).refreshPalette();
+};
+
+SpriteMorph.prototype.restorePrimitive = function (definition) {
+    var selector = definition.selector,
+        info = SpriteMorph.prototype.blocks[selector],
+        all = this.allBlockInstances(definition),
+        ide = this.parentThatIsA(IDE_Morph),
+        inst, prot;
+
+    if (!info.definition) {
+        return false;
+    }
+    delete info.definition;
+    inst = SpriteMorph.prototype.blockForSelector(selector);
+    prot = Object.getPrototypeOf(inst);
+    all.forEach(block => {
+        block.selector = selector;
+        delete block.definition;
+        delete block.isCustomBlock;
+        delete block.isGlobal;
+        delete block.isPrototype;
+        delete block.variables;
+        Object.setPrototypeOf(block, prot);
+        block.setSelector(selector);
+    });
     if (ide) {
         ide.flushBlocksCache();
     }
@@ -8156,7 +8196,9 @@ SpriteMorph.prototype.allBlockInstances = function (definition) {
                 sprite.allLocalBlockInstances(definition)
             )
         );
-        stage.globalBlocks.forEach(def => {
+        stage.globalBlocks.concat(
+            SpriteMorph.prototype.bootstrappedBlocks()
+        ).forEach(def => {
             def.scripts.forEach(eachScript =>
                 eachScript.allChildren().forEach(c => {
                     if (c.isCustomBlock && (c.definition === definition)) {
@@ -8423,9 +8465,97 @@ SpriteMorph.prototype.replaceDoubleDefinitionsFor = function (definition) {
     }
 };
 
+// SpriteMorph enumerating blocks
+
+SpriteMorph.prototype.everyBlock = function () {
+    // answer an array of every block in the system - under construction
+    var stage = this.parentThatIsA(StageMorph),
+        ide = this.parentThatIsA(IDE_Morph),
+        charted = [],
+        blocks = [];
+
+    function collect(morph) {
+        if (morph instanceof BlockMorph) {
+            blocks.push(morph);
+        }
+    }
+
+    function scanVariables(varFrame) {
+        varFrame.names().forEach(vname => {
+            var value = varFrame.getVar(vname);
+            if (value instanceof Context) {
+                scanContext(value);
+            } else if (value instanceof List) {
+                scanList(value);
+            }
+        });
+    }
+
+    function scanContext(context) {
+        if (!charted.includes(context)) {
+            charted.push(context);
+        }
+        if (context.expression instanceof BlockMorph) {
+            context.expression.allChildren().forEach(collect);
+        }
+    }
+
+    function scanList(list) {
+        if (!charted.includes(list)) {
+            charted.push(list);
+            if (!list.canBeJSON()) {
+                list.map(each => {
+                    if (each instanceof Context) {
+                        scanContext(each);
+                    } else if (each instanceof List) {
+                        scanList(each);
+                    }
+                });
+            }
+        }
+    }
+
+    function scanDefinition(def) {
+        def.scripts.forEach(eachScript =>
+            eachScript.allChildren().forEach(collect)
+        );
+        if (def.body) {
+            def.body.expression.allChildren().forEach(collect);
+        }
+    }
+
+    SpriteMorph.prototype.bootstrappedBlocks().forEach(scanDefinition);
+
+    if (ide) {
+        ide.sprites.asArray().forEach(sprite => {
+            sprite.scripts.allChildren().forEach(collect);
+            sprite.customBlocks.forEach(scanDefinition);
+            scanVariables(sprite.variables);
+            if (sprite.solution) {
+                sprite.solution.scripts.allChildren().forEach(collect);
+                sprite.solution.customBlocks.forEach(scanDefinition);
+                scanVariables(sprite.solution.variables);
+            }
+        });
+    }
+
+    if (stage) {
+        stage.globalBlocks.forEach(scanDefinition);
+        scanVariables(stage.globalVariables());
+        stage.threads.processes.forEach(proc => {
+            if (proc.context instanceof Context) {
+                scanContext(proc.context);
+            }
+        });
+    }
+
+    return blocks;
+};
+
+
 // SpriteMorph enumerating primitive block instances
 
-SpriteMorph.prototype.allPrimitiveBlockInstances = function (selector) {
+SpriteMorph.prototype.allPrimitiveBlockInstances = function (selector, alsoIn) {
     // answer an Array of all block instances in the system that are
     // primitive blocks (i.e. non-custom ones) with the given selector
     var stage = this.parentThatIsA(StageMorph),
@@ -8477,21 +8607,19 @@ SpriteMorph.prototype.allPrimitiveBlockInstances = function (selector) {
         }
     }
 
-    if (ide) { // +++
-    ide.sprites.asArray().forEach(sprite => {
-        sprite.scripts.allChildren().forEach(collect);
-        sprite.customBlocks.forEach(def => {
-            def.scripts.forEach(eachScript =>
-                eachScript.allChildren().forEach(collect)
-            );
-            if (def.body) {
-                def.body.expression.allChildren().forEach(collect);
-            }
-        });
-        scanVariables(sprite.variables);
-        if (sprite.solution) {
-            sprite.solution.scripts.allChildren().forEach(collect);
-            sprite.solution.customBlocks.forEach(def => {
+    SpriteMorph.prototype.bootstrappedBlocks().forEach(def => {
+        def.scripts.forEach(eachScript =>
+            eachScript.allChildren().forEach(collect)
+        );
+        if (def.body) {
+            def.body.expression.allChildren().forEach(collect);
+        }
+    });
+
+    if (ide) {
+        ide.sprites.asArray().forEach(sprite => {
+            sprite.scripts.allChildren().forEach(collect);
+            sprite.customBlocks.forEach(def => {
                 def.scripts.forEach(eachScript =>
                     eachScript.allChildren().forEach(collect)
                 );
@@ -8499,9 +8627,20 @@ SpriteMorph.prototype.allPrimitiveBlockInstances = function (selector) {
                     def.body.expression.allChildren().forEach(collect);
                 }
             });
-            scanVariables(sprite.solution.variables);
-        }
-    });
+            scanVariables(sprite.variables);
+            if (sprite.solution) {
+                sprite.solution.scripts.allChildren().forEach(collect);
+                sprite.solution.customBlocks.forEach(def => {
+                    def.scripts.forEach(eachScript =>
+                        eachScript.allChildren().forEach(collect)
+                    );
+                    if (def.body) {
+                        def.body.expression.allChildren().forEach(collect);
+                    }
+                });
+                scanVariables(sprite.solution.variables);
+            }
+        });
     }
 
     stage.globalBlocks.forEach(def => {
@@ -8518,6 +8657,17 @@ SpriteMorph.prototype.allPrimitiveBlockInstances = function (selector) {
             scanContext(proc.context);
         }
     });
+
+    if (alsoIn) {
+        alsoIn.globalBlocks.forEach(def => {
+            def.scripts.forEach(eachScript =>
+                eachScript.allChildren().forEach(collect)
+            );
+            if (def.body) {
+                def.body.expression.allChildren().forEach(collect);
+            }
+        });
+    }
 
     return blocks;
 
@@ -11947,6 +12097,12 @@ StageMorph.prototype.allDependentInvocationsOf
 
 StageMorph.prototype.customizeBlocks =
     SpriteMorph.prototype.customizeBlocks;
+
+StageMorph.prototype.restorePrimitives =
+    SpriteMorph.prototype.restorePrimitives;
+
+StageMorph.prototype.restorePrimitive =
+    SpriteMorph.prototype.restorePrimitive;
 
 StageMorph.prototype.customizePrimitive =
     SpriteMorph.prototype.customizePrimitive;
