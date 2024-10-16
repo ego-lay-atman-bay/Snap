@@ -63,7 +63,7 @@ Project*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.store = '2024-July-17';
+modules.store = '2024-September-13';
 
 // XML_Serializer ///////////////////////////////////////////////////////
 /*
@@ -259,7 +259,7 @@ SnapSerializer.uber = XML_Serializer.prototype;
 
 // SnapSerializer constants:
 
-SnapSerializer.prototype.app = 'Snap! 10-rc, https://snap.berkeley.edu';
+SnapSerializer.prototype.app = 'Snap! 10.1-dev, https://snap.berkeley.edu';
 
 SnapSerializer.prototype.thumbnailSize = new Point(160, 120);
 
@@ -1052,7 +1052,7 @@ SnapSerializer.prototype.loadCustomBlocks = function (
         }
         definition.type = child.attributes.type || 'command';
         definition.selector = child.attributes.selector || null;
-        definition.primitive = child.attributes.primitive || null;
+        definition.setPrimitive(child.attributes.primitive || null);
         definition.isHelper = (child.attributes.helper === 'true') || false;
         definition.spaceAbove = (child.attributes.space === 'true') || false;
         definition.isGlobal = (isGlobal === true);
@@ -1174,7 +1174,7 @@ SnapSerializer.prototype.loadCustomizedPrimitives = function (
         }
         definition.type = child.attributes.type || 'command';
         definition.selector = sel || null;
-        definition.primitive = child.attributes.primitive || null;
+        definition.setPrimitive(child.attributes.primitive || null);
         definition.isHelper = (child.attributes.helper === 'true') || false;
         definition.isGlobal = true;
 

@@ -111,7 +111,7 @@ ArgLabelMorph, embedMetadataPNG, ArgMorph, RingMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.byob = '2024-June-12';
+modules.byob = '2024-October-10';
 
 // Declarations
 
@@ -327,7 +327,7 @@ CustomBlockDefinition.prototype.defaultValueOf = function (inputName) {
     if (this.declarations.has(inputName)) {
         def = this.declarations.get(inputName)[1];
         if (isString(def)) {
-            if (def.length > 2 && def.startsWith('$_')) {
+            if (def.length > 2 && def.startsWith('$_') && !def.includes('\n')) {
                 // selector - can be translated later
                 return [def.slice(2)];
             }
@@ -661,6 +661,15 @@ CustomBlockDefinition.prototype.isDirectlyRecursive = function () {
     return this.cachedIsRecursive;
 };
 
+CustomBlockDefinition.prototype.setPrimitive = function (prim) {
+    if (isString(prim) &&
+            !Object.keys(SpriteMorph.prototype.blocks).includes(prim)) {
+        // console.warn('attempted to set unlisted primitive:', prim);
+        return;
+    }
+    this.primitive = prim;
+};
+
 // CustomBlockDefinition localizing
 
 CustomBlockDefinition.prototype.localizedSpec = function () {
@@ -806,7 +815,7 @@ CustomBlockDefinition.prototype.setBlockDefinition = function (aContext) {
     if (body.expression?.selector === 'doPrimitive' &&
         body.expression.inputs()[0].value
     ) {
-        this.primitive = body.expression.inputs()[1].contents().text || null;
+        this.setPrimitive(body.expression.inputs()[1].contents().text || null);
     } else {
         this.primitive = null;
     }
@@ -1155,7 +1164,7 @@ CustomBlockDefinition.prototype.unBootstrap = function (actor) {
 
 CustomBlockDefinition.prototype.isBootstrapped = function () {
     return this.isGlobal && this.selector &&
-        SpriteMorph.prototype.blocks[this.selector].definition === this;
+        SpriteMorph.prototype.blocks[this.selector]?.definition === this;
 };
 
 CustomBlockDefinition.prototype.isQuasiPrimitive = function () {
@@ -2654,7 +2663,7 @@ BlockDialogMorph.prototype.addCategoryButton = function (category) {
         colors = [
             IDE_Morph.prototype.frameColor,
             IDE_Morph.prototype.frameColor.darker
-                (MorphicPreferences.isFlat ? 5 : 50
+                (IDE_Morph.prototype.isBright ? 5 : 50
             ),
             SpriteMorph.prototype.blockColorFor(category)
         ],
@@ -2702,7 +2711,7 @@ BlockDialogMorph.prototype.addCustomCategoryButton = function (category, clr) {
         colors = [
             IDE_Morph.prototype.frameColor,
             IDE_Morph.prototype.frameColor.darker
-                (MorphicPreferences.isFlat ? 5 : 50
+                (IDE_Morph.prototype.isBright ? 5 : 50
             ),
             clr
         ],
@@ -3135,7 +3144,8 @@ BlockEditorMorph.prototype.init = function (definition, target) {
     scripts.rejectsHats = true;
     scripts.isDraggable = false;
     scripts.color = IDE_Morph.prototype.groupColor;
-    scripts.cachedTexture = IDE_Morph.prototype.scriptsPaneTexture;
+    scripts.cachedTexture = MorphicPreferences.isFlat ? null
+        : IDE_Morph.prototype.scriptsTexture();
     scripts.cleanUpMargin = 10;
 
     proto = new PrototypeHatBlockMorph(this.definition);
@@ -3411,9 +3421,9 @@ BlockEditorMorph.prototype.updateDefinition = function () {
     if (this.definition.body?.expression?.selector === 'doPrimitive' &&
         this.definition.body.expression.inputs()[0].value
     ) {
-        this.definition.primitive =
-            this.definition.body.expression.inputs()[1].contents().text
-                || null;
+        this.definition.setPrimitive(
+            this.definition.body.expression.inputs()[1].contents().text || null
+        );
     } else {
         this.definition.primitive = null;
     }
@@ -3871,11 +3881,12 @@ BlockLabelFragment.prototype.isSingleInput = function () {
 };
 
 BlockLabelFragment.prototype.isMultipleInput = function () {
-    // answer true if the type begins with '%mult'
+    // answer true if the type begins with '%mult' or '%group'
     if (!this.type) {
         return false; // not an input at all
     }
-    return this.type.indexOf('%mult') > -1;
+    return this.type.indexOf('%mult') > -1 ||
+        this.type.indexOf('%group') > -1;
 };
 
 BlockLabelFragment.prototype.isUpvar = function () {
@@ -4838,7 +4849,9 @@ InputSlotDialogMorph.prototype.addSlotsMenu = function () {
                 this.specialOptionsMenu()
             );
         }
-        if (this.fragment.type.includes('%mult')) {
+        if (this.fragment.type.includes('%mult') ||
+            this.fragment.type.includes('%group')
+        ) {
             menu.addItem(
                 (this.fragment.separator ? on : off) +
                     localize('separator') +
@@ -4880,6 +4893,12 @@ InputSlotDialogMorph.prototype.addSlotsMenu = function () {
                     localize('max slots') +
                     '...',
                 'editVariadicMaxSlots'
+            );
+            menu.addItem(
+                (this.fragment.type.includes('%group') ? on : off) +
+                    localize('group') +
+                    '...',
+                'editVariadicGroup'
             );
             menu.addLine();
         }
@@ -5113,7 +5132,7 @@ InputSlotDialogMorph.prototype.editVariadicMaxSlots = function () {
         num => this.fragment.maxSlots = num,
         this
     ).prompt(
-        "Min slots",
+        "Max slots",
         (this.fragment.maxSlots || 0).toString(),
         this.world(),
         null, // pic
@@ -5135,6 +5154,30 @@ InputSlotDialogMorph.prototype.editVariadicMaxSlots = function () {
         20, // slider-max
         null, // slider-action
         0 // decimals
+    );
+};
+
+InputSlotDialogMorph.prototype.editVariadicGroup = function () {
+    new DialogBoxMorph(
+        this,
+        str => {
+            let slots = str.split('\n');
+            this.fragment.type = '%group' + slots.map(
+                each => Process.prototype.slotSpec(
+                    Process.prototype.slotType(each.trim())
+                )
+            ).join('');
+            this.fragment.initialSlots = Math.min(slots.length, 12);
+        },
+        this
+    ).promptCode(
+        "Input group",
+        this.fragment.type.split('%').slice(2).map(each =>
+            Process.prototype.slotType(each.trim())
+        ).join('\n'),
+        this.world(),
+        null, // pic
+        localize('Enter one item per line.')
     );
 };
 

@@ -161,7 +161,7 @@ SVG_Costume, embedMetadataPNG, ThreadManager, snapEquals, display*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.blocks = '2024-June-10';
+modules.blocks = '2024-October-11';
 
 var SyntaxElementMorph;
 var BlockMorph;
@@ -462,7 +462,8 @@ SyntaxElementMorph.prototype.labelParts = {
             '1' : 1,
             last : ['last'],
             '~' : null,
-            all : ['all']
+            all : ['all'],
+            parent : ['parent']
         }
     },
     '%idx': {
@@ -471,7 +472,9 @@ SyntaxElementMorph.prototype.labelParts = {
         menu: {
             '1' : 1,
             last : ['last'],
-            random : ['random']
+            random : ['random'],
+            '~' : null,
+            parent : ['parent']
         }
     },
     '%ix': {
@@ -623,7 +626,8 @@ SyntaxElementMorph.prototype.labelParts = {
             caller: ['caller'],
             continuation: ['continuation'],
             '~' : null,
-            inputs : ['inputs']
+            inputs : ['inputs'],
+            object : ['object']
         }
     },
     '%snd': {
@@ -790,7 +794,7 @@ SyntaxElementMorph.prototype.labelParts = {
     },
     '%var': {
         type: 'input',
-        tags: 'read-only static',
+        tags: 'read-only static', // if "static" is removed, enable auto-ringify
         menu: 'getVarNamesDict'
     },
     '%shd': {
@@ -1017,11 +1021,12 @@ SyntaxElementMorph.prototype.labelParts = {
         tags: 'static'
     },
     '%cs': {
-        type: 'c'
+        type: 'c',
+        tags: 'lambda'
     },
     '%ca': {
         type: 'c',
-        tags: 'loop'
+        tags: 'loop lambda'
     },
     '%cl': {
         type: 'c',
@@ -1625,7 +1630,10 @@ SyntaxElementMorph.prototype.getVarNamesDict = function () {
             );
         } else if (morph instanceof BlockMorph) {
             morph.inputs().forEach(inp => {
-                inp.allChildren().forEach(child => {
+                inp.allChildrenExcept(each =>
+                    // exclude declarations inside rings
+                    each instanceof RingMorph
+                ).forEach(child => {
                     if (child instanceof TemplateSlotMorph) {
                         tempVars.push(child.contents());
                     } else if (child instanceof MultiArgMorph) {
@@ -1808,15 +1816,16 @@ SyntaxElementMorph.prototype.fixBlockColor = function (
 // SyntaxElementMorph label parts:
 
 SyntaxElementMorph.prototype.labelPart = function (spec) {
-    var part, info, tokens, cnts, i;
-    if ((this.labelParts[spec] || (spec[0] === '%' && spec.length > 1)) &&
-            (this.selector !== 'reportGetVar' ||
-                (['$turtleOutline', '$pipette'].includes(spec) &&
-                    this.isObjInputFragment()
-                )
+    var info = this.labelParts[spec],
+        part, tokens, cnts, i;
+    if (((info && Object.hasOwn(info, 'type')) ||
+        (spec[0] === '%' && spec.length > 1)) &&
+        (this.selector !== 'reportGetVar' ||
+            (['$turtleOutline', '$pipette'].includes(spec) &&
+                this.isObjInputFragment()
             )
+        )
     ) {
-
         // check for variable multi-arg-slot:
         if ((spec.length > 5) && (spec.slice(0, 5) === '%mult')) {
             part = new MultiArgMorph(spec.slice(5));
@@ -1824,12 +1833,18 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
             part.addInput();
             return part;
         }
+        // check for input group multi-arg-slot:
+        if ((spec.length > 6) && (spec.slice(0, 6) === '%group')) {
+            tokens = spec.slice(7).split('%').map(each => '%' + each);
+            part = new MultiArgMorph(tokens);
+            part.groupInputs = tokens.length;
+            return part;
+        }
 
         // single-arg and specialized multi-arg slots:
 
         // look up the spec
-        info = this.labelParts[spec];
-        if (!info) {
+        if (!info || !Object.hasOwn(info, 'type')) {
             throw new Error('label part spec not found: "' + spec + '"');
         }
 
@@ -2785,7 +2800,7 @@ function BlockLabelMorph(
 
 BlockLabelMorph.prototype.getRenderColor = function () {
     var block = this.parentThatIsA(BlockMorph);
-    if (MorphicPreferences.isFlat) {
+    if (IDE_Morph.prototype.isBright) {
         return !block || block.alpha > 0.5 ? this.color
             : block.color.solid().darker(Math.max(block.alpha * 200, 0.1));
     }
@@ -2822,7 +2837,7 @@ function BlockSymbolMorph(name, size, color, shadowOffset, shadowColor) {
 
 BlockSymbolMorph.prototype.getRenderColor = function () {
     var block = this.parentThatIsA(BlockMorph);
-    if (MorphicPreferences.isFlat) {
+    if (IDE_Morph.prototype.isBright) {
         if (this.isFading) {
             return this.color.mixed(block.alpha, WHITE);
         }
@@ -2953,6 +2968,7 @@ BlockSymbolMorph.prototype.getShadowRenderColor =
     arity: multiple
 
     %mult%x      - where %x stands for any of the above single inputs
+    %group%x%y   - where %x and %y stand for any of the above single inputs
     %inputs      - for an additional text label 'with inputs'
     %words       - for an expandable list of default 2 (used in JOIN)
     %lists       - for an expandable list of default 2 lists (CONCAT)
@@ -7415,6 +7431,23 @@ ReporterBlockMorph.prototype.snap = function (hand) {
             'snap',
             this.abstractBlockSpec()
         );
+        /*  // auto-ringify dropped variable accessors,
+            // experimental for OOP 2.0,
+            // needs to also remove the "static"
+            // flag in the %var input slot definition,
+            // and the auto-vanishing gimmick for rings,
+            // commented out b/c not strictly needed
+            // and potentially very confusing to users
+            // unfamiliar with rings.
+        if (this.selector === 'reportGetVar') {
+            if (target.choices === 'getVarNamesDict' ||
+                (target instanceof ReporterBlockMorph &&
+                    target.getSlotSpec() === '%var')
+            ) {
+                this.ringify();
+            }
+        }
+        */
     }
     this.fixBlockColor();
     ReporterBlockMorph.uber.snap.call(this);
@@ -7499,6 +7532,11 @@ ReporterBlockMorph.prototype.determineSlotSpec = function () {
         }
     }
     if (this.parent instanceof MultiArgMorph) {
+        if (this.parent.slotSpec instanceof Array) { // input group
+            idx = this.parent.inputs().indexOf(this);
+            parts = this.parent.slotSpec;
+            return parts[idx % parts.length];
+        }
         return this.parent.slotSpec;
     }
     if (this.parent instanceof TemplateSlotMorph) {
@@ -8159,6 +8197,12 @@ RingMorph.prototype.vanishForSimilar = function () {
             || (this.parent instanceof RingCommandSlotMorph)) {
         return null;
     }
+    /*  // adjustment for auto-ringification of variable getter accessors
+        // inside variable assigment blocks,
+        // experimental for OOP 2.0
+        // currently not needed, commented out for now.
+    if (this.getSlotSpec() === '%var') {return null; }
+    */
     if ((block.selector === 'reportGetVar' &&
             !contains(this.inputNames(), block.blockSpec)) ||
         // block.selector === 'reportListItem' ||
@@ -8174,6 +8218,11 @@ RingMorph.prototype.vanishForSimilar = function () {
 
 RingMorph.prototype.contents = function () {
     return this.parts()[0].nestedBlock();
+};
+
+RingMorph.prototype.setContents = function () {
+    // subclass responsibility
+    nop();
 };
 
 RingMorph.prototype.inputNames = function () {
@@ -8352,7 +8401,7 @@ ScriptsMorph.prototype.render = function (aContext) {
 };
 
 ScriptsMorph.prototype.getRenderColor = function () {
-    if (MorphicPreferences.isFlat ||
+    if (IDE_Morph.prototype.isBright ||
             SyntaxElementMorph.prototype.alpha > 0.85) {
         return this.color;
     }
@@ -9570,6 +9619,11 @@ ArgMorph.prototype.reactToSliderEdit = function () {
             }
         }
     }
+};
+
+ArgMorph.prototype.setContents = function () {
+    // subclass responsibility
+    nop();
 };
 
 // ArgMorph drag & drop: for demo puposes only
@@ -12435,7 +12489,7 @@ function InputSlotStringMorph(
 }
 
 InputSlotStringMorph.prototype.getRenderColor = function () {
-    if (MorphicPreferences.isFlat) {
+    if (IDE_Morph.prototype.isBright) {
         if (this.isEditable) {
             return this.color;
         }
@@ -12721,7 +12775,12 @@ BooleanSlotMorph.prototype.isBinary = function () {
 };
 
 BooleanSlotMorph.prototype.setContents = function (boolOrNull) {
-    this.value = (typeof boolOrNull === 'boolean') ? boolOrNull : null;
+    this.value = (typeof boolOrNull === 'boolean') ? boolOrNull
+        : (isNil(boolOrNull) ||
+            ['', ' ', 'null'].includes(boolOrNull) ||
+            +boolOrNull < 0 ? null
+                : ['true', 'on', 'yes', 'ok', 'y', '+'].includes(boolOrNull) ||
+                    +boolOrNull > 0);
     this.rerender();
 };
 
@@ -13350,7 +13409,7 @@ ArrowMorph.prototype.render = function (ctx) {
 
 ArrowMorph.prototype.getRenderColor = function () {
     if (this.isBlockLabel) {
-        if (MorphicPreferences.isFlat) {
+        if (IDE_Morph.prototype.isBright) {
             return this.color;
         }
         return SyntaxElementMorph.prototype.alpha > 0.5 ? this.color : WHITE;
@@ -13642,6 +13701,7 @@ BlockHighlightMorph.prototype.updateReadout = function () {
     my block specs are
 
         %mult%x - where x is any single input slot
+        %group%x%y - where x and y are any single input slots
         %inputs - for an additional text label 'with inputs'
 
     evaluation is handles by the interpreter
@@ -13790,7 +13850,7 @@ MultiArgMorph.prototype.init = function (
     listSymbol.alpha = 0.5;
     listSymbol.getRenderColor = function () {
         // behave the same as arrows when fading the blocks
-        if (MorphicPreferences.isFlat) {
+        if (IDE_Morph.prototype.isBright) {
             return this.color;
         }
         return SyntaxElementMorph.prototype.alpha > 0.5 ? this.color : WHITE;
@@ -13883,7 +13943,7 @@ MultiArgMorph.prototype.setInfix = function (separator = '') {
     }
     inps = this.inputs();
     this.collapseAll();
-    this.infix = separator;
+    this.infix = (separator === '$nl' ? '%br' : separator);
     inps.forEach(slot => this.replaceInput(this.addInput(), slot));
     if (inps.length === 1 && this.infix) { // show at least 2 slots with infix
         this.addInput();
@@ -13917,8 +13977,11 @@ MultiArgMorph.prototype.setExpand = function (expand) {
 
     // parse expansion labels to determine its cardiinality
     function massage(str) {
-        var items = (str || '').toString().split('\n').map(line =>
-                line.trim()).filter(each => each.length);
+        var items = (str || '').toString().split('\n').map(line => {
+                let dta = line.trim();
+                return dta === '$nl' ? '%br'
+                    : (dta.startsWith('$_') ? localize(dta.slice(2)) : dta);
+            }).filter(each => each.length);
         return items.length > 1 ? items : items[0] || null;
     }
 
@@ -13952,8 +14015,10 @@ MultiArgMorph.prototype.setDefaultValue = function (defaultValue) {
     // parse default values to determine their arity
     function massage(str) {
         var items = (str || '').toString().split('\n')
-            // .map(line => line.trim())
-            .filter(each => each.length);
+            .filter(each => each.length).map(each =>
+                isString(each) && each.length > 2 && each.startsWith('$_') ?
+                    localize(each.slice(2))
+                    : each);
         return items.length > 1 ? items : items[0] || null;
     }
 

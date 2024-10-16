@@ -1,6 +1,370 @@
 # Snap! (BYOB) History
 
 ## in development:
+
+## 10.1.5:
+* **Notable Fixes:**
+    * fixed broadcasting and sending messages with data
+
+### 2024-09-15
+* threads: fixed broadcasting with data
+* prepared v10.1.5 patch
+
+## 10.1.4:
+* **Notable Fixes:**
+    * fixed a dictionary lookup glitch for primitive block palettes
+
+### 2024-09-13
+* objects: fixed another dictionary lookup glitch for primitive palettes 
+* prepared v10.1.4 patch
+
+## 10.1.3:
+* **Notable Fixes:**
+    * fixed a dictionary lookup glitch for custom block categories
+
+### 2024-09-13
+* objects, gui: fixed a dictionary lookup glitch for custom block categories 
+* prepared v10.1.3 patch
+
+## 10.1.2:
+* **Notable Fixes:**
+    * only bind rings that replace list items to the list as environment if they are referred to by a non-numerical index (OOP 2.0)
+    * fixed #3403 editing a primitive and changing a default input
+    * fixed naming a custom block category to a JS property such as "constructor"
+
+### 2024-09-13
+* objects: fixed naming a custom block category to a JS property such as "constructor"
+* prepared v10.1.2 patch
+
+### 2024-09-12
+* threads: only bind rings replaced in a list to the list as environment if they are referred to by a non-numerical index (OOP 2.0)
+* objects: fixed #3403 editing a primitive and changing a default input
+
+## 10.1.1:
+* **Notable Fixes:**
+    * only bind rings fetched from a list to the list as environment if they are accessed by a non-numerical index (OOP 2.0)
+
+### 2024-09-12
+* threads: only bind rings retrieved from a list to the list as environment if they are retrieved by a non-numerical index (OOP 2.0)
+* prepared v10.1.1 patch
+
+## 10.1.0:
+* **New Features:**
+    1. OOP 2.0
+        * new list-dictionary based object system with data scope and Lieberman style prototypical inheritance
+        * new "parent" selector for accessing list items, points to entry at ellipsis "..."
+        * new "object" item in the THIS (runtime environment) primitive reporter's dropdown menu
+        * new OOP library
+    2. support for input-groups in custom blocks
+        * new "group" option in custom block slot type editor's special settings menu for multiple inputs
+        * metaprogramming support for input groups (represented by a list of slot types)
+        * new "Declare & Initialize Script Variables" library
+    3. UI Looks
+        * flat / default (skeuomorphic) design
+        * bright / dark (color) theme
+        * new "theme" configuration key in the API
+        * new "cube" and "cubeSolid" symbols
+    4. Other
+        * new Continuations library for run/cc and call/cc
+* **Notable Changes:**
+    * preserve the order of items when using lists as dictionaries or data objects
+    * variadic slots in custom blocks now support '%nl' as separators and expansion labels
+    * Boolean input slot default values can be specified through metaprogramming
+    * variadic Boolean input slot defaults can be specified both in the UI and through metaprogramming
+    * added an official "Restore primitives" item to the project menu, if a project / scene has customized prims
+    * default values and expansion labels of variadic input slots in custom blocks are now translatable by prefixing them with $-underscore
+* **Notable Fixes:**
+    * exclude variables declared inside input rings from the dropdown menu of reachable variables
+    * automatically declare variadic upvars inside custom blocks when evaluating them
+    * fixed a LISP-encoding conflict between a variadic expression and formal ring parameters
+    * fixed naming a block to a JS property such as "constructor"
+    * fixed a variable refactoring (renaming) bug in custom block definitions
+* **Documentation Updates:**
+    * updated API.md with new "theme" configuration key for "bright" or "dark" UI modes
+    * updated LISP syntax documentation for script parameters
+* **Translation Updates:**
+    * German
+
+### 2024-09-11
+* blocks: fixed #3401 - naming a block "constructor" fails
+* threads: removed explicit macros for data objects
+* objects: fixed a variable refactoring (renaming) bug in custom block definitions
+* prepared v10.1 release
+
+### 2024-09-10
+* threads: changed evaluation of input groups to return a 2D (or empty) list
+* objects: adjusted LISP formulation of primitive IF block to the new input group evaluation
+* byob: for input groups set "initial slots" to the length of the group
+* libraries: adjusted variable declaration module to the new input group evaluation
+* libraries: adjusted OOP module to the new input group evaluation
+* html: adjusted obsolete "apple" meta tags for mobile sites
+* reduced and re-activated pwa service worker
+* reduced number of pwa-cached files
+* added everything except libraries to pwa cache
+* added everything except some libraries to pwa cache
+* added Beetle and MQTT libraries to pwa cache
+* added Tunescope library to pwa cache
+* added SciSnap library to pwa cache
+* removed SciSnap library from pwa cache (again)
+* added SciSnap library to pwa cache (again), except for the costume js file
+* new "Continuations" library
+* updated "iteration / composition" library with new continuation blocks
+* updated dev version
+* v10.1-rc1
+* added skipWaiting() to service worker
+* v10.1-rc2
+
+### 2024-09-09
+* updated from master branch
+
+### 2024-09-18
+* blocks: fixed unevaluated slots for input groups
+* updated OOP library
+* updated dev version
+* threads: added read-only access to global variables to unbound data objects
+
+### 2024-09-17
+* blocks, threads: new "object" item in the THIS (runtime environment) primitive reporter's dropdown menu
+* updated German translation for "object" string
+* updated dev version
+* updated from master branch - fixed canvasBoundingBox() bug
+* updated dev version
+
+### 2024-09-16
+* lists: preserve the order of items when using lists as dictionaries or data objects 
+* updated from master branch
+* updated dev version
+
+### 2024-09-14
+* blocks, byob: made default values and expansion labels of variadic input slots in custom blocks translatable
+* German translation update for "field" (in the OOP library)
+* updated OOP library with German translation
+* updated variable declaration library with German translation
+* updated dev version
+
+### 2024-09-13
+* updated from master branch
+* updated dev version
+* updated OOP library: added "FIELD OF" reporter
+* symbols: new "cube" and "cubeSolid" symbols
+
+### 2024-09-12
+* threads: fixed #3394 - LISP-encoding conflict between a variadic expression and formal ring parameters
+* updated LISP syntax documentation for script parameters
+* changed dev version to 10.1
+* updated dev version
+* gui: added an official "Restore primitives" item to the project menu, if a project / scene has customized prims
+
+### 2024-09-11
+* threads: bind looked up variables inside objects to their receiver ("self")
+
+### 2024-09-10
+* threads: bind rings to object scope when INSERT / REPLACE -ing them into an object-list
+* updated OOP library: added "ADD field" command
+* updated dev version
+
+### 2024-09-09
+* blocks: disabled experimental change allowing dropping reporters into variable accessor input slots and auto-ringification
+* blocks, morphic: exclude variables declared inside input rings from the dropdown menu of reachable variables
+* threads: automatically declare variadic upvars inside custom blocks when evaluating them
+* threads: automatically declare upvars inside custom block input groups
+* updated OOP library
+* new "Declare & Initialize Script Variables" library
+* updated dev version
+
+### 2024-09-06
+* API: new "theme" configuration key for "bright" or "dark" GUI theme
+* updated pyret transpilation study with new "bright" theme configuration
+* updated dev from master (pulled Polish translation update v10.0.7)
+* updated dev version
+
+### 2024-09-05
+* blocks: auto-ringify variable getter reporters when they are dropped into the variable (name) slot of variable accessor commands
+* blocks: support for setting (variadic) Boolean input slot defaults
+
+### 2024-09-03
+* gui, objects, blocks, byob: decoupled skeuomorphic/flat UI design from dark/bright UI theme
+* German translation update for UI Looks
+* updated dev version
+* threads: reverted to ringified variable blobs as valid inputs for variable setters
+
+### 2024-09-02
+* lists: let list-based objects inherit variables from both other lists and also sprites and the stage, including from global variable scope
+
+### 2024-08-29
+* blocks: avoid errors when specifying default values for non-editable slots
+* updated dev from master (pulled Catalan translation update v10.0.6)
+* store: updated file version to 11-dev
+* updated dev version
+
+### 2024-08-28
+* threads: added metaprogramming support for input groups
+* updated dev version
+
+### 2024-08-27
+* blocks, threads: new localized "parent" selector for accessing list items, points to entry at ellipsis "..."
+* byob: use slot numbers and support mnemonics for input groups
+* updated dev version
+
+### 2024-08-26
+* new list-dictionary based object system with data scope and prototypical inheritance
+* new OOP library
+* updated dev version
+
+### 2024-08-20
+* new dev version
+
+## 10.0.13:
+* **Notable Changes:**
+    * disabled pwa service worker in yet an attempt to address reporterd Chrome v129 memory issue
+
+## 10.0.12:
+* **New Features:**
+    * added extensions to access the "Thread safe scripts" setting
+* **Notable Changes:**
+    * reenabled pwa service worker because the Chrome v129 memory issue seems to have been fixed by Google
+    * changed polling scheduler for streaming data from serial ports to be in lock step with Morphic
+    * updated Microblocks library to improve event streaming fluency
+* **Notable Fixes:**
+    * removed "average" reporter from the audioComp library
+
+### 2024-10-09:
+* morphic, extensions: new World>>schedule() shortcut for one-time callbacks
+* prepared v10.0.12 patch
+
+### 2024-10-08:
+* renamed service worker to ensure that it doesn't get launched by Chrome
+* extensions: added 'snap_threadsafe?' and 'snap_threadsafe(on?)' extensions
+* extensions: changed polling scheduler for streaming data from serial ports to be in lock step with Morphic
+* updated Microblocks library to improve event streaming fluency
+* removed "average" reporter from the audioComp library
+
+## 10.0.11:
+* **Notable Changes:**
+    * disabled pwa service worker in an attempt to address reporterd Chrome v129 memory issue
+
+### 2024-09-19
+* disabled pwa service worker in an attempt to address reporterd Chrome v129 memory issue
+* prepared v10.0.11 patch
+
+## 10.0.10:
+* **Notable Fixes:**
+    * fixed bounding box bug in paint editor by reverting @SArpnt's optimization PR
+
+### 2024-09-17
+* ojects: fixed bounding box bug in paint editor by reverting @SArpnt's optimization PR
+* prepared v10.0.10 patch
+
+## 10.0.9:
+* **Notable Fixes:**
+    * tweaked refactoring variables ("rename all") for auto-lambdafying C-Slots inside custom blocks
+    * optimized canvasBoundingBox for speed, thanks, @SArpnt, for the contribution!
+    * fixed initializing formal ring parameters if called without passing actual arguments, thanks, @DarDoro, for the report!
+
+### 2024-09-16
+* blocks: tweaked refactoring variables ("rename all") for auto-lambdafying C-Slots inside custom blocks
+* objects: optimized canvasBoundingBox() for speed, thanks, @SArpnt!
+* threads: fixed initializing formal ring parameters if called without passing actual arguments
+* prepared v10.0.9 patch
+
+## 10.0.8:
+* **Notable Fixes:**
+    * disabled abusing the "primitive" block with metaprogramming to run arbitrary JS code. Sigh.
+
+### 2024-09-13
+* byob, objects, threads, store: disabled abusing the "primitive" block with metaprogramming to run arbitrary JS code. Sigh.
+* prepared v10.0.8 patch
+
+## 10.0.7:
+* **Translation Updates:**
+    * Polish, thanks, P1neF0rest935!
+
+### 2024-09-06
+* Polish translation update, thanks, P1neF0rest935!
+* restored "easing" reporter in animation library to its latest version
+* prepared v10.0.7 patch
+
+## 10.0.6:
+* **Translation Updates:**
+    * Catalan, thanks, Joan!
+
+### 2024-08-29
+* Catalan translation update, thanks, Joan!
+* prepared v10.0.6 patch
+
+## 10.0.5:
+* **Notable Fixes:**
+    * fixed querying the pixels of an empty costume
+
+### 2024-08-20
+* objects: fixed querying the pixels of an empty costume
+* prepared v10.0.5 patch
+
+## 10.0.4:
+* **Notable Changes:**
+    * tiles library update: new "render" block, German translation update for upvar names
+* **Translation Updates:**
+    * German
+
+### 2024-08-16
+* German translation update for tiles library
+* tiles library update: new "render" block, German translation update for upvar names
+* prepared v10.0.4 patch
+
+## 10.0.3:
+* **Notable Changes:**
+    * enabled setting custom block labels to (nested) lists of label parts, not just in DEFINE but also in SET
+* **Notable Fixes:**
+    * fixed initial number of inputs in the parallelization library
+    
+### 2024-08-12
+* threads: enabled setting custom block labels to (nested) lists of label parts
+* fixed initial number of inputs in the parallelization library
+* prepared v10.0.3 patch
+
+## 10.0.2:
+* **Notable Fixes:**
+    * allow assigning non-catalog selectors to custom block definitions (doesn't make sense, but people do it anyway...)
+    * SciSnap3: fixed a color channel typo in the variadic color reporter
+
+### 2024-08-09
+* byob: allow assigning non-catalog selectors to custom block definitions (doesn't make sense, but people do it anyway...) 
+* SciSnap3: fixed a color channel typo in the variadic color reporter
+* prepared v10.0.2 patch
+
+## 10.0.1:
+* **Notable Changes:**
+    * SciSnap! v3 extension, update - new major release -, thanks, Eckart!
+    * exclude "reportHyperZip" from collected block dependencies for libraries etc.
+    * MQTT extension update, thanks, Simon and Xavier! 
+* **Notable Fixes:**
+    * fixed a variable scope bug when evaluating a ring with a same-named formal parameter as an outer scoped variable
+    * fixed disabling a primitive that has ZIP as a custom fallback, e.g. numbers, reporter-if 
+    * fixed dialog box label to show "Max slots" when editing the max slots setting of a variadic custom block input
+    * fixed occasional buffer overflow issue for code embedded in script pics, thanks, Dariusz!
+    * fixed PWA cache for backgrounds
+    * embroidery library: fixed customized "GO TO" primitive for selected target sprite, (partially) enables nested sprites trails embroidery
+
+### 2024-08-08
+* sw.js: fixed PWA cache for backgrounds
+* prepared v10.0.1 patch
+
+### 2024-08-07
+* embroidery library: fixed customized "GO TO" primitive for selected target sprite, (partially) enables nested sprites trails embroidery
+* objects: exclude "reportHyperZip" from collected block dependencies for libraries etc.
+* MQTT extension update, thanks, Simon and Xavier!
+* SciSnap! v3 update, thanks, Eckart!
+
+### 2024-08-06
+* morphic: fixed occasional buffer overflow issue for code embedded in script pics, thanks, Dariusz! 
+
+### 2024-08-05
+* new dev version
+* threads: fixed a variable scope bug when evaluating a ring with a same-named formal parameter as an outer scoped variable
+* objects: fixed disabling a primitive that has ZIP as a custom fallback, e.g. numbers, reporter-if
+* byob: fixed dialog box label to show "Max slots" when editing the max slots setting of a variadic custom block input 
+
+## 10.0.0:
 * **New Features:**
     1. Blocks all the way
         * all blocks in the palette are now custom blocks, except hat blocks and rings
@@ -81,6 +445,7 @@
         * new "svg poly" export format for vector pen trails, optimized for speed and laser-cutting
         * export vector pen trails as embroidery files (DST, EXP)
         * added pen trails export options to the project ("file") menu
+        * added ability to switch octaves in the piano keyboard menu, thanks, ego-lay-atman-bay!
 * **Notable Changes:**
     1. Blocks all the way
         * renamed "primitive" blocks into "extension"
@@ -92,6 +457,8 @@
         * support for multiple separator lines in input slot dropdown menus
         * Libraries (and Costumes, etc) media files are now in a JSON format, which supports translation and additional search metadata.
         * arcs library: changed label wording to TurtleStitch convention, added "arc left" version
+        * new Streams 2.0 library, thanks, qw23 and Brian!
+        * new BLE and MicroBlocks library, thanks, John, Bernat and Peter!
     4. Metaprogramming
         * automatically add generic inputs in DEFINE matching the number of placeholders in the label
         * when querying the defintion of a block via metaprogramming the number of inputs of the resulting ring now matches that of the header expression
@@ -106,6 +473,7 @@
     6. User interface
         * scroll long text inside result balloons instead of shortening it
         * Confirmation pop-ups when closing the browser tab only appears in the event of unsaved changes, thanks, 2-www
+        * more help screens, thanks, Brian and the forum gang!
     7. Lisp code
         * splitting a LISP-formatted text by "blocks" returns a block-syntax tree
         * converting a block-syntax tree to "text" using the list-selectors reporters reeturns LISP code
@@ -121,6 +489,22 @@
     * updated extensions.md
 * **Translation Updates:**
     * German
+
+### 2024-07-24
+* widgets: added ability to switch octaves in the piano keyboard widget, thanks, ego-lay-atman-bay!
+* gui: added credits for ego-lay-atman-bay
+* v10-rc6
+* reverted piano keyboard behavior
+* v10-rc7
+* prepared v10.0.0 release
+
+### 2024-07-22
+* edited help screen for doDeleteBlock, converted to PNG, reduced file size
+* v10-rc5
+
+### 2024-07-22
+* more help screens, thanks, Brian and the forum gang!
+* v10-rc4
 
 ### 2024-07-18
 * gui: refresh IDE when loading a library from the cloud to support customized primitives

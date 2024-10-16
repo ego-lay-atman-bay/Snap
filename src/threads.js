@@ -65,7 +65,7 @@ StagePickerMorph, CustomBlockDefinition, CommentMorph*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2024-June-10';
+modules.threads = '2024-October-15';
 
 var ThreadManager;
 var Process;
@@ -1015,7 +1015,7 @@ Process.prototype.doReport = function (block) {
 Process.prototype.evaluateMultiSlot = function (multiSlot, argCount) {
     // first evaluate all subslots, then return a list of their values
     var inputs = this.context.inputs,
-        ans;
+        ans, i;
     if (multiSlot.bindingID) {
         if (this.isCatchingErrors) {
             try {
@@ -1034,11 +1034,37 @@ Process.prototype.evaluateMultiSlot = function (multiSlot, argCount) {
             this.evaluateNextInputSet(multiSlot); // frame-optimized version
         } else {
             // declare a new script var in the current context for every
-            // variable template
-            if (multiSlot.slotSpec === '%t') { // variable template
+            // variable template, excluding formal ring parameters
+            if (['%t', '%upvar'].includes(multiSlot.slotSpec) && // var template
+                !(multiSlot.parentThatIsA(BlockMorph) instanceof RingMorph)
+            ) {
                 inputs.forEach(vname =>
                     this.context.outerContext.variables.addVar(vname)
                 );
+            } else if (multiSlot.slotSpec instanceof Array) { // input group
+                if (multiSlot.slotSpec.includes('%t') ||
+                    multiSlot.slotSpec.includes('%upvar')
+                ) { // identify and declare every upvar
+                    for (i = 0; i < inputs.length; i += 1) {
+                        if (['%t', '%upvar'].includes(
+                            multiSlot.slotSpec[i % multiSlot.slotSpec.length]
+                        )) {
+                            this.context.outerContext.variables.addVar(
+                                inputs[i]
+                            );
+                        }
+                    }
+                }
+                if (inputs.length &&
+                    !['%receive', '%send'].includes(multiSlot.elementSpec)
+                ) {
+                    // format the inputs as 2D table, unless it's a "built-in"
+                    // group, e.g. for broadcast, scene changes etc.
+                    ans = new List(inputs);
+                    inputs = this.reportNumbers(1, ans.length()).reshape(
+                        new List([0, multiSlot.slotSpec.length])
+                    ).map(indices => ans.query(indices)).itemsArray();
+                }
             }
             this.returnValueToParentContext(new List(inputs));
             this.popContext();
@@ -1484,46 +1510,41 @@ Process.prototype.evaluate = function (
     // parameter ID Symbol.for('arguments'), to be used for variadic inputs
     outer.variables.addVar(Symbol.for('arguments'), args);
 
-    // assign arguments that are actually passed
-    if (parms.length > 0) {
-
-        // assign formal parameters
-        for (i = 0; i < context.inputs.length; i += 1) {
-            value = 0;
-            if (!isNil(parms[i])) {
-                value = parms[i];
-            }
-            outer.variables.addVar(context.inputs[i], value);
+    // assign formal parameters
+    for (i = 0; i < context.inputs.length; i += 1) {
+        value = 0;
+        if (!isNil(parms[i])) {
+            value = parms[i];
         }
+        outer.variables.addVar(context.inputs[i], value);
+    }
 
-        // assign implicit parameters if there are no formal ones
-        if (context.inputs.length === 0) {
-            // in case there is only one input
-            // assign it to all empty slots...
-            if (parms.length === 1) {
-                // ... unless it's an empty reporter ring,
-                // in which special case it gets treated as the ID-function;
-                // experimental feature jens is not at all comfortable with
-                if (!context.emptySlots) {
-                    expr = context.expression;
-                    if (expr instanceof Array &&
-                            expr.length === 1 &&
-                            expr[0].selector &&
-                            expr[0].selector === 'reifyReporter' &&
-                            !expr[0].contents()) {
-                        runnable.expression = new Variable(parms[0]);
-                    }
-                } else {
-                    for (i = 1; i <= context.emptySlots; i += 1) {
-                        outer.variables.addVar(i, parms[0]);
-                    }
+    // assign implicit parameters if there are no formal ones
+    if (context.inputs.length === 0) {
+        // in case there is only one input
+        // assign it to all empty slots...
+        if (parms.length === 1) {
+            // ... unless it's an empty reporter ring,
+            // in which special case it gets treated as the ID-function;
+            if (!context.emptySlots) {
+                expr = context.expression;
+                if (expr instanceof Array &&
+                        expr.length === 1 &&
+                        expr[0].selector &&
+                        expr[0].selector === 'reifyReporter' &&
+                        !expr[0].contents()) {
+                    runnable.expression = new Variable(parms[0]);
                 }
-            // otherwise match the inputs sequentially to the empty slots,
-            // disregard unmatched or excess inputs or slots
             } else {
-                for (i = 1; i <= parms.length; i += 1) {
-                    outer.variables.addVar(i, parms[i - 1]);
+                for (i = 1; i <= context.emptySlots; i += 1) {
+                    outer.variables.addVar(i, parms[0]);
                 }
+            }
+        // otherwise match the inputs sequentially to the empty slots,
+        // disregard unmatched or excess inputs or slots
+        } else {
+            for (i = 1; i <= parms.length; i += 1) {
+                outer.variables.addVar(i, parms[i - 1]);
             }
         }
     }
@@ -1665,6 +1686,8 @@ Process.prototype.reportEnvironment = function (choice, trgt = this.context) {
         return this.reportContinuation(trgt);
     case 'inputs':
         return this.reportInputs(trgt);
+    case 'object':
+        return this.reportData(trgt);
     default:
         return this.reportSelf(trgt);
     }
@@ -1734,6 +1757,20 @@ Process.prototype.reportInputs = function (trgt) {
     var sym = Symbol.for('arguments'),
         frame = trgt.variables.silentFind(sym);
     return frame ? frame.vars[sym].value : new List();
+};
+
+Process.prototype.reportData = function (trgt) {
+    var data = trgt.variables;
+    while (!isNil(data)) {
+        if (data instanceof List) {
+            return data;
+        }
+        if (isSnapObject(data.owner)) {
+            return data.owner;
+        }
+        data = data.parentFrame;
+    }
+    return data;
 };
 
 // Process stopping blocks primitives
@@ -1992,7 +2029,8 @@ Process.prototype.doChangeVar = function (varName, value) {
 Process.prototype.reportGetVar = function () {
     // assumes a getter block whose blockSpec is a variable name
     return this.context.variables.getVar(
-        this.context.expression.blockSpec
+        this.context.expression.blockSpec,
+        this // fallback for OOP 2.0 List environments
     );
 };
 
@@ -2201,6 +2239,8 @@ Process.prototype.doDeleteFromList = function (index, list) {
     }
     if (this.inputOption(index) === 'last') {
         idx = list.length();
+    } else if (this.inputOption(index) === 'parent') {
+        idx = '...';
     }
     list.forget(idx);
 };
@@ -2220,11 +2260,16 @@ Process.prototype.doInsertInList = function (element, index, list) {
             idx = this.reportBasicRandom(1, list.length() + 1);
         } else if (index[0] === 'last') {
             idx = list.length() + 1;
+        } else if (index[0] === 'parent') {
+            idx = '...';
         } else {
             idx = list.length() + 1;
         }
     }
     if (parseFloat(idx) !== +idx) { // treat as alphanumerical index
+        if (element instanceof Context) { // OOP 2.0: treat ring as method
+            element = this.reportContextFor(element, list);
+        }
         return list.bind(idx, element);
     }
     list.add(element, idx);
@@ -2245,9 +2290,15 @@ Process.prototype.doReplaceInList = function (index, list, element) {
             idx = this.reportBasicRandom(1, list.length() + 1);
         } else if (index[0] === 'last') {
             idx = list.length();
+        } else if (index[0] === 'parent') {
+            idx = '...';
         } else {
             idx = 0;
         }
+    }
+    if (element instanceof Context && (parseFloat(idx) !== +idx)) {
+        // OOP 2.0: treat ring as method
+        element = this.reportContextFor(element, list);
     }
     list.bind(idx, element);
 };
@@ -2272,6 +2323,7 @@ Process.prototype.shadowListAttribute = function (list) {
 // Process accessing list elements - hyper dyadic
 
 Process.prototype.reportListItem = function (index, list) {
+    var value;
     this.assertType(list, 'list');
     if (index === '') {
         return '';
@@ -2283,12 +2335,22 @@ Process.prototype.reportListItem = function (index, list) {
         if (index[0] === 'last') {
             return list.at(list.length());
         }
-        return '';
+        if (index[0] === 'parent') {
+            index = '...';
+        } else {
+            return '';
+        }
     }
     if (index instanceof List && this.enableHyperOps) {
         return list.query(index);
     }
-    return list.lookup(index);
+    value = list.lookup(index);
+    if (value instanceof Context && (parseFloat(index) !== +index)) {
+        // treat the ring as macro and bind it to the list as environment
+        // for OOP 2.0
+        value = this.reportContextFor(value, list);
+    }
+    return value;
 };
 
 // Process - tabular list ops
@@ -5528,11 +5590,15 @@ Process.prototype.assemble = function (blocks) {
 // Process - generating syntax trees from parsed text
 
 Process.prototype.toBlockSyntax = function (list) {
-    var head;
+    var head, data;
     if (list.isEmpty()) {
         return list;
     }
     head = list.at(1);
+    if (snapEquals(head, 'items')) { // reserved token for data
+        data = this.toInputSyntax(list.cdr());
+        return list.cons(data.length(), data);
+    }
     return this.variadify(
         list.cons(
             head instanceof List ? this.toBlockSyntax(head)
@@ -5602,6 +5668,12 @@ Process.prototype.variadify = function (list) {
         syntax = new List(items.slice(0, idx));
         if (list.at(idx + 1) === ':') {
             syntax.add(list.at(idx + 2));
+            if (list.length() > idx + 2) {
+                // add following tokens as ring parameters, if any
+                for (idx = idx + 3; idx <= list.length(); idx += 1) {
+                    syntax.add(list.at(idx));
+                }
+            }
         } else {
             syntax.add(new List(
                 [list.cons(
@@ -5637,28 +5709,51 @@ Process.prototype.toTextSyntax = function (list) {
     head = syn.at(1);
     return syn.cons(
         head instanceof List ? this.toTextSyntax(head)
-            : this.blockToken(head),
+            : (head === Symbol.for('items') ? 'items' // reserved token for data
+                : this.blockToken(head)),
         this.toInputTextSyntax(syn.cdr())
     );
 };
 
 Process.prototype.devariadify = function (list) {
     var ring = list.at(1),
-        slot, idx, syntax;
+        slot, idx, syntax,
+        arr, slots, inps, slotInputs;
     if (ring instanceof List) {
         return list;
     }
     slot = ring.expression?.inputs().find(any =>
         any instanceof MultiArgMorph);
-    if (slot && !slot.inputs().length) {
-        idx = ring.expression.inputs().indexOf(slot) + 1;
-        syntax = list.map(each => each); // shallow copy
-        if (syntax.length() === (idx + 1) && syntax.at(idx + 1) === '') {
-            syntax.remove(idx + 1);
+
+    if (slot) {
+        if (!slot.inputs().length) {
+            // "with input list"
+            idx = ring.expression.inputs().indexOf(slot) + 1;
+            syntax = list.map(each => each); // shallow copy
+            if (syntax.length() === (idx + 1) && syntax.at(idx + 1) === '') {
+                syntax.remove(idx + 1);
+                return syntax;
+            }
+            syntax.add(':', idx + 1);
             return syntax;
         }
-        syntax.add(':', idx + 1);
-        return syntax;
+        inps = slot.inputs();
+        slots = ring.expression.inputs();
+        if (inps.length + slots.length < list.length()) {
+            // special case: the first expression has a variadic slot
+            // that conflicts with surplus ring parameters
+            // solution: collect the slot inputs in a separate data list
+            arr = list.itemsArray();
+            idx = slots.indexOf(slot) + 1;
+            syntax = new List(arr.slice(0, idx));
+            slotInputs = arr.slice(idx, idx + inps.length);
+            slotInputs.unshift(Symbol.for('items'));
+            syntax.add(':');
+            syntax.add(new List(slotInputs));
+            arr.slice(idx + inps.length, list.length()).forEach(each =>
+                syntax.add(each));
+            return syntax;
+        }
     }
     return list;
 };
@@ -7057,6 +7152,12 @@ Process.prototype.reportContextFor = function (context, otherObj) {
         receiverVars,
         rootVars;
 
+    if (otherObj instanceof List) { // OOP 2.0
+        result.outerContext = new Context();
+        result.outerContext.variables.parentFrame = otherObj;
+        return result;
+    }
+
     if (otherObj instanceof Context) {
         result.outerContext = otherObj.outerContext;
         result.variables.parentFrame = otherObj.outerContext.variables;
@@ -7928,7 +8029,9 @@ Process.prototype.reportBasicBlockAttribute = function (attribute, block) {
                 : this.blockReceiver().getMethod(expr.semanticSpec));
             // def.declarations.forEach(value => slots.add(value[1]));
             def.declarations.forEach(value => {
-                if((value[0] || '').toString().startsWith('%mult')) {
+                if((value[0] || '').toString().startsWith('%mult') ||
+                    (value[0] || '').toString().startsWith('%group')
+                ) {
                     data = (value[1] || '').split('\n').map(each =>
                         each.trim()).filter(each =>
                             each.length);
@@ -8194,6 +8297,10 @@ Process.prototype.slotType = function (spec) {
                 shift = 0;
                 key = 'variables';
             }
+        } else if (key.startsWith('group')) {
+            return new List(
+                key.split('%').slice(1).map(each => this.slotType(each))
+            );
         }
     } else if (spec.endsWith('...')) {
         shift = 100;
@@ -8330,6 +8437,12 @@ Process.prototype.slotSpec = function (num) {
         id = this.reportIsA(num, 'text') ? this.slotType(num) : +num,
         spec;
 
+    if (num instanceof List) { // input group
+        return '%group' + num.itemsArray().map(each =>
+            this.slotSpec(each)
+        ).join('');
+    }
+
     if (id >= 100) {
         prefix = '%mult';
         id -= 100;
@@ -8402,8 +8515,16 @@ Process.prototype.doSetBlockAttribute = function (attribute, block, val) {
             (oldType == 'command' && rep.includes(type));
     }
 
+    function labelFromList(list) {
+        return list.map(each => each instanceof List ? each.asWords()
+            : each).asTXT().replaceAll('\n', ' $nl ');
+    }
+
     switch (choice) {
     case 'label':
+        if (val instanceof List) {
+            val = labelFromList(val);
+        }
         def.setBlockLabel(val);
         break;
     case 'comment':
@@ -8421,8 +8542,9 @@ Process.prototype.doSetBlockAttribute = function (attribute, block, val) {
         val = [true, 1, '1'].includes(val);
         if (prim && prim.selector === 'doPrimitive' && prim.nextBlock()) {
             prim.inputs()[0].setContents(val);
-            def.primitive = val ? prim.inputs()[1].contents().text || null
-                : null;
+            def.setPrimitive(
+                val ? prim.inputs()[1].contents().text || null : null
+            );
         }
         break;
     case 'category':
@@ -9702,6 +9824,9 @@ VariableFrame.prototype.silentFind = function (name) {
         return this;
     }
     if (this.parentFrame) {
+        if (this.parentFrame instanceof List) {
+            return this.parentFrame;
+        }
         return this.parentFrame.silentFind(name);
     }
     return null;
@@ -9718,6 +9843,11 @@ VariableFrame.prototype.setVar = function (name, value, sender) {
 
     var frame = this.find(name);
     if (frame) {
+        if (frame instanceof List) { // OOP 2.0
+            frame.lookup(name, () => this.variableError(name));
+            frame.bind(name, value);
+            return;
+        }
         if (sender instanceof SpriteMorph &&
                 (frame.owner instanceof SpriteMorph) &&
                 (sender !== frame.owner)) {
@@ -9741,6 +9871,14 @@ VariableFrame.prototype.changeVar = function (name, delta, sender) {
         value,
         newValue;
     if (frame) {
+        if (frame instanceof List) { // OOP 2.0
+            value = frame.lookup(name, () => this.variableError(name));
+            // hypermutation is not supported for use inside dictionaries
+            newValue = isNaN(parseFloat(value)) ? delta
+                : Process.prototype.reportSum(value, delta);
+            frame.bind(name, newValue);
+            return;
+        }
         value = frame.vars[name].value;
         if (value instanceof List) {
             Process.prototype.hyperChangeBy(value, delta);
@@ -9755,14 +9893,26 @@ VariableFrame.prototype.changeVar = function (name, delta, sender) {
         } else {
             frame.vars[name].value = newValue;
         }
-
     }
 };
 
-VariableFrame.prototype.getVar = function (name) {
+VariableFrame.prototype.getVar = function (name, proc) {
     var frame = this.silentFind(name),
         value;
+
     if (frame) {
+        if (frame instanceof List) { // OOP 2.0
+            value = frame.lookup(
+                name,
+                proc ?
+                    () => proc.blockReceiver().globalVariables().getVar(name)
+                    : () => this.variableError(name)
+            );
+            if (value instanceof Context) {
+                value = Process.prototype.reportContextFor(value, frame);
+            }
+            return value;
+        }
         value = frame.vars[name].value;
         return (value === 0 ? 0
                 : value === false ? false

@@ -96,7 +96,7 @@ CustomBlockDefinition, exportEmbroidery*/
 
 /*jshint esversion: 11*/
 
-modules.objects = '2024-July-11';
+modules.objects = '2024-October-13';
 
 var SpriteMorph;
 var StageMorph;
@@ -184,9 +184,8 @@ SpriteMorph.prototype.allCategories = function () {
 };
 
 SpriteMorph.prototype.blockColorFor = function (category) {
-    return this.blockColor[category] ||
-        this.customCategories.get(category) ||
-        this.blockColor.other;
+    return Object.hasOwn(this.blockColor, category) ? this.blockColor[category]
+        : this.customCategories.get(category) || this.blockColor.other;
 };
 
 SpriteMorph.prototype.paletteColor = new Color(55, 55, 55);
@@ -1180,10 +1179,10 @@ SpriteMorph.prototype.primitiveBlocks = function () {
                     (run (get "true case"))
                     (ifElse (empty (get "else pairs"))
                         nil
-                        (ifElse (item 1 (get "else pairs"))
-                            (run (item 2 (get "else pairs")))
+                        (ifElse (item 1 (item 1 (get "else pairs")))
+                            (run (item 2 (item 1 (get "else pairs"))))
                             (run (get self) (bool f) nil
-                                (cdr (cdr (get "else pairs"))))))))`
+                                (cdr (get "else pairs")))))))`
         },
         doIfElse: {
             type: 'command',
@@ -2269,11 +2268,24 @@ SpriteMorph.prototype.primitiveBlocks = function () {
 
 SpriteMorph.prototype.initBlocks = function () {
     SpriteMorph.prototype.blocks = this.primitiveBlocks();
+    this.initHyperZip();
+};
+
+SpriteMorph.prototype.initHyperZip = function () {
+    var info = SpriteMorph.prototype.blocks.reportHyperZip,
+        def = SpriteMorph.prototype.customBlockDefinitionFor('reportHyperZip'),
+        proc = new Process(null, this.parentThatIsA(StageMorph));
+
+    def.primitive = false;
+    info.definition = def;
+    proc.pushContext();
+    def.setBlockDefinition(proc.assemble(proc.parseCode(info.src)));
 };
 
 SpriteMorph.prototype.hasCustomizedPrimitives = function () {
     return Object.keys(this.blocks).some(selector =>
-        this.blocks[selector].definition instanceof CustomBlockDefinition
+        selector !== 'reportHyperZip' &&
+            this.blocks[selector].definition instanceof CustomBlockDefinition
     );
 };
 
@@ -2469,8 +2481,9 @@ SpriteMorph.prototype.toggleAllCustomizedPrimitives = function (stage, choice) {
         var prim = def.body?.expression;
         if (prim && prim.selector === 'doPrimitive' && prim.nextBlock()) {
             prim.inputs()[0].setContents(choice);
-            def.primitive = choice ? prim.inputs()[1].contents().text || null
-                : null;
+            def.setPrimitive(
+                choice ? prim.inputs()[1].contents().text || null : null
+            );
             stage.allBlockInstances(def).reverse().forEach(block =>
                 block.selector = def.primitive || 'evaluateCustomBlock'
             );
@@ -2481,7 +2494,8 @@ SpriteMorph.prototype.toggleAllCustomizedPrimitives = function (stage, choice) {
 SpriteMorph.prototype.bootstrappedBlocks = function () {
     var boot = [];
     Object.keys(SpriteMorph.prototype.blocks).forEach(each => {
-        if (this.blocks[each].definition instanceof CustomBlockDefinition) {
+        if (each !== 'reportHyperZip' &&
+                this.blocks[each].definition instanceof CustomBlockDefinition) {
             boot.push(this.blocks[each].definition);
         }
     });
@@ -3361,6 +3375,7 @@ SpriteMorph.prototype.blockForSelector = function (selector, setDefaults) {
         if (setDefaults) {
             block.refreshDefaults(info.definition);
         }
+        return block;
     } else {
         block = info.type === 'command' ? new CommandBlockMorph()
             : info.type === 'hat' ? new HatBlockMorph()
@@ -4129,7 +4144,9 @@ SpriteMorph.prototype.makeBlock = function () {
 };
 
 SpriteMorph.prototype.getPrimitiveTemplates = function (category) {
-    var blocks = this.primitivesCache[category];
+    var blocks = Object.hasOwn(this.primitivesCache, category) ?
+            this.primitivesCache[category]
+            : null;
     if (!blocks) {
         blocks = this.blockTemplates(category);
         if (this.isCachingPrimitives) {
@@ -4140,7 +4157,9 @@ SpriteMorph.prototype.getPrimitiveTemplates = function (category) {
 };
 
 SpriteMorph.prototype.palette = function (category) {
-    if (!this.paletteCache[category]) {
+    if (!Object.hasOwn(this.paletteCache, category) ||
+        !this.paletteCache[category]
+    ) {
         this.paletteCache[category] = this.freshPalette(category);
     }
     return this.paletteCache[category];
@@ -4635,7 +4654,7 @@ SpriteMorph.prototype.searchBlocks = function (
         if (focus) {focus.destroy(); }
         if (!selection || !scriptFocus) {return; }
         focus = selection.outline(
-            MorphicPreferences.isFlat ? new Color(150, 200, 255) : WHITE,
+            IDE_Morph.prototype.isBright ? new Color(150, 200, 255) : WHITE,
             2
         );
         searchPane.contents.add(focus);
@@ -4984,9 +5003,11 @@ SpriteMorph.prototype.renameVariable = function (
         container, newWatcher, targets;
 
     function renameVariableInCustomBlock(definition) {
-        definition.scripts.forEach(eachScript =>
-            eachScript.refactorVariable(oldName, newName)
-        );
+        definition.scripts.forEach(eachScript => {
+            if (eachScript instanceof BlockMorph) { // skip comments
+                eachScript.refactorVariable(oldName, newName);
+            }
+        });
         if (definition.body) {
             definition.body.expression.refactorVariable(
                 oldName,
@@ -13128,7 +13149,7 @@ Costume.prototype.pixels = function () {
         i;
 
     if (!this.contents.width || !this.contents.height) {
-        return pixels;
+        return new List(pixels);
     }
     src = this.contents.getContext('2d').getImageData(
         0,
@@ -14495,6 +14516,8 @@ WatcherMorph.prototype.update = function () {
                     SpriteMorph.prototype.blockColor.variables
                 );
             }
+        } else if (this.target instanceof List) { // OOP 2.0
+            newValue = this.target.lookup(this.getter);
         } else {
             newValue = this.target[this.getter]();
 

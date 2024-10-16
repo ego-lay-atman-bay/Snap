@@ -20,6 +20,26 @@
     }
   },
   {
+    "fileName": "OOP_module.xml",
+    "name": "OOP",
+    "description": "Data Objects with prototypical inheritance",
+    "searchData": [
+      "object _",
+      "clone object _"
+    ],
+    "categories": [
+      "lists"
+    ],
+    "translations": {
+      "de": {
+        "searchData": [
+          "object _",
+          "clone object _"
+        ]
+      }
+    }
+  },
+  {
     "fileName": "~",
     "name": "~"
   },
@@ -1644,6 +1664,24 @@
     ]
   },
   {
+    "fileName": "variable_declaration_module.xml",
+    "name": "Declare & Initialize Script Variables",
+    "description": "Declare and initialize multiple script variables",
+    "searchData": [
+      "let _"
+    ],
+    "categories": [
+      "variables"
+    ],
+    "translations": {
+      "de": {
+        "searchData": [
+          "let _"
+        ]
+      }
+    }
+  },
+  {
     "fileName": "make-variables.xml",
     "name": "Create variables",
     "description": "Create and manage global/sprite/script variables in a script",
@@ -1770,8 +1808,8 @@
     "name": "~"
   },
   {
-    "fileName": "SciSnap!2Blocks.xml",
-    "name": "SciSnap! v2",
+    "fileName": "SciSnap3Blocks.xml",
+    "name": "SciSnap! v3",
     "description": "Scientific Functions, Graphing, SQL interface, Machine Learning, from Uni Göttingen (Eckart Modrow)",
     "translations": {
       "ca": {
@@ -2310,6 +2348,20 @@
       "lists",
       "sensing",
       "other"
+    ],
+    "translations": {
+    }
+  },
+  {
+    "fileName": "continuations_module.xml",
+    "name": "Continuations",
+    "description": "Capture runtime continuations to build fancy control structures",
+    "searchData": [
+      "run _ with continuation",
+      "call _ with continuation"
+    ],
+    "categories": [
+      "control"
     ],
     "translations": {
     }

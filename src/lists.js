@@ -59,13 +59,13 @@ Color, Point, WatcherMorph, StringMorph, SpriteMorph, ScrollFrameMorph, isNil,
 CellMorph, ArrowMorph, MenuMorph, snapEquals, localize, isString, IDE_Morph,
 MorphicPreferences, TableDialogMorph, SpriteBubbleMorph, SpeechBubbleMorph,
 TableFrameMorph, TableMorph, Variable, isSnapObject, Costume, contains, detect,
-Context, ZERO, WHITE, ReadStream*/
+Context, ZERO, WHITE, ReadStream, Process*/
 
 /*jshint esversion: 6*/
 
 // Global settings /////////////////////////////////////////////////////
 
-modules.lists = '2024-April-08';
+modules.lists = '2024-September-16';
 
 var List;
 var ListWatcherMorph;
@@ -332,17 +332,33 @@ List.prototype.indexOf = function (element) {
 
 // List key-value accessing (experimental in v8.1):
 
-List.prototype.lookup = function (key) {
-    var rec;
+List.prototype.lookup = function (key, ifNone = '') {
+    // look up the value of a given key, return optional ifNone value,
+    // which can also be a niladic callback, or an empty string
+    var rec, parent;
     if (parseFloat(key) === +key) { // treat as numerical index
         return this.at(key);
     }
     rec = this.itemsArray().find(elem => elem instanceof List &&
         elem.length() > 0 &&
         snapEquals(elem.at(1), key));
-    return rec ?
-        (rec.length() > 2 ? rec.cdr() : rec.at(2))
-        : '';
+    if (rec) {
+        return rec.length() > 2 ? rec.cdr() : rec.at(2);
+    }
+    if (snapEquals(key, '...')) {
+        if (typeof ifNone === 'function') {
+            return ifNone();
+        }
+        return ifNone;
+    }
+    parent = this.lookup('...');
+    if (parent instanceof List) {
+        return parent.lookup(key, ifNone);
+    } else if (isSnapObject(parent)) {
+        Process.prototype.assertAlive(parent);
+        return parent.variables.getVar(key);
+    }
+    return typeof ifNone === 'function' ? ifNone() : ifNone;
 };
 
 List.prototype.bind = function (key, value) {
@@ -352,12 +368,14 @@ List.prototype.bind = function (key, value) {
     if (key instanceof List) {
         return; // cannot use lists as key because of hyperization
     }
-    this.forget(key); // ensure unique entry
-    this.add(new List([key, value]));
+    this.add(new List([key, value]), this.forget(key) + 1);
 };
 
 List.prototype.forget = function (key) {
+    // remove all records indicated by the key
+    // and return the index of the first match, if any
     var idx = 0,
+        match = this.length(),
         query = rec =>
             snapEquals(rec, key) || (
                 rec instanceof List &&
@@ -366,14 +384,17 @@ List.prototype.forget = function (key) {
             );
 
     if (parseFloat(key) === +key) { // treat as numerical index
-        return this.remove(key);
+        this.remove(key);
+        return key;
     }
     while (idx > -1) {
         idx = this.itemsArray().findIndex(query);
         if (idx > -1) {
+            match = Math.min(match, idx);
             this.remove(idx + 1);
         }
     }
+    return match;
 };
 
 // List table (2D) accessing (for table morph widget):

@@ -1,4 +1,6 @@
-var snapVersion = '10-rc3',
+/*global self, caches*/
+/*jshint esversion: 6*/
+var snapVersion = '10.1.5',
     cacheName = `snap-pwa-${snapVersion}`,
     filesToCache = [
         'snap.html',
@@ -117,6 +119,7 @@ var snapVersion = '10-rc3',
 
         'libraries/code2blocks_module.xml',
         'libraries/colors.xml',
+        'libraries/continuations_module.xml',
         'libraries/crayons.xml',
         'libraries/Eisenbergification.xml',
         'libraries/embroidery_module.xml',
@@ -124,7 +127,6 @@ var snapVersion = '10-rc3',
         'libraries/httpBlocks.xml',
         'libraries/HummingbirdBlocks.xml',
         'libraries/iteration-composition.xml',
-        'libraries/leap-library.xml',
         'libraries/list_comprehension_module.xml',
         'libraries/list-utilities.xml',
         'libraries/localstorage_module.xml',
@@ -133,17 +135,23 @@ var snapVersion = '10-rc3',
         'libraries/make-variables.xml',
         'libraries/maps_module.xml',
         'libraries/menu_module.xml',
+        'libraries/metaprogramming_module.xml',
         'libraries/microblocks.xml',
+
         'libraries/mqttExtension.js',
         'libraries/mqtt.js',
         'libraries/mqtt.xml',
+
+        'libraries/OOP_module.xml',
         'libraries/parallel_module.xml',
         'libraries/pixel_module.xml',
         'libraries/plot_bars_module.xml',
         'libraries/replace_letters_module.xml',
         'libraries/schemeNumber.js',
-        'libraries/SciSnapExtensions.js',
-        'libraries/SciSnap!2Blocks.xml',
+
+        'libraries/SciSnap3Blocks.xml',
+        'libraries/SciSnap3Extensions.js',
+        // 'libraries/SciSnap3Costumedata.js', // commented out b/c it crashes Chrome
 
         'libraries/TuneScope.xml',
 
@@ -198,6 +206,7 @@ var snapVersion = '10-rc3',
         'libraries/textCostumes_module.xml',
         'libraries/textformat_module.xml',
         'libraries/try-catch.xml',
+        'libraries/variable_declaration_module.xml',
         'libraries/word-sentence.xml',
         'libraries/words_module.xml',
 
@@ -751,7 +760,7 @@ var snapVersion = '10-rc3',
         'Costumes/wizard.svg',
 
         // Backgrounds
-        'Backgrounds/BACKGROUNDS',
+        'Backgrounds/BACKGROUNDS.json',
 
         'Backgrounds/atom_playground.jpg',
         'Backgrounds/bedroom1.gif',
@@ -797,7 +806,7 @@ var snapVersion = '10-rc3',
         'Examples/vee.xml'
     ];
 
-console.log('service worker executed')
+console.log('service worker executed');
 /* Start the service worker and cache all of the app's content */
 self.addEventListener('install', function(e) {
     e.waitUntil(
@@ -808,6 +817,7 @@ self.addEventListener('install', function(e) {
 });
 
 self.addEventListener('activate', (evt) => {
+    self.skipWaiting();
     evt.waitUntil(
         caches.keys().then((keyList) => {
             return Promise.all(keyList.map((key) => {
