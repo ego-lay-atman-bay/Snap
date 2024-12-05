@@ -57,13 +57,13 @@ BlockMorph, ArgMorph, InputSlotMorph, TemplateSlotMorph, CommandSlotMorph,
 FunctionSlotMorph, MultiArgMorph, ColorSlotMorph, nop, CommentMorph, isNil,
 localize, SVG_Costume, MorphicPreferences, Process, isSnapObject, Variable,
 SyntaxElementMorph, BooleanSlotMorph, normalizeCanvas, contains, Scene,
-Project*/
+Project, CustomHatBlockMorph*/
 
 /*jshint esversion: 11*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.store = '2024-September-13';
+modules.store = '2024-November-25';
 
 // XML_Serializer ///////////////////////////////////////////////////////
 /*
@@ -1055,6 +1055,7 @@ SnapSerializer.prototype.loadCustomBlocks = function (
         definition.setPrimitive(child.attributes.primitive || null);
         definition.isHelper = (child.attributes.helper === 'true') || false;
         definition.spaceAbove = (child.attributes.space === 'true') || false;
+        definition.semantics = child.attributes.semantics || null;
         definition.isGlobal = (isGlobal === true);
         if (isDispatch) {
             object.inheritedMethodsCache.push(definition);
@@ -1176,6 +1177,7 @@ SnapSerializer.prototype.loadCustomizedPrimitives = function (
         definition.selector = sel || null;
         definition.setPrimitive(child.attributes.primitive || null);
         definition.isHelper = (child.attributes.helper === 'true') || false;
+        definition.semantics = child.attributes.semantics || null;
         definition.isGlobal = true;
 
         names = definition.parseSpec(definition.spec).filter(
@@ -1513,14 +1515,17 @@ SnapSerializer.prototype.loadBlock = function (model, isReporter, object) {
         )) {
             return this.obsoleteBlock(isReporter);
         }
-        block = info.type === 'command' ? new CustomCommandBlockMorph(
-            info,
-            false
-        ) : new CustomReporterBlockMorph(
-            info,
-            info.type === 'predicate',
-            false
-        );
+        if (info.type === 'command') {
+            block = new CustomCommandBlockMorph(info, false);
+        } else if (info.type === 'hat') {
+            block = new CustomHatBlockMorph(info, false);
+        } else {
+            block = new CustomReporterBlockMorph(
+                info,
+                info.type === 'predicate',
+                false
+            );
+        }
     }
     if (block === null) {
         block = this.obsoleteBlock(isReporter);
@@ -2507,8 +2512,7 @@ CustomCommandBlockMorph.prototype.toBlockXML = function (serializer) {
         this.isGlobal ?
                 '' : serializer.format(' scope="@"', scope),
         serializer.store(this.inputs()),
-        this.isGlobal &&
-        	this.definition.variableNames.length &&
+        this.variables.names().length &&
             !serializer.isExportingBlocksLibrary ?
                 '<variables>' +
                     this.variables.toXML(serializer) +
@@ -2519,6 +2523,9 @@ CustomCommandBlockMorph.prototype.toBlockXML = function (serializer) {
 };
 
 CustomReporterBlockMorph.prototype.toBlockXML
+    = CustomCommandBlockMorph.prototype.toBlockXML;
+
+CustomHatBlockMorph.prototype.toBlockXML
     = CustomCommandBlockMorph.prototype.toBlockXML;
 
 CustomBlockDefinition.prototype.toXML = function (serializer) {
@@ -2535,7 +2542,7 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
     }
 
     return serializer.format(
-        '<block-definition s="@" type="@" category="@"%%%%>' +
+        '<block-definition s="@" type="@" category="@"%%%%%>' +
             '%' +
             (this.variableNames.length ? '<variables>%</variables>' : '@') +
             '<header>@</header>' +
@@ -2554,6 +2561,8 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
             : '',
         this.isHelper ? ' helper="true"' : '',
         this.spaceAbove ? ' space="true"' : '',
+        this.type === 'hat' && this.semantics === 'rule' ?
+            ' semantics="rule"' : '',
         this.comment ? this.comment.toXML(serializer) : '',
         (this.variableNames.length ?
                 serializer.store(new List(this.variableNames)) : ''),

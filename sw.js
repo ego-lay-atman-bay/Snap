@@ -1,6 +1,6 @@
 /*global self, caches*/
 /*jshint esversion: 6*/
-var snapVersion = '10.1.5',
+var snapVersion = '10.3.0',
     cacheName = `snap-pwa-${snapVersion}`,
     filesToCache = [
         'snap.html',
@@ -30,6 +30,7 @@ var snapVersion = '10.1.5',
         'src/embroider.js',
         'src/sha512.js',
         'src/FileSaver.min.js',
+        'src/santa.js',
 
         // translations
         'locale/lang-ar.js',
@@ -123,7 +124,9 @@ var snapVersion = '10.1.5',
         'libraries/crayons.xml',
         'libraries/Eisenbergification.xml',
         'libraries/embroidery_module.xml',
+        'libraries/events_module.xml',
         'libraries/frequency_distribution_module.xml',
+        'libraries/halo_module.xml',
         'libraries/httpBlocks.xml',
         'libraries/HummingbirdBlocks.xml',
         'libraries/iteration-composition.xml',
@@ -152,6 +155,8 @@ var snapVersion = '10.1.5',
         'libraries/SciSnap3Blocks.xml',
         'libraries/SciSnap3Extensions.js',
         // 'libraries/SciSnap3Costumedata.js', // commented out b/c it crashes Chrome
+
+        'libraries/sprite_api_module.xml',
 
         'libraries/TuneScope.xml',
 

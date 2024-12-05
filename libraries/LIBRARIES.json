@@ -40,6 +40,30 @@
     }
   },
   {
+    "fileName": "events_module.xml",
+    "name": "Events",
+    "description": "Write scripts that react to data transitions, state changes and sensor threshold passings",
+    "searchData": [
+      "when _ happens",
+      "has _ happened?"
+    ],
+    "categories": [
+      "looks",
+      "control",
+      "sensing",
+      "operators",
+      "variables"
+    ],
+    "translations": {
+      "de": {
+        "searchData": [
+          "Wenn _ sich ereignet",
+          "hat _ sich ereignet?"
+        ]
+      }
+    }
+  },
+  {
     "fileName": "~",
     "name": "~"
   },
@@ -946,6 +970,25 @@
     ]
   },
   {
+    "fileName": "halo_module.xml",
+    "name": "Outlines and Halos",
+    "description": "Compute and display outlines of costumes and halos around sprites",
+    "searchData": [
+      "outline",
+      "halo"
+    ],
+    "categories": [
+      "looks"
+    ],
+    "translations": {
+      "de": {
+        "searchData": [
+          "umriss"
+        ]
+      }
+    }
+  },
+  {
     "fileName": "audioComp_module.xml",
     "name": "Audio Comp",
     "description": "Analyze, manipulate and generate sound samples.",
@@ -1791,6 +1834,28 @@
       "pt": {
         "searchData": [
           "nome da fonte _ _ texto em negrito? _ _ oblíquo? _\res"
+        ]
+      }
+    }
+  },
+  {
+    "fileName": "sprite_api_module.xml",
+    "name": "Sprite Method API",
+    "description": "Run and call a sprite's local custom blocks from another sprite",
+    "searchData": [
+      "api",
+      "methods",
+      "run",
+      "call"
+    ],
+    "categories": [
+      "control",
+      "sensing"
+    ],
+    "translations": {
+      "de": {
+        "searchData": [
+          "api"
         ]
       }
     }

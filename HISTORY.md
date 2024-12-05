@@ -2,6 +2,303 @@
 
 ## in development:
 
+## 10.3.0:
+* **New Features:**
+    1. Custom Hat Blocks
+        * Custom Hat Blocks, expressed as predicate defining a condition that fires the event
+        * Custom Hat Blocks can choose to be "events" reacting to a state change (default) or "conditions" observing state (indicated by an infinity symbol) 
+        * new "Events" library featuring custom hat blocks reacting to various state changes
+        * hat blocks are now first class and have their own new data type: "hat"
+    2. Other
+        * new "obj_version(obj)" extension for observing compound structures (lists, actors, scripts)
+        * new "infinity" / chain link symbol
+        * new "relabel" option for generic "When" hat block lets you switch between "event" (new default) and old "condition" semantics, indicated by the infinity symbol
+        * Surprise XMas Skin "Bake a block"
+* **Notable Changes:**
+    * directly clicking on a generic or custom hat block runs it no matter what
+    * "condition" hat blocks (that always fire when their condition is true) are indicated by an infinity symbol
+    * the generic "When" hat block in the palette now has "event" semantics and only fires on state change, blocks in existing projects keep their "condition" semantics
+    * optimized evaluation speed of generic (and custom) "when" hat block predicates
+    * hat blocks can be ringified (but not - yet - dropped into rings)
+    * changed positioning of local method icon (location pin) to be vertically centered
+* **Notable Fixes:**
+    * fixed generic and custom hat block scheduling for turbo mode
+    * fixed "expand _ to _ slots" block in the metapgroamming libary to be able to fully collapse
+    * fixed contrast for local method icon (location pin) in bright ui theme
+    * keep musical notes from going of out midi-value bounds
+* **Translation Updates:**
+    * German
+
+### 2024-12-05
+* prepared minor release
+
+### 2024-12-04
+* objects: double-clock event hats to enable observing script-induced state transitions
+* locale: fixed #3420
+* blocks, objects: keep musical notes from going of out midi-value bounds
+* updated dev version
+* threads: tweaked custom / event hat block evaluation for visible stepping
+* byob: renamed "rule" hat block semantics option to "condition"
+* German translation update for "condition"
+
+### 2024-12-03
+* blocks, gui: minor refactorings
+* updated dev version
+
+### 2024-12-02
+* added partial metaprgramming support for hat blocks
+* updated dev version
+* byob: tweaked LISP-ification of custom block definition scripts
+
+### 2024-11-29
+* threads, objects: optimized generic and custom hat block execution
+* updated dev version
+
+### 2024-11-28
+* threads: fixed upvars for custom hat blocks
+* updated dev version
+
+### 2024-11-26
+* byob: fixed a layout glitch in the input slot dialog
+* byob: renamed the block type button in the make-a-block dialog to "Event Hat"
+* boyb: fully integrated custom hat block type into the block dialog, so users can switch from an to any other block type 
+* German translation update
+* updated dev version
+
+### 2024-11-25
+* gui: fixed contrast for local method icon (location pin) in bright ui theme
+* blocks: tweaked vertical positioning of method icon in local custom hat blocks
+* byob: introduced "semantics" property to distinguish between "event" and "rule" custom hat blocks
+* store: added support for "semantics" property of custom block definitions
+* blocks: changed positioning of local method icon (location pin) to be vertically centered
+* threads: new "event" semantics (default) for custom hat blocks
+* blocks, byob: refactored HatBlock >> isLoaded
+* threads: new generic "receiveEventCondition" primitive for generic hat blocks
+* blocks, objects, threads: replaced generic "When" hat in the palette with event semantics version
+* objects: added "relabel" options to generic "When" hat block to switch between "event" and "rule" semantics
+* updated "Events" library with new event semantics
+* duplicated help screen for generic "When" hat
+* updated dev version
+
+### 2024-11-24
+* symbols: new "infinity" / chain link symbol
+* blocks, byob: mark "rule" hat blocks with an infinity symbol to distinguish them from "event" hats 
+* updated dev version
+
+### 2024-11-22
+* fixed "expand _ to _ slots" block in the metapgroamming libary to be able to fully collapse
+
+### 2024-11-21
+* byob: fixed custom hat block prototype attach points (there should be none)
+* threads: directly clicking on a generic or custom hat block runs it no matter what
+* objects: fixed generic and custom hat block scheduling for turbo mode
+* blocks, byob, threads: basic metaprogramming support for custom hat blocks
+* extensions: new "obj_version(obj)" extension for observing compound structures (lists, actors, scripts)
+* updated dev version
+
+### 2024-11-20
+* libraries: new "Events" library featuring custom hat blocks reacting to various state changes
+* updated dev version
+
+### 2024-11-19
+* byob, blocks, objects, threads, store: Custom Event Hat Blocks, expressed as predicate defining a condition that fires the event
+* updated dev version
+
+### 2024-11-18
+* new dev version
+
+## 10.2.5:
+* **Notable Fixes:**
+    * fixed "reshape" to let a zero dimension consistenly refer to the available leaf count, e.g. reshape (['foo', 'bar'], 0) => ['foo', 'bar']
+    * fixed an error when referencing a renamed or nonexisting input slot in a slot-menu-event hat block
+
+### 2024-11-14
+* lists: fixed "reshape" to let a zero dimension consistenly refer to the available leaf count, e.g. reshape (['foo', 'bar'], 0) => ['foo', 'bar']
+* byob: fixed an error when referencing a renamed or nonexisting input slot in a slot-menu-event hat block
+* prepared v10.2.5 patch
+
+## 10.2.4:
+* **Notable Fixes:**
+    * fixed a variadic input slot arrow layout bug
+
+## 10.2.3:
+* **New Features:**
+    * expose a copy of the custom block as "caller" to input slot reaction scripts inside custom block definitions
+    * new "input slots" menu option for custom block input slots
+    * new "expand (input) to (n) slots" command in the metaprogramming library 
+* **Notable Changes:**
+    * automatically add a dropdown menu to any custom block input slot whose definition has a slot menu event hat block for it
+    * tweaked variadic input slot arrows layout
+* **Notable Fixes:**
+    * fixed input names when querying a custom block definition that has no function body script
+    * hide variadic input arrows in case the number of slots is fixed  
+    * expand variadic inputs to their initial slots amount (if any is specified) when restoring them (i.e. when removing an embedded reporter block)
+* Note to overeager enthusiasts and online geniuses (tm):
+    * Please, oh please, use metaprogramming capabilities and variadic inputs wisely, if at all. They can be powerful abstractions, but there ain't not free lunch, they come with costs in expressivity and comprehensibility. Remember that naming things (and chosing distinct names) is a great strategy when communicating with fellow humans. It's sure nice to be revered by your peers for your inconceivable brilliance, but so much nicer to be understood. Never forget that among humans expressive is better than impressive, straight ist better than crooked, flat is better than nested, named is better than anonymous and explicit is better than implicit. Also remember that the one you're most likely talking to is your future you. Be nice to them!
+
+### 2024-11-12
+* threads: fixed input names when querying a custom block definition that has no function body script
+* metaprogramming library: new "expand (input) to (n) slots" command
+* blocks: hide variadic input arrows in case the number of slots is fixed
+* blocks: expand variadic inputs to their initial slots amount (if any is specified) when restoring them (i.e. when removing an embedded reporter block)
+* prepared v10.2.3 patch
+
+### 2024-11-11
+* threads: expose a copy of the custom block as "caller" to input slot reaction scripts inside custom block definitions
+* blocks: reversed order of slot-event dropdown items
+* byob: automatically add a dropdown menu to any custom block input slot whose definition has a slot menu event hat block for it
+* byob: added "input slots" menu as option to custom block input slot dialog
+
+## 10.2.2:
+* **Notable Changes:**
+    * changed wording for "when slot ... gets ..." hat block to "when slot ... signals ..."
+* **Translation Updates:**
+    * German
+
+### 2024-11-10
+* objects: changed wording for "when slot ... gets ..." hat block to "when slot ... signals ..."
+* prepared v10.2.2 patch
+
+## 10.2.1:
+* **Notable Changes:**
+    * deprecated "expand (input) to (n) slots" command, because "set slot ... to ..." can now do this by passing a list as value
+    * merged both custom block slot event hat blocks into one "when slot ... gets ..."
+* **Translation Updates:**
+    * German
+
+### 2024-11-10
+* threads, objects, blocks: removed support for "expand" block (b/c reorganizing the whole feature)
+* threads, objects, blocks, byob: merged both ustom block slot event hat blocks into one "when slot ... gets ..."
+* updated OOP library for the new slot event hat block
+* updated Sprite Method API library for the new slot event hat block
+* updated German translation: removed obsolete strings of deprecated slot-interaction blocks
+* updated German translation: added new strings for slot-interaction blocks
+* objects: changed default value for slot-event to "menu"
+* prepared v10.2.1 patch
+
+### 2024-11-09
+* threads: enhanced "set slot ... to ..." command to also handle variadic inputs, setting them to a list of values
+* threads, objects: deprecated "expand (input) to (n) slots" command, because "set slot ... to ..." can now do this by passing a list as value
+* updated OOP library - replaced "expand" with "set slot"
+* updated Sprite Method API library - replaced "expand" with "set slot"
+
+## 10.2.0:
+* **New Features:**
+    1. Block instance scripting
+        * dynamic (scriptable) drop down menus for custom block input slots
+        * new "scripted" menu option for custom block input slots
+        * new "When slot (slot) menu clicked" hat block for use inside custom block editors, has to report a list of drop-down menu items
+        * metaprogramming support for scriptable input slot menus
+        * custom block instance scripting support
+        * new "When slot (slot) edited" hat block for use inside custom block editors
+        * new "set slot (slot) to ..." commmand block for use inside custom block editors in "when (slot) edited" hatted scripts 
+        * new "expand (input) to (n) slots" command block for use inside custom block editors in "when (slot) edited" hatted scripts
+    2. OOP
+        * new "Sprite Method API" library for teaching OOP with dot notation
+        * OOP library: updated "field ... of (obj)" reporter with a new dynamic dropdown and automatic input slot variadicity
+    3. Block instance variables for sprite-local custom blocks
+* **Notable Changes:**
+    * simplified evaluation of generic "When ..." hat blocks, removed time-slice threshold for predicates
+    * changed "my (attribute)" primitive to report an empty list instead of an empty (scalar) value in case of no existing block, costumes, etc.
+* **Notable Fixes:**
+    * added the "Outlines and Halos" library to the libraries browser
+* **Translation Updates:**
+    * German
+
+### 2024-11-08
+* blocks: refactored droppability of custom-block definition specific hat blocks
+* blocks, gui: prevent custom-block specific hats to be dropped into non-block-editor scripting panes and on sprite-icons in the corral
+* prepared v10.2 minor release
+
+### 2024-11-07
+* threads, objects, blocks: simplified evaluation of generic "When ..." hat blocks, removed time-slice threshold for predicates
+* threads: fixed #3414 - accessing global variables in slot scripts
+* updated dev version
+* added the "outlines and halos" library to the libraries browser
+
+### 2024-11-06
+* byob, blocks, objects, store: added block (-instance) variables to sprite-local custom blocks ("methods")
+* updated dev version
+
+### 2024-11-05
+* blocks, threads: extended "When (slot) edited" event to variadic inputs, fires when a subslot is edited or when the user changes the arity
+* threads: turned "set slot" and "expand (input)" to noop when used outside their domain
+* blocks: tweaked internal dropdown menus to avoid bugs in user scripted ones
+* OOP library: updated "field ... of (obj)" reporter with a new dynamic dropdown and automatic input slot variadicity
+* new "Sprite Method API" library for teaching OOP with dot notation
+* updated dev version
+
+### 2024-11-04
+* threads: added access to global custom block instance variables to "When slot ..." scripts inside definitions
+* blocks: slightly refactored dynamicMenu()
+* German translation update for the new v10.2 blocks
+* updated dev version
+
+### 2024-11-02
+* objects, blocks, byob: new "When (slot) edited" hat block for use inside custom block editors
+* objects, blocks, byob, threads: new "set (slot) slot to ..." commmand block for use inside custom block editors in "when (slot) edited" hatted scripts
+* objects: changed wordings for slot-based primitives
+* threads: changed "my (attribute)" primitive to report an empty list instead of an empty (scalar) value in case of no existing block, costumes, etc.
+* objects, blocks, threads: new "expand (input) to (n) slots" command block for use inside custo block editors in "when (slot) edited" hatted scripts
+* updated dev version
+
+### 2024-10-31
+* objects: changed wording for "when ... menu clicked" hat block
+* blocks: fixed skipping evaluation of nested reporters for dynamicMenu()
+* byob: enabled visible stepping of input menu scripts inside the block editor
+* blocks, threads: fully evaluate the custom block's inputs (including reporters) before running the menu-generator script
+* updated dev version
+
+### 2024-10-30
+* objects: changed wording for "when ... menu" hat block
+* byob: changed wording in the ui for dynamic menus to "scripted"
+* objects: changed wording for "when ... input menu" hat block
+* threads: metaprogramming support for dynamic drop down menus
+* updated dev version
+* blocks: tweaked menuSelectorsMenu() to scan the block editor's current prototype declarations instead of the (changed) definition
+
+### 2024-10-29
+* new dev version
+* threads: fixed a context-binding glitch in invoke()
+* byob: dynamic drop down menu option for custom block input slots
+* threads, blocks, objects: new "When ... menu is clicked" hat block for use inside custom block editors
+* blocks: support for nested dynamic drop down menus
+* objects: changed wording for "when ... menu clicked" hat block
+
+## 10.1.9:
+* **Notable Changes:**
+    * adjusted push-button outlines for bright gui theme
+
+### 2024-10-28
+* gui: tweaked push button outlines for bright theme
+* prepared v10.1.9 patch
+
+## 10.1.8:
+* **Notable Fixes:**
+    * updated the text costumes library with a special case for a space character
+    * updated BLE library for Morphic scheduling, thanks, Bernat!
+
+### 2024-10-22
+    * updated the text costumes library with a special case for a space character
+    * updated BLE library for Morphic scheduling, thanks, Bernat!
+    * prepared v10.1.8 patch
+
+## 10.1.7:
+* **Notable Fixes:**
+    * fixed a BlockSymbolMorph getRenderColor() null case glitch
+
+### 2024-09-19
+* objects: fixed a BlockSymbolMorph getRenderColor() null case glitch
+* prepared v10.1.7 patch
+
+## 10.1.6:
+* **Notable Fixes:**
+    * fixed #3409 - do not remove custom blocks referenced in customized primitives as "unused"
+
+### 2024-09-18
+* objects: fixed #3409 - do not remove custom blocks referenced in customized primitives as "unused" 
+* prepared v10.1.6 patch
+
 ## 10.1.5:
 * **Notable Fixes:**
     * fixed broadcasting and sending messages with data

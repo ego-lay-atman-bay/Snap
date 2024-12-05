@@ -44,6 +44,7 @@
     CommandBlockMorph***
         CustomCommandBlockMorph
         HatBlockMorph***
+            CustomHatBlockMorph
             PrototypeHatBlockMorph
 
     DialogBoxMorph**
@@ -105,18 +106,19 @@ ToggleButtonMorph, IDE_Morph, MenuMorph, ToggleElementMorph, fontHeight, isNil,
 StageMorph, SyntaxElementMorph, CommentMorph, localize, CSlotMorph, Variable,
 MorphicPreferences, SymbolMorph, CursorMorph, VariableFrame, BooleanSlotMorph,
 WatcherMorph, XML_Serializer, SnapTranslator, SnapExtensions, MultiArgMorph,
-ArgLabelMorph, embedMetadataPNG, ArgMorph, RingMorph*/
+ArgLabelMorph, embedMetadataPNG, ArgMorph, RingMorph, InputList*/
 
 /*jshint esversion: 11*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.byob = '2024-October-10';
+modules.byob = '2024-December-04';
 
 // Declarations
 
 var CustomBlockDefinition;
 var CustomCommandBlockMorph;
+var CustomHatBlockMorph;
 var CustomReporterBlockMorph;
 var BlockDialogMorph;
 var BlockEditorMorph;
@@ -171,6 +173,9 @@ function CustomBlockDefinition(spec, receiver) {
     this.selector = null;
     this.primitive = null;
 
+    // allow hat blocks to distinguish between "events" (default) and "rules"
+    this.semantics = null;
+
     // don't serialize (not needed for functionality):
     this.receiver = receiver || null; // for serialization only (pointer)
     this.editorDimensions = null; // a rectangle, last bounds of the editor
@@ -187,6 +192,8 @@ CustomBlockDefinition.prototype.blockInstance = function (storeTranslations) {
     var block;
     if (this.type === 'command') {
         block = new CustomCommandBlockMorph(this);
+    } else if (this.type === 'hat') {
+        block = new CustomHatBlockMorph(this);
     } else {
         block = new CustomReporterBlockMorph(
             this,
@@ -215,6 +222,8 @@ CustomBlockDefinition.prototype.prototypeInstance = function () {
     // make a new block instance and mark it as prototype
     if (this.type === 'command') {
         block = new CustomCommandBlockMorph(this, true);
+    } else if (this.type === 'hat') {
+        block = new CustomHatBlockMorph(this, true);
     } else {
         block = new CustomReporterBlockMorph(
             this,
@@ -402,6 +411,7 @@ CustomBlockDefinition.prototype.dropDownMenuOf = function (inputName) {
                 fname = options.slice(2);
                 if (contains(
                     [
+                        'dynamicMenu',
                         'messagesMenu',
                         'messagesReceivedMenu', // for backward (5.0.0 - 5.0.3) support
                         'objectsMenu',
@@ -423,7 +433,8 @@ CustomBlockDefinition.prototype.dropDownMenuOf = function (inputName) {
                         'audioMenu',
                         'scenesMenu',
                         'primitivesMenu',
-                        'extensionsMenu'
+                        'extensionsMenu',
+                        'inputSlotsMenu'
                     ],
                     fname
                 ) || fname.indexOf('ext_') === 0) {
@@ -1205,7 +1216,7 @@ CustomCommandBlockMorph.prototype.init = function (definition, isProto) {
     this.selector = definition.primitive || 'evaluateCustomBlock';
     this.variables = null;
 	this.storedTranslations = null; // transient - only for "wishes"
-    this.initializeVariables();
+    this.initializeVariables(definition.variableNames);
     if (definition) { // needed for de-serializing
         this.refresh();
     }
@@ -1223,13 +1234,10 @@ CustomCommandBlockMorph.prototype.reactToTemplateCopy = function () {
     CustomCommandBlockMorph.uber.reactToTemplateCopy.call(this);
 };
 
-CustomCommandBlockMorph.prototype.initializeVariables = function (oldVars) {
+CustomCommandBlockMorph.prototype.initializeVariables = function (names, old) {
     this.variables = new VariableFrame();
-    if (!this.isGlobal) {
-        return;
-    }
-    this.definition.variableNames.forEach(name => {
-        var v = oldVars ? oldVars[name] : null;
+    names.forEach(name => {
+        var v = old ? old[name] : null;
         this.variables.addVar(
             name,
             v instanceof Variable ? v.value : null
@@ -1308,9 +1316,7 @@ CustomCommandBlockMorph.prototype.refresh = function (aDefinition, offset) {
 
     // initialize block vars
     // preserve values of unchanged variable names
-    if (this.isGlobal) {
-        this.initializeVariables(this.variables.vars);
-    }
+    this.initializeVariables(def.variableNames, this.variables.vars);
 
     // make (double) sure I'm colored correctly
     this.forceNormalColoring();
@@ -1462,13 +1468,19 @@ CustomCommandBlockMorph.prototype.refreshPrototype = function () {
 
     // update the prototype's type
     // and possibly exchange 'this' for 'myself'
-    if (this instanceof CustomCommandBlockMorph
-            && ((hat.type === 'reporter') || (hat.type === 'predicate'))) {
-        myself = new CustomReporterBlockMorph(
-            this.definition,
-            hat.type === 'predicate',
-            true
-        );
+    if (this instanceof CustomCommandBlockMorph && hat.type !== 'command') {
+        if (['reporter', 'predicate'].includes(hat.type)) {
+            myself = new CustomReporterBlockMorph(
+                this.definition,
+                hat.type === 'predicate',
+                true
+            );
+        } else if (hat.type === 'hat') {
+            myself = new CustomHatBlockMorph(
+                this.definition,
+                true
+            );
+        }
         hat.replaceInput(this, myself);
     } else if (this instanceof CustomReporterBlockMorph) {
         if (hat.type === 'command') {
@@ -1477,12 +1489,34 @@ CustomCommandBlockMorph.prototype.refreshPrototype = function () {
                 true
             );
             hat.replaceInput(this, myself);
-        } else {
+        } else if (hat.type === 'hat') {
+            myself = new CustomHatBlockMorph(
+                this.definition,
+                true
+            );
+            hat.replaceInput(this, myself);
+        } else if (this.isPredicate !== (hat.type === 'predicate')) {
             this.isPredicate = (hat.type === 'predicate');
             this.fixLayout();
             this.rerender();
         }
+    } else if (this instanceof CustomHatBlockMorph && hat.type !== 'hat') {
+        if (hat.type === 'command') {
+            myself = new CustomCommandBlockMorph(
+                this.definition,
+                true
+            );
+        } else if (['reporter', 'predicate'].includes(hat.type)) {
+            myself = new CustomReporterBlockMorph(
+                this.definition,
+                hat.type === 'predicate',
+                true
+            );
+        }
+        hat.replaceInput(this, myself);
     }
+
+    // update the (new) prototype's category & color
     myself.setCategory(hat.blockCategory || 'other');
     hat.fixBlockColor();
 
@@ -1806,26 +1840,38 @@ CustomCommandBlockMorph.prototype.userMenu = function () {
                 hat.parentThatIsA(BlockEditorMorph).editTranslations();
             }
         );
+        if (hat.inputs().length < 2) {
+            menu.addItem(
+                "block variables...",
+                function () {
+                    hat.enableBlockVars();
+                }
+            );
+        } else {
+            menu.addItem(
+                "remove block variables...",
+                function () {
+                    hat.enableBlockVars(false);
+                }
+            );
+        }
         if (this.isGlobal) {
-            if (hat.inputs().length < 2) {
-                menu.addItem(
-                    "block variables...",
-                    function () {
-                        hat.enableBlockVars();
-                    }
-                );
-            } else {
-                menu.addItem(
-                    "remove block variables...",
-                    function () {
-                        hat.enableBlockVars(false);
-                    }
-                );
-            }
             menu.addItem(
                 "selector...",
                 () => hat.editSelector(),
                 "overload a primitive"
+            );
+        }
+        if (this instanceof CustomHatBlockMorph) {
+            addOption(
+                'condition',
+                () => {
+                    this.semantics = this.semantics ? null : 'rule';
+                    this.changed();
+                },
+                this.semantics === 'rule',
+                'uncheck for\nevent semantics',
+                'check for\ncondition semantics'
             );
         }
         addOption(
@@ -2246,6 +2292,49 @@ CustomCommandBlockMorph.prototype.alternatives = function () {
     );
 };
 
+// CustomCommandBlockMorph events /////////////////////////////////////
+
+CustomCommandBlockMorph.prototype.fireSlotEditedEvent= function (slot) {
+    var rcvr = this.scriptTarget(),
+        def = this.isGlobal ? this.definition
+            : rcvr.getMethod(this.blockSpec),
+        names = def.inputNames(),
+        inputName = names[this.inputs().indexOf(slot)],
+        scripts = def.scripts.filter(each =>
+            each.selector === 'receiveSlotEvent' &&
+                each.inputs()[0].evaluate() === inputName &&
+                each.inputs()[1].evaluateOption() === 'edited'),
+        stage = rcvr.parentThatIsA(StageMorph),
+        vars;
+
+    // fully evaluate the block's inputs, including embedded reporters, if any
+    vars = new InputList(this, names);
+
+    // evaluate the scripts concurrently
+    scripts.forEach(script =>
+        stage.threads.startProcess(
+            script,
+            rcvr,
+            null, // threadsafe
+            null, // export result
+            null, // callback
+            null, // clicked
+            null, // right away
+            null, // atomic
+            vars
+        )
+    );
+};
+
+// CustomCommandBlockMorph accessing slots by their name //////////////
+
+CustomCommandBlockMorph.prototype.inputSlotNamed = function (name) {
+    var rcvr = this.scriptTarget(),
+        def = this.isGlobal ? this.definition : rcvr.getMethod(this.blockSpec);
+    return this.inputs()[def.inputNames().map(each =>
+        each.toLowerCase()).indexOf(name.toLowerCase())];
+};
+
 // CustomReporterBlockMorph ////////////////////////////////////////////
 
 // CustomReporterBlockMorph inherits from ReporterBlockMorph:
@@ -2280,7 +2369,7 @@ CustomReporterBlockMorph.prototype.init = function (
     this.category = definition.category;
     this.storedTranslations = null; // transient - only for "wishes"
     this.variables = new VariableFrame();
-    this.initializeVariables();
+    this.initializeVariables(definition.variableNames);
     this.selector = definition.primitive || 'evaluateCustomBlock';
     if (definition) { // needed for de-serializing
         this.refresh();
@@ -2376,6 +2465,14 @@ CustomReporterBlockMorph.prototype.exportBlockDefinition
 
 // CustomReporterBlockMorph events:
 
+CustomReporterBlockMorph.prototype.fireSlotEditedEvent =
+    CustomCommandBlockMorph.prototype.fireSlotEditedEvent;
+
+// CustomReporterBlockMorph accessing slots by their name
+
+CustomReporterBlockMorph.prototype.inputSlotNamed =
+    CustomCommandBlockMorph.prototype.inputSlotNamed;
+
 // hover help - commented out for now
 /*
 CustomReporterBlockMorph.prototype.mouseEnter
@@ -2400,6 +2497,175 @@ CustomReporterBlockMorph.prototype.relabel
 
 CustomReporterBlockMorph.prototype.alternatives
     = CustomCommandBlockMorph.prototype.alternatives;
+
+// CustomHatBlockMorph ////////////////////////////////////////////
+
+// CustomHatBlockMorph inherits from HatBlockMorph:
+
+CustomHatBlockMorph.prototype = new HatBlockMorph();
+CustomHatBlockMorph.prototype.constructor = CustomHatBlockMorph;
+CustomHatBlockMorph.uber = HatBlockMorph.prototype;
+
+// CustomHatBlockMorph shared settings:
+
+CustomHatBlockMorph.prototype.isCustomBlock = true;
+
+// CustomHatBlockMorph instance creation:
+
+function CustomHatBlockMorph(definition, isProto) {
+    this.init(definition, isProto);
+}
+
+CustomHatBlockMorph.prototype.init = function (definition, isProto) {
+    this.definition = definition; // mandatory
+    this.semanticSpec = '';
+    this.isGlobal = definition ? definition.isGlobal : false;
+    this.isPrototype = isProto || false; // optional
+
+    // additional property for custom hat blocks
+    this.semantics = null; // "event" (default) or "rule"
+
+    CustomCommandBlockMorph.uber.init.call(this);
+    if (isProto) {
+        this.isTemplate = true;
+    }
+    this.category = definition.category;
+    this.selector = definition.primitive || 'evaluateCustomBlock';
+    this.variables = null;
+	this.storedTranslations = null; // transient - only for "wishes"
+    this.initializeVariables(definition.variableNames);
+    if (definition) { // needed for de-serializing
+        this.refresh();
+    }
+};
+
+CustomHatBlockMorph.prototype.initializeVariables =
+    CustomCommandBlockMorph.prototype.initializeVariables;
+
+CustomHatBlockMorph.prototype.reactToTemplateCopy =
+    CustomCommandBlockMorph.prototype.reactToTemplateCopy;
+
+CustomHatBlockMorph.prototype.refresh = function (aDefinition, offset) {
+    var def = aDefinition || this.definition;
+    this.semantics = def.semantics || null;
+    CustomCommandBlockMorph.prototype.refresh.call(this, aDefinition, offset);
+    this.changed();
+};
+
+CustomHatBlockMorph.prototype.isRuleHat = function () {
+    return !!this.semantics; // currently either "rule" or null for "event"
+};
+
+CustomHatBlockMorph.prototype.mouseClickLeft = function () {
+    if (!this.isPrototype) {
+        return CustomHatBlockMorph.uber.mouseClickLeft.call(this);
+    }
+    this.edit();
+};
+
+CustomHatBlockMorph.prototype.placeHolder =
+    CustomCommandBlockMorph.prototype.placeHolder;
+
+CustomHatBlockMorph.prototype.parseSpec =
+    CustomCommandBlockMorph.prototype.parseSpec;
+
+CustomHatBlockMorph.prototype.edit =
+    CustomCommandBlockMorph.prototype.edit;
+
+CustomHatBlockMorph.prototype.labelPart =
+    CustomCommandBlockMorph.prototype.labelPart;
+
+CustomHatBlockMorph.prototype.upvarFragmentNames =
+    CustomCommandBlockMorph.prototype.upvarFragmentNames;
+
+CustomHatBlockMorph.prototype.upvarFragmentName
+    = CustomCommandBlockMorph.prototype.upvarFragmentName;
+
+CustomHatBlockMorph.prototype.inputFragmentNames
+    = CustomCommandBlockMorph.prototype.inputFragmentNames;
+
+CustomHatBlockMorph.prototype.specFromFragments
+    = CustomCommandBlockMorph.prototype.specFromFragments;
+
+CustomHatBlockMorph.prototype.blockSpecFromFragments
+    = CustomCommandBlockMorph.prototype.blockSpecFromFragments;
+
+CustomHatBlockMorph.prototype.declarationsFromFragments
+    = CustomCommandBlockMorph.prototype.declarationsFromFragments;
+
+CustomHatBlockMorph.prototype.refreshPrototype
+    = CustomCommandBlockMorph.prototype.refreshPrototype;
+
+CustomHatBlockMorph.prototype.refreshPrototypeSlotTypes
+    = CustomCommandBlockMorph.prototype.refreshPrototypeSlotTypes;
+
+CustomHatBlockMorph.prototype.restoreInputs
+    = CustomCommandBlockMorph.prototype.restoreInputs;
+
+CustomHatBlockMorph.prototype.refreshDefaults
+    = CustomCommandBlockMorph.prototype.refreshDefaults;
+
+CustomHatBlockMorph.prototype.isInUse
+    = CustomCommandBlockMorph.prototype.isInUse;
+
+CustomHatBlockMorph.prototype.attachTargets
+    = CustomCommandBlockMorph.prototype.attachTargets;
+
+// CustomHatBlockMorph menu:
+
+CustomHatBlockMorph.prototype.userMenu
+    = CustomCommandBlockMorph.prototype.userMenu;
+
+CustomHatBlockMorph.prototype.moveInPalette =
+    CustomCommandBlockMorph.prototype.moveInPalette;
+
+CustomHatBlockMorph.prototype.duplicateBlockDefinition
+    = CustomCommandBlockMorph.prototype.duplicateBlockDefinition;
+
+CustomHatBlockMorph.prototype.deleteBlockDefinition
+    = CustomCommandBlockMorph.prototype.deleteBlockDefinition;
+
+CustomHatBlockMorph.prototype.exportBlockDefinition
+    = CustomCommandBlockMorph.prototype.exportBlockDefinition;
+
+// CustomHatBlockMorph events:
+
+CustomHatBlockMorph.prototype.fireSlotEditedEvent =
+    CustomCommandBlockMorph.prototype.fireSlotEditedEvent;
+
+// CustomHatBlockMorph accessing slots by their name
+
+CustomHatBlockMorph.prototype.inputSlotNamed =
+    CustomCommandBlockMorph.prototype.inputSlotNamed;
+
+// hover help - commented out for now
+/*
+CustomHatBlockMorph.prototype.mouseEnter
+    = CustomCommandBlockMorph.prototype.mouseEnter;
+
+CustomHatBlockMorph.prototype.mouseLeave
+    = CustomCommandBlockMorph.prototype.mouseLeave;
+*/
+
+// CustomHatBlockMorph bubble help:
+
+CustomHatBlockMorph.prototype.bubbleHelp
+    = CustomCommandBlockMorph.prototype.bubbleHelp;
+
+CustomHatBlockMorph.prototype.popUpbubbleHelp
+    = CustomCommandBlockMorph.prototype.popUpbubbleHelp;
+
+// CustomHatBlockMorph relabelling
+
+CustomHatBlockMorph.prototype.relabel
+    = CustomCommandBlockMorph.prototype.relabel;
+
+CustomHatBlockMorph.prototype.alternatives
+    = CustomCommandBlockMorph.prototype.alternatives;
+
+// CustomHatBlockMorph syntax analysis
+
+CustomHatBlockMorph.prototype.reify = BlockMorph.prototype.reify;
 
 // JaggedBlockMorph ////////////////////////////////////////////////////
 
@@ -2867,6 +3133,15 @@ BlockDialogMorph.prototype.createTypeButtons = function () {
         block,
         () => this.blockType === 'predicate'
     );
+
+    block = new HatBlockMorph();
+    block.setColor(clr);
+    block.setSpec(localize('Event Hat'));
+    this.addBlockTypeButton(
+        () => this.setType('hat'),
+        block,
+        () => this.blockType === 'hat'
+    );
 };
 
 BlockDialogMorph.prototype.addBlockTypeButton = function (
@@ -2966,7 +3241,7 @@ BlockDialogMorph.prototype.getInput = function () {
     def.type = this.blockType;
     def.category = this.category;
     def.isGlobal = this.isGlobal;
-    if (def.type === 'reporter' || def.type === 'predicate') {
+    if (def.type !== 'command') {
         body = Process.prototype.reify.call(
             null,
             SpriteMorph.prototype.blockForSelector('doReport'),
@@ -3034,11 +3309,6 @@ BlockDialogMorph.prototype.fixLayout = function () {
         }
     }
 
-    if (this.label) {
-        this.label.setCenter(this.center());
-        this.label.setTop(this.top() + (th - this.label.height()) / 2);
-    }
-
     if (this.types) {
         this.types.fixLayout();
         this.bounds.setHeight(
@@ -3053,9 +3323,24 @@ BlockDialogMorph.prototype.fixLayout = function () {
         this.types.setCenter(this.center());
         if (this.body) {
             this.types.setTop(this.body.bottom() + this.padding);
+            this.body.setWidth(Math.max(
+                this.types.width() - this.padding,
+                this.body.width()
+            ));
         } else if (this.categories) {
             this.types.setTop(this.categories.bottom() + this.padding);
         }
+    }
+
+    if (this.label) {
+        this.label.setCenter(this.center());
+        this.label.setTop(this.top() + (th - this.label.height()) / 2);
+    }
+
+    if (this.body && this.categories) {
+        this.categories.setLeft(
+            this.body.left() + (this.body.width() - this.categories.width()) / 2
+        );
     }
 
     if (this.scopes) {
@@ -3169,7 +3454,7 @@ BlockEditorMorph.prototype.init = function (definition, target) {
     scripts.add(proto);
 
     this.definition.scripts.forEach(element => {
-        block = element.fullCopy();
+        block = isLive ? element : element.fullCopy();
         block.setPosition(scripts.position().add(element.position()));
         scripts.add(block);
         if (block instanceof BlockMorph) {
@@ -3375,12 +3660,14 @@ BlockEditorMorph.prototype.updateDefinition = function () {
         oldSpec = this.definition.blockSpec(),
         pos = this.body.contents.position(),
         count = 1,
+        menuHats = [],
         spec, element;
 
     this.definition.receiver = this.target; // only for serialization
     this.definition.spec = this.prototypeSpec();
     this.definition.declarations = this.prototypeSlots();
     this.definition.variableNames = this.variableNames();
+    this.definition.semantics = this.prototypeSemantics();
     this.definition.scripts = [];
     this.definition.updateTranslations(this.translations);
     this.definition.cachedTranslation = null;
@@ -3396,6 +3683,11 @@ BlockEditorMorph.prototype.updateDefinition = function () {
             element.parent = null;
             element.setPosition(morph.position().subtract(pos));
             this.definition.scripts.push(element);
+            if (element.selector === 'receiveSlotEvent' &&
+                element.inputs()[1].evaluateOption() === 'menu'
+            ) {
+                menuHats.push(element);
+            }
         }
     });
 
@@ -3415,6 +3707,20 @@ BlockEditorMorph.prototype.updateDefinition = function () {
         } else {
             this.definition.comment = null;
         }
+    }
+
+    // automatically declare custom dropdown menus
+    if (menuHats.length) {
+        menuHats.forEach(hat => {
+            let slot = hat.inputs()[0].evaluate(),
+                info = this.definition.declarations.get(slot);
+            if (slot !== '' && info && !info[2]) {
+                info[2] = this.definition.encodeChoices(
+                    new List(['§_dynamicMenu'])
+                );
+                this.definition.declarations.set(slot, info);
+            }
+        });
     }
 
     this.definition.body = this.context(head);
@@ -3490,6 +3796,14 @@ BlockEditorMorph.prototype.prototypeSlots = function () {
         this.body.contents.children,
         c => c instanceof PrototypeHatBlockMorph
     ).parts()[0].declarationsFromFragments();
+};
+
+BlockEditorMorph.prototype.prototypeSemantics = function () {
+    // answer the semantics represented by my (edited) block prototype
+    return detect(
+        this.body.contents.children,
+        c => c instanceof PrototypeHatBlockMorph
+    ).parts()[0].semantics;
 };
 
 BlockEditorMorph.prototype.variableNames = function () {
@@ -3734,6 +4048,14 @@ PrototypeHatBlockMorph.prototype.selectorMenu = function () {
     return lst;
 };
 
+PrototypeHatBlockMorph.prototype.blockSequence = function () {
+    // override my inherited method so that I am not part of my sequence
+    var result;
+    result = HatBlockMorph.uber.blockSequence.call(this);
+    result.shift();
+    return result;
+};
+
 // BlockLabelFragment //////////////////////////////////////////////////
 
 // BlockLabelFragment instance creation:
@@ -3839,6 +4161,7 @@ BlockLabelFragment.prototype.hasOptions = function () {
 BlockLabelFragment.prototype.hasSpecialMenu = function () {
     return contains(
         [
+            '§_dynamicMenu',
             '§_messagesMenu',
             '§_messagesReceivedMenu',    //for backward (5.0.0 - 5.0.3) support
             '§_objectsMenu',
@@ -3860,7 +4183,8 @@ BlockLabelFragment.prototype.hasSpecialMenu = function () {
             '§_audioMenu',
             '§_scenesMenu',
             '§_primitivesMenu',
-            '§_extensionsMenu'
+            '§_extensionsMenu',
+            '§_inputSlotsMenu'
         ],
         this.options
     );
@@ -4978,6 +5302,8 @@ InputSlotDialogMorph.prototype.specialOptionsMenu = function () {
     }
 
     addSpecialOptions('(none)', '');
+    addSpecialOptions('scripted', '§_dynamicMenu');
+    menu.addLine();
     addSpecialOptions('messages', '§_messagesMenu');
     addSpecialOptions('objects', '§_objectsMenu');
     addSpecialOptions('data types', '§_typesMenu');
@@ -5000,6 +5326,7 @@ InputSlotDialogMorph.prototype.specialOptionsMenu = function () {
     addSpecialOptions('microphone', '§_audioMenu');
     addSpecialOptions('primitives', '§_primitivesMenu');
     addSpecialOptions('extensions', '§_extensionsMenu');
+    addSpecialOptions('input slots', '§_inputSlotsMenu');
     return menu;
 };
 

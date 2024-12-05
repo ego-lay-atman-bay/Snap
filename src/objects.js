@@ -92,11 +92,11 @@ localize, TableMorph, TableFrameMorph, normalizeCanvas, VectorPaintEditorMorph,
 AlignmentMorph, Process, WorldMap, copyCanvas, useBlurredShadows, BLACK,
 BlockVisibilityDialogMorph, CostumeIconMorph, SoundIconMorph, MenuItemMorph,
 embedMetadataPNG, SnapExtensions, SnapSerializer, snapEquals, display,
-CustomBlockDefinition, exportEmbroidery*/
+CustomBlockDefinition, exportEmbroidery, CustomHatBlockMorph*/
 
 /*jshint esversion: 11*/
 
-modules.objects = '2024-October-13';
+modules.objects = '2024-December-04';
 
 var SpriteMorph;
 var StageMorph;
@@ -1066,6 +1066,11 @@ SpriteMorph.prototype.primitiveBlocks = function () {
             category: 'control',
             spec: 'when %b'
         },
+        receiveConditionEvent: {
+            type: 'hat',
+            category: 'control',
+            spec: 'when %b'
+        },
         getLastMessage: {  // retained for legacy compatibility
             dev: true,
             type: 'reporter',
@@ -1349,6 +1354,19 @@ SpriteMorph.prototype.primitiveBlocks = function () {
             spec: 'this %env',
             defaults: [['script']],
             code: 'this'
+        },
+
+        // custom block slot control & dynamic user defined drop-down menus
+        receiveSlotEvent: {
+            type: 'hat',
+            category: 'control',
+            spec: 'when slot %inputSlot signals %slotEvent',
+            defaults: ['', ['menu']]
+        },
+        doSetSlot: {
+            type: 'command',
+            category: 'control',
+            spec: 'set slot %inputSlot to %s'
         },
 
         // Debugging - pausing
@@ -2403,7 +2421,7 @@ SpriteMorph.prototype.customizePrimitive = function (
         block.isGlobal = def.isGlobal;
         block.isPrototype = false;
         block.variables = null;
-        block.initializeVariables();
+        block.initializeVariables(def.variableNames);
         block.refresh();
     });
     if (withCode && info.src) {
@@ -2727,6 +2745,20 @@ SpriteMorph.prototype.newPrimitivesSince = function (version) {
             'reportEnvironment'
         );
     }
+    if (version < 10) {
+        selectors.push(
+            'reportNewCostumeSkewed'
+        );
+    }
+    // 10.1: no new primitives
+    if (version < 10.2) {
+        selectors.push(
+            'receiveSlotEvent',
+            'doSetSlot'
+        );
+    }
+    // 10.3: no new primitives
+
     return selectors;
 };
 
@@ -2811,6 +2843,8 @@ SpriteMorph.prototype.blockAlternatives = {
         ['doForEach', 2]],
     doFor: [['doForever', -3], ['doRepeat', -2], ['doUntil', -2],
         ['doForEach', -1]],
+    receiveCondition: ['receiveConditionEvent'],
+    receiveConditionEvent: ['receiveCondition'],
     // doRun: ['fork'],
     // fork: ['doRun'],
 
@@ -3651,7 +3685,7 @@ SpriteMorph.prototype.blockTemplates = function (
         blocks.push(block('receiveGo'));
         blocks.push(block('receiveKey'));
         blocks.push(block('receiveInteraction'));
-        blocks.push(block('receiveCondition'));
+        blocks.push(block('receiveConditionEvent'));
         blocks.push('-');
         blocks.push(block('receiveMessage'));
         blocks.push(block('doBroadcast'));
@@ -3697,6 +3731,9 @@ SpriteMorph.prototype.blockTemplates = function (
         blocks.push(block('doSetBlockAttribute'));
         blocks.push(block('reportBlockAttribute'));
         blocks.push(block('reportEnvironment'));
+        blocks.push('-');
+        blocks.push(block('receiveSlotEvent'));
+        blocks.push(block('doSetSlot'));
 
         // for debugging: ///////////////
         if (devMode) {
@@ -7878,18 +7915,19 @@ SpriteMorph.prototype.allHatBlocksForUserEdit = function (spriteName) {
 };
 
 SpriteMorph.prototype.hasGenericHatBlocks = function () {
+    var generics = ['receiveCondition', 'receiveConditionEvent'];
     return this.scripts.children.some(morph =>
-        morph.selector === 'receiveCondition'
+        morph instanceof CustomHatBlockMorph ||
+            generics.includes(morph.selector)
     );
 };
 
 SpriteMorph.prototype.allGenericHatBlocks = function () {
-    return this.scripts.children.filter(morph => {
-        if (morph.selector) {
-            return morph.selector === 'receiveCondition';
-        }
-        return false;
-    });
+    var generics = ['receiveCondition', 'receiveConditionEvent'];
+    return this.scripts.children.filter(morph =>
+        morph instanceof CustomHatBlockMorph ||
+            generics.includes(morph.selector)
+    );
 };
 
 SpriteMorph.prototype.allScripts = function () {
@@ -8386,7 +8424,9 @@ SpriteMorph.prototype.usesBlockInstance = function (
 
     if (definition.isGlobal && !skipGlobals) {
         inDefinitions = [];
-        this.parentThatIsA(StageMorph).globalBlocks.forEach(def => {
+        this.parentThatIsA(StageMorph).globalBlocks.concat(
+            this.customizedPrimitives()
+        ).forEach(def => {
             if (forRemoval && (definition === def)) {return; }
             if (skipBlocks && contains(skipBlocks, def)) {return; }
             if (def.body) {
@@ -10217,16 +10257,33 @@ StageMorph.prototype.step = function () {
     }
 
     // manage threads
-    if (this.enableCustomHatBlocks) {
-        this.stepGenericConditions();
-    }
     if (this.isFastTracked && this.threads.processes.length) {
         while (this.isFastTracked && (Date.now() - this.lastTime) < 15) {
+            this.stepGenericConditions();
             this.threads.step(); // approx. 67 fps
+
+            // double-clock event hats:
+            if (this.enableCustomHatBlocks &&
+                !this.threads.pauseCustomHatBlocks &&
+                !Process.prototype.enableSingleStepping
+            ) {
+                this.stepGenericConditions(null, true); // only events
+                this.threads.removeTerminatedProcesses();
+            }
         }
         this.changed();
     } else {
+        this.stepGenericConditions();
         this.threads.step();
+
+        // double-clock event hats:
+        if (this.enableCustomHatBlocks &&
+            !this.threads.pauseCustomHatBlocks &&
+            !Process.prototype.enableSingleStepping
+        ) {
+            this.stepGenericConditions(null, true); // only events
+            this.threads.removeTerminatedProcesses();
+        }
 
         // single-stepping hook:
         if (this.threads.wantsToPause) {
@@ -10280,14 +10337,31 @@ StageMorph.prototype.updateProjection = function () {
     this.changed();
 };
 
-StageMorph.prototype.stepGenericConditions = function (stopAll) {
+StageMorph.prototype.stepGenericConditions = function (stopAll, onlyEvents) {
     var hatCount = 0,
         ide;
+    if (!this.enableCustomHatBlocks) {return; }
     this.children.concat(this).forEach(morph => {
         if (isSnapObject(morph)) {
             morph.allGenericHatBlocks().forEach(block => {
                 hatCount += 1;
-                this.threads.doWhen(block, morph, stopAll);
+                if (!this.threads.pauseCustomHatBlocks) {
+                    if (onlyEvents && block.isRuleHat()) {
+                        return;
+                    }
+                    this.threads.startProcess (
+                        block,
+                        morph, // receiver
+                        true, // isThreadSafe
+                        null, // exportResult
+                        null, // callback
+                        null, // isClicked
+                        true, // rightAway
+                        null, // atomic
+                        null, // variables
+                        true // no halo
+                    );
+                }
             });
         }
     });
@@ -10816,7 +10890,7 @@ StageMorph.prototype.blockTemplates = function (
         blocks.push(block('receiveGo'));
         blocks.push(block('receiveKey'));
         blocks.push(block('receiveInteraction'));
-        blocks.push(block('receiveCondition'));
+        blocks.push(block('receiveConditionEvent'));
         blocks.push('-');
         blocks.push(block('receiveMessage'));
         blocks.push(block('doBroadcast'));
@@ -10860,6 +10934,9 @@ StageMorph.prototype.blockTemplates = function (
         blocks.push(block('doSetBlockAttribute'));
         blocks.push(block('reportBlockAttribute'));
         blocks.push(block('reportEnvironment'));
+        blocks.push('-');
+        blocks.push(block('receiveSlotEvent'));
+        blocks.push(block('doSetSlot'));
 
         // for debugging: ///////////////
         if (this.world().isDevMode) {
@@ -13500,7 +13577,7 @@ Sound.prototype.toDataURL = function () {
 // Note instance creation
 
 function Note(pitch) {
-    this.pitch = pitch === 0 ? 0 : pitch || 69;
+    this.pitch = pitch === 0 ? 0 : Math.min(Math.max(pitch, 0), 144) || 69;
     this.frequency = null; // alternative for playing a non-note frequency
     this.setupContext();
     this.oscillator = null;
