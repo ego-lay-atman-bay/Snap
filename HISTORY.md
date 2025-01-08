@@ -2,6 +2,70 @@
 
 ## in development:
 
+## 10.3.6:
+* **Notable Fixes:**
+    * Previewing a library in the import dialog no longer accidentally overwrites palette primitives
+* **Translation Updates:**
+    * Catalan, thanks, Joan!
+
+### 2024-12-30
+* new dev version
+* tweaked versioning
+* tweaked library preview
+* updated version
+* Catalan translation update, thanks, Joan!
+* prepared v10.3.6 patch
+
+## 10.3.5:
+* **Notable Fixes:**
+    * disabled some theoretical albeit unsupported programmatical variadic slot settings
+
+### 2024-12-23
+* threads: added some guards against assholes
+* prepared v10.3.5 patch
+
+## 10.3.4:
+* **Notable Changes:**
+    * added "compress ... by ..." reporter to the Pixels library
+    * added "stretch" and "compress" reporters to the AudioComp library
+* **Translation Updates:**
+    * German (parts of the Pixels and AudioComp libraries)
+
+### 2024-12-18
+* byob: tweaked dropdown-menu parser
+* added "compress ... by ..." reporter to the pixels library
+* added "stretch" and "compress" reporters to the AudioComp library
+* updated German translation for data streching / compression library blocks
+* prepared v10.3.4 patch
+
+## 10.3.3:
+* **Translation Updates:**
+    * Japanese and Spanish
+
+### 2024-12-12
+* Japanese and Spanish translation fixes
+* prepared v10.3.3 patch
+
+## 10.3.2:
+* **Translation Updates:**
+    * Japanese katagana and Hiragana, thanks, @fumiyasu-aizu!
+    * Simplified Chinese, thanks, @moodykeke!
+
+### 2024-12-09
+* Japanese katagana and Hiragana translation updates, thanks, @fumiyasu-aizu!
+* Simplified Chinese translation update, thanks, @moodykeke!
+* prepared v10.3.2 patch
+
+## 10.3.1:
+* **Notable Fixes:**
+    * fixed c-slot rendering for hat blocks
+    * loosened type assertions to include hat blocks in some script related extensions
+
+### 2024-12-07
+* blocks, santa: fixed c-slot rendering for hat blocks
+* extensions: loosened type assertions to include hat blocks in some script related extensions
+* prepared v10.3.1 patch
+
 ## 10.3.0:
 * **New Features:**
     1. Custom Hat Blocks

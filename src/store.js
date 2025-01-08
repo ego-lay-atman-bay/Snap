@@ -57,13 +57,13 @@ BlockMorph, ArgMorph, InputSlotMorph, TemplateSlotMorph, CommandSlotMorph,
 FunctionSlotMorph, MultiArgMorph, ColorSlotMorph, nop, CommentMorph, isNil,
 localize, SVG_Costume, MorphicPreferences, Process, isSnapObject, Variable,
 SyntaxElementMorph, BooleanSlotMorph, normalizeCanvas, contains, Scene,
-Project, CustomHatBlockMorph*/
+Project, CustomHatBlockMorph, SnapVersion*/
 
 /*jshint esversion: 11*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.store = '2024-November-25';
+modules.store = '2024-December-30';
 
 // XML_Serializer ///////////////////////////////////////////////////////
 /*
@@ -259,7 +259,9 @@ SnapSerializer.uber = XML_Serializer.prototype;
 
 // SnapSerializer constants:
 
-SnapSerializer.prototype.app = 'Snap! 10.1-dev, https://snap.berkeley.edu';
+SnapSerializer.prototype.app = 'Snap! ' +
+    SnapVersion +
+    ', https://snap.berkeley.edu';
 
 SnapSerializer.prototype.thumbnailSize = new Point(160, 120);
 
@@ -698,19 +700,31 @@ SnapSerializer.prototype.loadScene = function (xmlNode, appVersion, remixID) {
     return scene.initialize();
 };
 
-SnapSerializer.prototype.loadBlocks = function (xmlString, targetStage) {
-    // public - answer a new dictionary of custom block definitions
+SnapSerializer.prototype.loadBlocks = function (
+    xmlString,
+    targetStage,
+    forPreview
+) { // public - answer a new dictionary of custom block definitions
     // represented by the given XML String
+    // forPreview is an optional Boolean flag that prevents customized
+    // primitives from being installed when merely previewing the blocks
+    // of a library before actually importing them
     var model = this.parse(xmlString);
     if (+model.attributes.version > this.version) {
         throw 'Module uses newer version of Serializer';
     }
-    return this.loadBlocksModel(model, targetStage);
+    return this.loadBlocksModel(model, targetStage, forPreview);
 };
 
-SnapSerializer.prototype.loadBlocksModel = function (model, targetStage) {
-    // public - answer a new dictionary of custom block definitions
-    // represented by the given already parsed XML Node
+SnapSerializer.prototype.loadBlocksModel = function (
+    model,
+    targetStage,
+    forPreview
+) { // public - answer a new dictionary of custom block definitions
+    // represented by the given already parsed XML Node,
+    // forPreview is an optional Boolean flag that prevents customized
+    // primitives from being installed when merely previewing the blocks
+    // of a library before actually importing them
     var stage, varModel, varFrame, localVarFrame;
 
     this.scene = new Scene();
@@ -731,7 +745,7 @@ SnapSerializer.prototype.loadBlocksModel = function (model, targetStage) {
         this.populateCustomBlocks( stage, model.local, false); // not global
     }
     model.primitives = model.childNamed('primitives');
-    if (model.primitives) {
+    if (model.primitives && !forPreview) {
         this.loadCustomizedPrimitives(stage, model.primitives, targetStage);
     }
     varModel = model.childNamed('variables');

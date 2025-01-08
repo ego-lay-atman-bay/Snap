@@ -87,11 +87,11 @@ HatBlockMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.gui = '2024-December-05';
+modules.gui = '2024-December-30';
 
 // Declarations
 
-var SnapVersion = '10.3.0';
+var SnapVersion = '10.3.6';
 
 var IDE_Morph;
 var ProjectDialogMorph;
@@ -10385,7 +10385,8 @@ LibraryImportDialogMorph.prototype.buildFilterField = function () {
         var text = this.getValue().toLowerCase();
 
         myself.filteredLibrariesList =
-            myself.librariesData.filter(library => librarySearcText(library).indexOf(text) > -1);
+            myself.librariesData.filter(library =>
+                librarySearcText(library).indexOf(text) > -1);
 
         if (myself.filteredLibrariesList.length === 0) {
             myself.filteredLibrariesList.push({
@@ -10485,10 +10486,12 @@ LibraryImportDialogMorph.prototype.installLibrariesList = function () {
                 this.ide.resourceURL('libraries', fileName),
                 libraryXML => {
                     let serializer = this.ide.serializer,
-                        palette = serializer.parse(libraryXML).childNamed('palette');
+                        palette = serializer.parse(
+                            libraryXML
+                        ).childNamed('palette');
                     this.cacheLibrary(
                         fileName,
-                        serializer.loadBlocks(libraryXML),
+                        serializer.loadBlocks(libraryXML, null, true),
                         palette ? serializer.loadPalette(palette) : {}
                     );
                     this.displayBlocks(fileName);
@@ -10498,7 +10501,6 @@ LibraryImportDialogMorph.prototype.installLibrariesList = function () {
     };
 
     this.body.add(this.listField);
-
     this.fixLayout();
 };
 
@@ -10546,7 +10548,7 @@ LibraryImportDialogMorph.prototype.fixLayout = function () {
         this.body.setExtent(new Point(
             this.width() - this.padding * 2,
             this.height()
-                - this.padding * 4 // top, bottom, filterfield and button padding.
+                - this.padding * 4 // top, bottom, filterfield, button padding
                 - titleHeight
                 - this.buttons.height()
         ));
@@ -10577,7 +10579,10 @@ LibraryImportDialogMorph.prototype.fixLayout = function () {
         ));
         this.palette.setExtent(new Point(
             this.body.width() - this.listField.width() - thin,
-            this.body.height() - this.filterField.height() - this.notesField.height() - thin
+            this.body.height() -
+                this.filterField.height() -
+                this.notesField.height() -
+                thin
         ));
 
         this.palette.setPosition(this.listField.topRight().add(
@@ -10610,7 +10615,11 @@ LibraryImportDialogMorph.prototype.hasCached = function (key) {
     return this.libraryCache.hasOwnProperty(key);
 };
 
-LibraryImportDialogMorph.prototype.cacheLibrary = function (key, blocks, palette) {
+LibraryImportDialogMorph.prototype.cacheLibrary = function (
+    key,
+    blocks,
+    palette
+) {
     this.libraryCache.set(key, { blocks, palette });
 };
 
@@ -10632,6 +10641,12 @@ LibraryImportDialogMorph.prototype.importLibrary = function () {
     // restore captured user-blocks categories
     SpriteMorph.prototype.customCategories = this.originalCategories;
 
+    /*
+    // importing previously cached blocks is disabled because
+    // of customized primitives, which aren't installed for caching
+    // to prevent polluting the project's palette
+    // code retained for reference, -jens (01/2025)
+
     if (this.hasCached(selectedLibrary)) {
         this.cachedLibrary(selectedLibrary).forEach(def => {
             def.receiver = ide.stage;
@@ -10652,6 +10667,17 @@ LibraryImportDialogMorph.prototype.importLibrary = function () {
             }
         );
     }
+    */
+
+    ide.showMessage(`${localize('Loading')} ${libraryName}`);
+    ide.getURL(
+        ide.resourceURL('libraries', selectedLibrary),
+        libraryText => {
+            ide.droppedText(libraryText, libraryName);
+            this.isLoadingLibrary = true;
+        }
+    );
+
     ide.refreshIDE();
 };
 
