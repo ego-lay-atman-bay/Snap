@@ -7,7 +7,7 @@
     written by Jens Mönig and Brian Harvey
     jens@moenig.org, bh@cs.berkeley.edu
 
-    Copyright (C) 2024 by Jens Mönig and Brian Harvey
+    Copyright (C) 2025 by Jens Mönig and Brian Harvey
 
     This file is part of Snap!.
 
@@ -65,7 +65,7 @@ Context, ZERO, WHITE, ReadStream, Process*/
 
 // Global settings /////////////////////////////////////////////////////
 
-modules.lists = '2024-November-14';
+modules.lists = '2025-February-27';
 
 var List;
 var ListWatcherMorph;
@@ -814,7 +814,9 @@ List.prototype.reshape = function (dimensions) {
     // if no dimensions, report a scalar
     if (dim.isEmpty()) {return src[0]; }
 
-    size = dim.itemsArray().reduce((a, b) => a * b);
+    size = Math.ceil(
+        dim.itemsArray().reduce((a, b) => Math.ceil(a) * Math.ceil(b))
+    );
     if (size === Infinity) {return new List(); }
 
     // make sure the items count matches the specified target dimensions
@@ -871,7 +873,7 @@ List.prototype.folded = function (dimensions) {
         return this.map(e => e);
     }
     for (i = len; i > 1; i -= 1) {
-        trg = trg.asChunksOf(dimensions.at(i));
+        trg = trg.asChunksOf(Math.ceil(dimensions.at(i)));
     }
     return trg;
 };
@@ -1175,11 +1177,13 @@ List.prototype.asTXT = function () {
     return this.itemsArray().join('\n');
 };
 
-List.prototype.canBeWords = function () {
+List.prototype.canBeWords = function (already = []) {
     return this.itemsArray().every(item =>
         isString(item) ||
         (typeof item === 'number') ||
-        (item instanceof List && item.canBeWords())
+        (item instanceof List &&
+            !already.includes(item) &&
+            item.canBeWords(already.concat([item]))) // detect circularity
     );
 };
 
@@ -1365,12 +1369,14 @@ List.prototype.canBeCSV = function () {
     );
 };
 
-List.prototype.canBeJSON = function () {
+List.prototype.canBeJSON = function (already = []) {
     return this.itemsArray().every(value => !isNaN(+value) ||
         isString(value) ||
         value === true ||
         value === false ||
-        (value instanceof List && value.canBeJSON())
+        (value instanceof List &&
+            !already.includes(value) &&
+            value.canBeJSON(already.concat([value]))) // detect circularity
     );
 };
 

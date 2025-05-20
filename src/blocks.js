@@ -9,7 +9,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2024 by Jens Mönig
+    Copyright (C) 2025 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -162,7 +162,7 @@ CustomHatBlockMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.blocks = '2024-December-07';
+modules.blocks = '2025-March-30';
 
 var SyntaxElementMorph;
 var BlockMorph;
@@ -311,7 +311,8 @@ SyntaxElementMorph.prototype.labelParts = {
         Input slots
 
         type: 'input'
-        tags: 'numeric alphanum read-only unevaluated landscape static'
+        tags: 'numeric numstring alphanum read-only unevaluated landscape
+               static'
         menu: dictionary or selector
         react: selector
         value: string, number or Array for localized strings / constants
@@ -322,6 +323,10 @@ SyntaxElementMorph.prototype.labelParts = {
     '%n': {
         type: 'input',
         tags: 'numeric'
+    },
+    '%ns': {
+        type: 'input',
+        tags: 'numstring'
     },
     '%txt': {
         type: 'input',
@@ -1970,7 +1975,8 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
 
         // apply the tags
         // ---------------
-        // input: numeric, alphanum, read-only, unevaluated, landscape, static
+        // input: numeric, numstring, alphanum, read-only, unevaluated,
+        //        landscape, static
         // text entry: monospace
         // boolean: unevaluated, static
         // symbol: static, fading, protected
@@ -1994,6 +2000,10 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
                     case 'alphanum':
                         part.isNumeric = true;
                         part.isAlphanumeric = true;
+                        break;
+                    case 'numstring':
+                        part.isNumeric = true;
+                        part.evaluateAsString = true;
                         break;
                     case 'read-only':
                         part.isReadOnly = true;
@@ -2732,6 +2742,7 @@ SyntaxElementMorph.prototype.showBubble = function (value, exportPic, target) {
 };
 
 SyntaxElementMorph.prototype.exportPictureWithResult = function (aBubble) {
+    if (this.removeHighlight) {this.removeHighlight(); }
     var ide = this.parentThatIsA(IDE_Morph) ||
             this.parentThatIsA(BlockEditorMorph).target.parentThatIsA(
                 IDE_Morph
@@ -3057,6 +3068,7 @@ BlockMorph.prototype.init = function () {
     this.instantiationSpec = null; // spec to set upon fullCopy() of template
     this.category = null; // for zebra coloring (non persistent)
     this.isCorpse = false; // marked for deletion fom a custom block definition
+    this.afterglow = 0; // frame count-down for displaying the "active" halo
 
     BlockMorph.uber.init.call(this);
     this.color = new Color(102, 102, 102);
@@ -3781,11 +3793,12 @@ BlockMorph.prototype.userMenu = function () {
     ) {
         return menu;
     }
-
-    if (!hasLine) {menu.addLine(); }
-    rcvr = rcvr || this.scriptTarget(true);
-    if (rcvr && !rcvr.parentThatIsA(IDE_Morph).config.noRingify) {
-        menu.addItem("ringify", 'ringify');
+    if (!(top instanceof PrototypeHatBlockMorph)) {
+        if (!hasLine) {menu.addLine(); }
+        rcvr = rcvr || this.scriptTarget(true);
+        if (rcvr && !rcvr.parentThatIsA(IDE_Morph).config.noRingify) {
+            menu.addItem("ringify", 'ringify');
+        }
     }
     if (StageMorph.prototype.enableCodeMapping) {
         menu.addLine();
@@ -5469,6 +5482,7 @@ BlockMorph.prototype.removeHighlight = function () {
     if (highlight !== null) {
         this.fullChanged();
         this.removeChild(highlight);
+        this.afterglow = 0;
     }
     return highlight;
 };
@@ -8211,6 +8225,9 @@ RingMorph.prototype.render = function (ctx) {
 // RingMorph dragging and dropping
 
 RingMorph.prototype.rootForGrab = function () {
+    if (this.parent?.isTemplate) {
+        return this.parent;
+    }
     if (this.isDraggable) {
         return this;
     }
@@ -10960,6 +10977,7 @@ InputSlotMorph.prototype.init = function (
     this.choices = choiceDict || null; // object, function or selector
     this.oldContentsExtent = contents.extent();
     this.isNumeric = isNumeric || false;
+    this.evaluateAsString = false; // special case for RANDOM NUMBER reporter
     this.isAlphanumeric = false; // temporary override for allowing text
     this.isReadOnly = isReadOnly || false;
     this.minWidth = 0; // can be chaged for text-type inputs ("landscape")
@@ -12321,15 +12339,12 @@ InputSlotMorph.prototype.mappedCode = function () {
 // InputSlotMorph evaluating:
 
 InputSlotMorph.prototype.evaluate = function () {
-/*
-    answer my contents, which can be a "wish", i.e. a block that refers to
-    another sprite's local method, or a text string. If I am numerical convert
-    that string to a number. If the conversion fails answer the string
-    (e.g. for special choices like 'random', 'all' or 'last') otherwise
-    the numerical value.
-*/
-    var num, contents;
-
+    // answer my contents, which can be a "wish", i.e. a block that refers to
+    // another sprite's local method, or a text string. If I am numerical
+    // convert that string to a number. If the conversion fails answer the
+    // string (e.g. for special choices like 'random', 'all' or 'last')
+    // otherwise the numerical value.
+    var val, num;
  	if (this.selectedBlock) {
   		return this.selectedBlock;
   	}
@@ -12342,14 +12357,17 @@ InputSlotMorph.prototype.evaluate = function () {
     if (this.constant) {
         return this.constant;
     }
-    contents = this.contents();
-    if (this.isNumeric) {
-        num = parseFloat(contents.text || '0');
+    val = this.contents().text;
+    if (this.isNumeric &&
+        !this.isAlphanumeric &&
+        (!this.evaluateAsString || val === '')
+    ) {
+        num = +val;
         if (!isNaN(num)) {
             return num;
         }
     }
-    return contents.text;
+    return val;
 };
 
 InputSlotMorph.prototype.evaluateOption = function () {
@@ -16288,6 +16306,9 @@ CommentMorph.prototype.snap = function (hand) {
     scripts.clearDropInfo();
     target = scripts.closestBlock(this, hand);
     if (target !== null) {
+        if (this.block) {
+            this.block.comment = null;
+        }
         target.comment = this;
         this.block = target;
         if (this.snapSound) {
@@ -16306,7 +16327,6 @@ CommentMorph.prototype.snap = function (hand) {
     if (hand) {
         scripts.recordDrop(hand.grabOrigin);
     }
-
 };
 
 // CommentMorph sticking to blocks

@@ -8,7 +8,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2010-2024 by Jens Mönig
+    Copyright (C) 2010-2025 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -490,6 +490,19 @@
     event method has an additional optional parameter indicating the
     currently pressed mouse button, which is either 'left' or 'right'.
     You can use this to let users interact with 3D environments.
+
+    Mouse move and click events are only triggered when and as long as the
+    mouse pointer is within a morph's bounds. If you wish to confine and
+    retain mouse interaction to a particular morph while a mouse button is
+    pressed you can call the morph's
+    
+        lockMouseFocus()
+
+    method, preferrably in one of its mouseDown methods. Afterwards the
+    ensuing mouse events will be routed to the locked morph even after the
+    mouse pointer has left its bounds, and the mouseLeave event will not
+    occur until the mouse button is released again. This is useful for
+    creating sliders and handle widgets for resizing, moving, rotating etc.
 
     The
 
@@ -1338,7 +1351,7 @@
 
 /*jshint esversion: 11, bitwise: false*/
 
-var morphicVersion = '2024-October-09';
+var morphicVersion = '2025-March-20';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = true;
 
@@ -3879,6 +3892,7 @@ Morph.prototype.penTrails = function () {
     // obtained canvas will be around at the next display cycle,
     // so they might also wish to set the receiver's "isCachingImage"
     // property to "true".
+    this.isCachingImage = true;
     return this.getImage();
 };
 
@@ -4765,6 +4779,17 @@ Morph.prototype.escalateEvent = function (functionName, arg) {
     }
 };
 
+Morph.prototype.lockMouseFocus = function () {
+    // while the mouse button is pressed let me handle mouseMove events
+    // and the next mouseUp event, and don't fire the mouseLeave event.
+    // Use for widgets that are dragged around, e.g. resize handles,
+    // dials, sliders etc.
+    var hand = this.world().hand;
+    hand.inputTarget = this;
+    hand.clickTarget = this;
+    hand.mouseOverList = hand.mouseOverList.concat(this.allParents());
+};
+
 // Morph eval:
 
 Morph.prototype.evaluateString = function (code) {
@@ -4876,6 +4901,7 @@ HandleMorph.prototype.init = function (
     this.target = target || null;
     this.minExtent = new Point(minX || 0, minY || 0);
     this.inset = new Point(insetX || 0, insetY || insetX || 0);
+    this.offset = null;
     this.type =  type || 'resize'; // also: 'move', 'moveCenter', 'movePivot'
     this.isHighlighted = false;
     HandleMorph.uber.init.call(this);
@@ -5045,60 +5071,6 @@ HandleMorph.prototype.renderHandleOn = function (
     }
 };
 
-// HandleMorph stepping:
-
-HandleMorph.prototype.step = null;
-
-HandleMorph.prototype.mouseDownLeft = function (pos) {
-    var world = this.root(),
-        offset;
-
-    if (!this.target) {
-        return null;
-    }
-    if (this.type.indexOf('move') === 0) {
-        offset = pos.subtract(this.center());
-    } else {
-        offset = pos.subtract(this.bounds.origin);
-    }
-
-    this.step = () => {
-        var newPos, newExt;
-        if (world.hand.mouseButton) {
-            newPos = world.hand.bounds.origin.copy().subtract(offset);
-            if (this.type === 'resize') {
-                newExt = newPos.add(
-                    this.extent().add(this.inset)
-                ).subtract(this.target.bounds.origin);
-                newExt = newExt.max(this.minExtent);
-                this.target.setExtent(newExt);
-
-                this.setPosition(
-                    this.target.bottomRight().subtract(
-                        this.extent().add(this.inset)
-                    )
-                );
-            } else if (this.type === 'moveCenter') {
-                this.target.setCenter(newPos);
-            } else if (this.type === 'movePivot') {
-                this.target.setPivot(newPos);
-                this.setCenter(this.target.rotationCenter());
-            } else { // type === 'move'
-                this.target.setPosition(
-                    newPos.subtract(this.target.extent())
-                        .add(this.extent())
-                );
-            }
-        } else {
-            this.step = null;
-        }
-    };
-
-    if (!this.target.step) {
-        this.target.step = nop;
-    }
-};
-
 // HandleMorph dragging and dropping:
 
 HandleMorph.prototype.rootForGrab = function () {
@@ -5115,6 +5087,47 @@ HandleMorph.prototype.mouseEnter = function () {
 HandleMorph.prototype.mouseLeave = function () {
     this.isHighlighted = false;
     this.changed();
+};
+
+HandleMorph.prototype.mouseDownLeft = function (pos) {
+    if (!this.target) {
+        return null;
+    }
+    if (this.type.indexOf('move') === 0) {
+        this.offset = pos.subtract(this.center());
+    } else {
+        this.offset = pos.subtract(this.bounds.origin);
+    }
+    this.lockMouseFocus();
+};
+
+HandleMorph.prototype.mouseMove = function (pos) {
+    var newPos, newExt;
+
+    newPos = pos.subtract(this.offset);
+    if (this.type === 'resize') {
+        newExt = newPos.add(
+            this.extent().add(this.inset)
+        ).subtract(this.target.bounds.origin);
+        newExt = newExt.max(this.minExtent);
+        this.target.setExtent(newExt);
+
+        this.setPosition(
+            this.target.bottomRight().subtract(
+                this.extent().add(this.inset)
+            )
+        );
+    } else if (this.type === 'moveCenter') {
+        this.target.setCenter(newPos);
+    } else if (this.type === 'movePivot') {
+        this.target.setPivot(newPos);
+        this.setCenter(this.target.rotationCenter());
+    } else { // type === 'move'
+        this.target.setPosition(
+            newPos.subtract(this.target.extent())
+                .add(this.extent())
+        );
+    }
 };
 
 // HandleMorph menu:
@@ -6031,44 +6044,14 @@ BoxMorph.prototype.render = function (ctx) {
 BoxMorph.prototype.outlinePath = function (ctx, corner, inset) {
     var w = this.width(),
         h = this.height(),
-        radius = Math.min(corner, (Math.min(w, h) - inset) / 2),
-        offset = radius + inset;
+        radius = Math.min(corner, (Math.min(w, h) - inset) / 2);
 
-    // top left:
-    ctx.arc(
-        offset,
-        offset,
-        radius,
-        radians(-180),
-        radians(-90),
-        false
-    );
-    // top right:
-    ctx.arc(
-        w - offset,
-        offset,
-        radius,
-        radians(-90),
-        radians(-0),
-        false
-    );
-    // bottom right:
-    ctx.arc(
-        w - offset,
-        h - offset,
-        radius,
-        radians(0),
-        radians(90),
-        false
-    );
-    // bottom left:
-    ctx.arc(
-        offset,
-        h - offset,
-        radius,
-        radians(90),
-        radians(180),
-        false
+    ctx.roundRect(
+        inset,
+        inset,
+        w - (inset * 2),
+        h - (inset * 2),
+        radius
     );
 };
 
@@ -6735,23 +6718,17 @@ DialMorph.prototype.render = function (ctx) {
     ctx.fill();
 };
 
-// DialMorph stepping:
-
-DialMorph.prototype.step = null;
+// DialMorph events:
 
 DialMorph.prototype.mouseDownLeft = function (pos) {
-    var world = this.root();
+    this.lockMouseFocus();
+};
 
-    this.step = () => {
-        if (world.hand.mouseButton) {
-            this.setValue(
-            	this.getValueOf(world.hand.bounds.origin),
-             	world.currentKey !== 16 // snap to tick
-            );
-        } else {
-            this.step = null;
-        }
-    };
+DialMorph.prototype.mouseMove = function (pos) {
+    this.setValue(
+        this.getValueOf(pos),
+        this.world().currentKey !== 16 // snap to tick
+    );
 };
 
 // DialMorph menu:
@@ -6843,75 +6820,15 @@ CircleBoxMorph.prototype.autoOrientation = function () {
 };
 
 CircleBoxMorph.prototype.render = function (ctx) {
-    var w = this.width(),
-        h = this.height(),
-        radius;
-
     if (this.autoOrient) {
         this.autoOrientation();
     }
+    var w = this.width(),
+        h = this.height(),
+        radius = this.orientation === 'vertical' ? w / 2 : h / 2;
 
-    if (this.orientation === 'vertical') {
-        radius = w / 2;
-        ctx.beginPath();
-
-        // top semi-circle
-        ctx.arc(
-            radius,
-            radius,
-            radius,
-            radians(180),
-            radians(0),
-            false
-        );
-
-        // right line
-        ctx.lineTo(
-            w,
-            h - radius
-        );
-
-        // bottom semi-circle
-        ctx.arc(
-            radius,
-            h - radius,
-            radius,
-            radians(0),
-            radians(180),
-            false
-        );
-
-    } else {
-        radius = h / 2;
-        ctx.beginPath();
-
-        // left semi-circle
-        ctx.arc(
-            radius,
-            radius,
-            radius,
-            radians(90),
-            radians(-90),
-            false
-        );
-
-        // top line
-        ctx.lineTo(
-            w - radius,
-            0
-        );
-
-        // right semi-circle
-        ctx.arc(
-            w - radius,
-            radius,
-            radius,
-            radians(-90),
-            radians(90),
-            false
-        );
-    }
-    ctx.closePath();
+    ctx.beginPath();
+    ctx.roundRect(0, 0, w, h, radius);
     ctx.fillStyle = this.color.toString();
     ctx.fill();
 };
@@ -7142,9 +7059,9 @@ SliderButtonMorph.prototype.mouseClickLeft = function () {
     this.rerender();
 };
 
-SliderButtonMorph.prototype.mouseMove = function () {
-    // prevent my parent from getting picked up
-    nop();
+SliderButtonMorph.prototype.mouseMove = function (pos) {
+    // delegate event to the slider
+    this.escalateEvent('mouseMove', pos);
 };
 
 // SliderMorph ///////////////////////////////////////////////////
@@ -7448,49 +7365,43 @@ SliderMorph.prototype.numericalSetters = function () {
     return list;
 };
 
-// SliderMorph stepping:
-
-SliderMorph.prototype.step = null;
+// SliderMorph events:
 
 SliderMorph.prototype.mouseDownLeft = function (pos) {
-    var world;
-
-    if (!this.button.bounds.containsPoint(pos)) {
-        this.offset = new Point(); // return null;
-    } else {
+    if (this.button.bounds.containsPoint(pos)) {
         this.offset = pos.subtract(this.button.bounds.origin);
+    } else {
+        this.offset = new Point();
+        this.button.userState = 'pressed';
+        this.button.rerender();
     }
-    world = this.root();
+    this.button.lockMouseFocus();
+    this.mouseMove(pos);
+};
 
-    this.step = () => {
-        var mousePos, newX, newY;
-        if (world.hand.mouseButton) {
-            mousePos = world.hand.bounds.origin;
-            if (this.orientation === 'vertical') {
-                newX = this.button.bounds.origin.x;
-                newY = Math.max(
-                    Math.min(
-                        mousePos.y - this.offset.y,
-                        this.bottom() - this.button.height()
-                    ),
-                    this.top()
-                );
-            } else {
-                newY = this.button.bounds.origin.y;
-                newX = Math.max(
-                    Math.min(
-                        mousePos.x - this.offset.x,
-                        this.right() - this.button.width()
-                    ),
-                    this.left()
-                );
-            }
-            this.button.setPosition(new Point(newX, newY));
-            this.updateValue();
-        } else {
-            this.step = null;
-        }
-    };
+SliderMorph.prototype.mouseMove = function (pos) {
+    var newX, newY;
+    if (this.orientation === 'vertical') {
+        newX = this.button.bounds.origin.x;
+        newY = Math.max(
+            Math.min(
+                pos.y - this.offset.y,
+                this.bottom() - this.button.height()
+            ),
+            this.top()
+        );
+    } else {
+        newY = this.button.bounds.origin.y;
+        newX = Math.max(
+            Math.min(
+                pos.x - this.offset.x,
+                this.right() - this.button.width()
+            ),
+            this.left()
+        );
+    }
+    this.button.setPosition(new Point(newX, newY));
+    this.updateValue();
 };
 
 // MouseSensorMorph ////////////////////////////////////////////////////
@@ -11286,6 +11197,8 @@ HandMorph.prototype.init = function (aWorld) {
     this.mouseOverList = [];
     this.mouseOverBounds = [];
     this.morphToGrab = null;
+    this.inputTarget = null;
+    this.clickTarget = null;
     this.grabPosition = null;
     this.grabOrigin = null;
     this.temporaries = [];
@@ -11494,8 +11407,11 @@ HandMorph.prototype.processMouseDown = function (event) {
     if (this.children.length !== 0) {
         this.drop();
         this.mouseButton = null;
+        this.inputTarget = null;
+        this.clickTarget = null;
     } else {
         morph = this.morphAtPointer();
+        this.clickTarget = morph;
         if (this.world.activeMenu) {
             if (!contains(
                     morph.allParents(),
@@ -11512,7 +11428,9 @@ HandMorph.prototype.processMouseDown = function (event) {
             }
         }
         if (this.world.cursor) {
-            if (morph !== this.world.cursor.target) {
+            if (morph !== this.world.cursor.target &&
+                    !morph.parentThatIsA(MenuItemMorph)
+            ) {
                 this.world.stopEditing();
             }
         }
@@ -11579,11 +11497,10 @@ HandMorph.prototype.processTouchEnd = function (event) {
 };
 
 HandMorph.prototype.processMouseUp = function () {
-    var morph = this.morphAtPointer(),
+    var morph = this.inputTarget || this.morphAtPointer(),
         context,
         contextMenu,
         expectedClick;
-
     this.destroyTemporaries();
     if (this.children.length !== 0) {
         this.drop();
@@ -11608,9 +11525,19 @@ HandMorph.prototype.processMouseUp = function () {
         while (!morph[expectedClick]) {
             morph = morph.parent;
         }
-        morph[expectedClick](this.bounds.origin);
+        if (this.clickTarget && this.clickTarget.allParents().includes(morph)) {
+            morph[expectedClick](this.bounds.origin);
+            if (this.inputTarget &&
+                !this.inputTarget.bounds.containsPoint(this.bounds.origin) &&
+                this.inputTarget.mouseLeave
+            ) {
+                this.inputTarget.mouseLeave();
+            }
+        }
     }
     this.mouseButton = null;
+    this.inputTarget = null;
+    this.clickTarget = null;
 };
 
 HandMorph.prototype.processDoubleClick = function () {
@@ -11646,7 +11573,9 @@ HandMorph.prototype.processMouseMove = function (event) {
     this.setPosition(pos);
 
     // determine the new mouse-over-list:
-    mouseOverNew = this.morphAtPointer().allParents();
+    mouseOverNew = this.morphAtPointer().allParents().concat(
+        this.inputTarget ? this.inputTarget.allParents() : []
+    );
     mouseOverBoundsNew = mouseOverNew.filter(m => m.isVisible &&
         m.visibleBounds().containsPoint(this.bounds.origin) &&
             !m.holes.some(any =>
@@ -11654,9 +11583,12 @@ HandMorph.prototype.processMouseMove = function (event) {
     );
 
     if (!this.children.length && this.mouseButton) {
-        topMorph = this.morphAtPointer();
+        topMorph = this.inputTarget || this.morphAtPointer();
         morph = topMorph.rootForGrab();
-        if (topMorph.mouseMove) {
+        if (this.clickTarget &&
+            this.clickTarget.allParents().includes(topMorph) &&
+            topMorph.mouseMove
+        ) {
             topMorph.mouseMove(pos, this.mouseButton);
             if (this.mouseButton === 'right') {
                 this.contextMenuEnabled = false;

@@ -2,6 +2,282 @@
 
 ## in development:
 
+## 10.7.1:
+* **Notable Fixes:**
+    * fixed a comment re-drop bug, see https://forum.snap.berkeley.edu/t/snap-just-broke-due-to-undrop-comment/19206
+    * fixed a ring-slot slide-back bug, prevent ring-slots from being dragged off template blocks in the palette, see https://forum.snap.berkeley.edu/t/look-at-my-video-is-a-bug/19211
+    * fixed a launch-list-item bug, see https://forum.snap.berkeley.edu/t/launching-from-an-alphanumeric-index-crashes/19210
+
+### 2025-03-30
+* blocks: fixed a comment re-drop bug, see https://forum.snap.berkeley.edu/t/snap-just-broke-due-to-undrop-comment/19206
+* blocks: fixed a ring-slot slide-back bug, prevent ring-slots from being dragged off template blocks in the palette, see https://forum.snap.berkeley.edu/t/look-at-my-video-is-a-bug/19211
+* threads: fixed a launch-list-item bug, see https://forum.snap.berkeley.edu/t/launching-from-an-alphanumeric-index-crashes/19210
+* prepared v10.7.1 patch
+
+## 10.7.0:
+* **New Features:**
+    * "Afterglow blocks" setting - lets you specify the number of frames running scripts keep their halo after their process has terminated
+* **Translation Updates:**
+    * German
+
+### 2025-03-24
+* new dev version
+* gui, threads: new "Afterglow blocks" setting lets you specify the number of frames running scripts keep their halo after their process has terminated
+* German translation update 
+* prepared v10.7 minor release
+
+## 10.6.3:
+* **Notable Fixes:**
+    * thread halos: fixed / added "afterglow" for generic conditions
+
+### 2025-03-23
+* new dev version
+* threads, objects: "afterglow" for generic conditions - display halos around scripts that have run as generic conditions, even if they have terminated within the same frame
+* prepared v10.6.3 patch
+
+## 10.6.2:
+* **Notable Fixes:**
+    * thread halos: "afterglow" - (again) display halos around running scripts for a couple of frames after their process has terminated (except for generic / custom event hats)
+    * fixed STRETCH COSTUME reporter to again also accept a 4-column list of pixel data 
+
+### 2025-03-21
+* new dev version
+* blocks, objects, threads: "afterglow" - display halos around running scripts for a couple of frames after their process has terminated (except for generic / custom event hats)
+* threads: fixed STRETCH COSTUME reporter to again also accept a 4-column list of pixel data 
+* prepared v10.6.2 patch
+
+## 10.6.1:
+* **Notable Changes:**
+    * improved user interaction scenarios for buttons, handles and sliders
+* **Notable Fixes:**
+    * MQTT Extension: fixed base64 reporter, thanks, Simon!
+* **Documentation Updates:**
+    * updated Morphic documentation for the new lockMouseFocus() mechanism
+    * moved Morphic documentation from src to docs folder
+
+### 2025-03-20
+* morphic: prevent locked inputTargets from firing mouseEnter events
+* MQTT extension base64 update, thanks, Simon!
+* prepared v10.6.1 patch
+
+### 2025-03-19
+* morphic: added lockMouseFocus() mechanism and the concept of a clickTarget, improved user interaction scenarios for buttons, handles and sliders 
+* gui: improved user interaction scenarios for buttons, handles and sliders
+* updated morphic documentation
+* updated dev version
+
+### 2025-03-17
+* new dev version
+* morphic: simplified BoxMorph & CircleBoxMorph outlinePath rendering with new Canvas roundRect() primitive
+* objects, widgets: simplified DialogBoxMorph and StagePicker outlinePath rendering with new Canvas roundRect primitive
+
+## 10.6.0:
+* **New Features:**
+    * new "recognize speech" reporter block in the "Text to Speech, Voice to Text" library
+    * new "tts_recognize" extension block
+* **Notable Changes:**
+    * renamed the "Text to Speech" library into "Text to Speech, Voice to Text"
+    * MQTT library update with base64 encoding, thanks, Xavier and Simon!
+* **Notable Fixes:**
+    * fixed a costume-loss issue for multi-scene projects stored in the cloud
+    * reduced processor load when idling
+* **Translation Updates:**
+    * Armenian, thanks, Antrohoos Education Foundation!
+    
+### 2025-03-13
+* prepared v10.6.0 minor release
+
+### 2025-03-13
+* Armenian translation update, thanks, Antrohoos Education Foundation!
+* v10.6-rc2
+
+### 2025-03-12
+* objects: reduced processor load when idling
+* store: fixed a costume-loss issue for multi-scene projects stored in the cloud
+* incremented dev version to 10.6-rc1
+* MQTT library update, thanks, Xavier and Simon!
+
+### 2025-03-11
+* new dev version
+* extensions: new "tts_recognize" extension for voice-to-text
+* added new "recognize speech" reporter to the Text-to-Speech library
+
+## 10.5.1:
+* **Notable Fixes:**
+    * added landscape orientation support for TILT sensor extension
+
+### 2025-03-02
+* extensions: added landscape orientation support for TILT sensor extension
+* updated dev version
+* prepared v10.5.1 patch
+
+## 10.5.0:
+* **New Features:**
+    * new "Mobile Device Sensors" library featuring a "tilt" reporter (kids, THIS is for you!), based on
+    * new "ori_tilt(xyz)" extension block
+    * new "mda_set_mic_resolution(idx)" extension block to programmatically set the audio buffer size to 1:256, 2:512, 3:1024 or 4:2048 (kids, you don't ever need to and shouldn't ever, this is for grown-up programmers of media extensions)
+* **Notable Changes:**
+    * changed STRETCH COSTUME to also accept a matrix of pixel data and in this case also report one (again, kids, this isn't for you but for educators and curriculum developers)
+    * changed RESHAPE to use the ceiling of fractional dimensions (2.3 x 4.6 becomes 3 x 5)
+* **Notable Fixes:**
+    * fixed (again, sigh) recording sounds in Safari (Mac & mobile)
+
+### 2025-02-28
+* extensions: new "mda_set_mic_resolution(idx)" extension block to programmatically set the audio buffer size
+* v10.5-rc2
+* sw: added mobile device sensor library to pwa cache
+* v10.5-rc3
+* prepared v10.5 minor release
+
+### 2025-02-27
+* new "Mobile Device Sensors" library featuring a "tilt" reporter
+* lists: changed RESHAPE to use the ceiling of fractional dimensions
+* v10.5-rc1
+
+### 2025-02-26
+* threads: tweaked STRETCH COSTUME primitive to also accept a matrix of pixel data as input and to then also return one
+* updated dev version
+* extensions: device-orientation sensing extension, experimental
+
+### 2025-02-25
+* gui: tweaked sound recording to - hopefully - support Safari, sigh
+
+## 10.4.6:
+* **Notable Changes:**
+    * SciSnap update, thanks, Eckart!
+    * reduced blocks outline contrast in flat design mode
+
+### 2025-02-05
+* gui: reduced blocks outline contrast in flat design mode
+* SciSnap update, thanks, Eckart!
+* prepared v10.4.6 patch 
+
+## 10.4.5:
+* **Notable Fixes:**
+    * fixed evaluating special strings inside numerical input slots
+
+### 2025-01-25
+* blocks: fixed evaluating special strings inside numerical input slots
+* prepared v10.4.5 patch 
+
+## 10.4.4:
+* **Notable Fixes:**
+    * fixed alphanumeric input slot evaluation for list accessors
+
+## 10.4.3:
+* **Notable Fixes:**
+    * special cased RANDOM reporter's input slots to evaluate as String instead of Number, fixes some extension issues, e.g. Hummingbird
+
+### 2025-01-24
+* blocks, objects, threads: special cased RANDOM reporter's input slots to evaluate as String instead of Number, hopefully fixes some extension issues, e.g. Hummingbird
+* new dev version for testing
+* prepared v10.4.3 patch
+
+## 10.4.2:
+* **Notable Fixes:**
+    * fixed a syntax error in the Greek translation file
+
+### 2025-01-23
+* fixed a syntax error in the Greek translation file
+* prepared v10.4.2 patch
+
+## 10.4.1:
+* **Notable Fixes:**
+    * fixed backup mechanism when creating a new project over an unsaved one
+    * fixed #3435 - evaluate empty numerical input slots as zero, also fixes string library issues
+* **Translation Updates:**
+    * Greek, thanks, HM100!
+
+### 2025-01-23
+* gui: fixed backup mechanism when creating a new project over an unsaved one
+* blocks: fixed #3435 - evaluate empty numerical input slots as zero
+* Greek translation update, thanks, HM100!
+* prepared v10.4.1 patch
+
+## 10.4.0:
+* **Notable Changes:**
+    * "Quicksteps" Evaluation - Dynamic Scheduling: Keep stepping non-animating processes between animation frames, makes "warp" and "turbo mode" largely obsolete for number crunching and improves musical thread synching
+    * Floating point precision random numbers - pick a random float by entering an integer with a decimal point into at least one of the "pick random" reporter's input slots
+    * reduced animation speed from 67 fps to 60 fps
+    * disabled santa hats until next Christmas, still loadable as extension
+* **Notable Fixes:**
+    * SciSnap file reader, thanks, Eckart!
+    * fixed Beetle extension for extrusion and scaling, thanks, Bernat and Joan!
+    * handle more cases of circularity in data structures more gracefully, thanks, blockpointstudios, for the report!
+    * fixed #3429: Previously hidden generic WHEN hat blocks reappeared in v10.3
+    * fixed a series of glitches handling customized primitives
+    * fixed morphic Pen demo and "doIt" for inspectors
+* **Translation Updates:**
+    * Armenian, thanks, Antrohoos Education Foundation!
+
+### 2025-01-22
+* Armenian translation update, thanks, Antrohoos Education Foundation!
+* prepared v10.4 minor release
+
+### 2025-01-21
+* morphic: fixed Pen demo and "doIt" for inspectors
+* v10.4 rc9
+
+### 2025-01-13
+* blocks: removed option to ringify prototype hat blocks inside block editors
+* gui, objects: fixed a block zooming / ide refreshing glitch
+* v10.4 rc7
+* Beetle extension fixes to extrusion and scaling, thanks, Bernat and Joan!
+* v10.4 rc8
+
+### 2025-01-12
+* gui: tweaked capturing and restoring global settings when serializing scenes
+* v10.4 rc5
+* gui: tweaked capturing and restoring global settingd when serializing scenes for cloud storage
+* v10.4 rc6
+
+### 2025-01-11
+* gui: tweaked loading libraries from the cloud to bypass resetting customized primitives
+* v10.4 rc4
+
+### 2025-01-10
+* store, gui: fixed loading customized primitives in different scenes
+* v10.4 rc3
+
+### 2025-01-09
+* extensions: added "snap_quicksteps" extension blocks, mostly for debugging purposes
+* v10.4 rc1
+* fixed #3429: Previously hidden generic WHEN hat blocks reappeared in v10.3
+* fixed #3428
+* v10.4 rc2
+
+### 2025-01-08
+* gui, objects: hidden "Dynamic scheduling" setting for analyzing and debugging (the Snap! source code, not your projects, folks)
+* updated version
+
+### 2025-01-07
+* objects: refactored Twostep event evaluation
+* objects: refactored Quickstep frame scheduling
+* disabled santa hats, still loadable as extension
+* updated version
+* objects: reduced animation speed from 67 fps to 60 fps
+* lists: handle more cases of circularity in data structures more gracefully
+* objects, threads: tweaked quickstepping
+
+### 2025-01-06
+* threads: optimized rapid evaluation of generic conditions & custom hat blocks
+* objects, threads: harmonized Quickstep / Twostep interaction
+* updated version
+
+### 2025-01-04
+* objects: enabled "quicksteps" to capture atomic custom events
+* updated version
+* objects, threads: tweaked "quicksteps" performance for rule hats
+
+### 2025-01-03
+* objects, threads: "quicksteps" - keep scheduling non-animating processes between animation ticks
+* updated version
+* integrated SciSnap file reader fix, thanks, Eckart!
+
+### 2025-01-02
+* new dev version
+* blocks, threads: added the capability to pick a random float by entering an integer with a decimal point into at least one of the "pick random" reporter's input slots
+
 ## 10.3.6:
 * **Notable Fixes:**
     * Previewing a library in the import dialog no longer accidentally overwrites palette primitives

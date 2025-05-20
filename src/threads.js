@@ -9,7 +9,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2024 by Jens Mönig
+    Copyright (C) 2025 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -66,7 +66,7 @@ CustomHatBlockMorph*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2024-December-23';
+modules.threads = '2025-March-30';
 
 var ThreadManager;
 var Process;
@@ -200,11 +200,13 @@ function invoke(
 
 function ThreadManager() {
     this.processes = [];
+    this.halos = [];
     this.wantsToPause = false; // single stepping support
 }
 
 ThreadManager.prototype.pauseCustomHatBlocks = false;
 ThreadManager.prototype.disableClickToRun = false;
+ThreadManager.prototype.afterglow = 5;
 
 ThreadManager.prototype.toggleProcess = function (block, receiver) {
     if (this.disableClickToRun) {
@@ -238,7 +240,8 @@ ThreadManager.prototype.startProcess = function (
     rightAway,
     atomic, // special option used (only) for "onStop" scripts
     variables, // optional variable frame, used for WHEN hats
-    noHalo
+    noHalo,
+    genericCondition
 ) {
     var top = block.topBlock(),
         active = this.findProcess(top, receiver),
@@ -255,6 +258,7 @@ ThreadManager.prototype.startProcess = function (
     newProc.exportResult = exportResult;
     newProc.isClicked = isClicked || false;
     newProc.isAtomic = atomic || false;
+    newProc.isGenericCondition = genericCondition || false;
 
     // in case an optional variable frame has been passed,
     // copy it into the new outer context.
@@ -297,10 +301,10 @@ ThreadManager.prototype.highlight = function (aProcess, adjustCount = 0) {
     if (glow) {
         glow.threadCount = this.processesForBlock(top).length + 1 + adjustCount;
         glow.updateReadout();
-    } else {
+    } else if (aProcess.isRunning()) {
         top.addHighlight();
     }
-    this.wantsHalo = false;
+    aProcess.wantsHalo = false;
 };
 
 ThreadManager.prototype.stopAll = function (excpt) {
@@ -358,12 +362,15 @@ ThreadManager.prototype.resumeAll = function (stage) {
     }
 };
 
-ThreadManager.prototype.step = function () {
+ThreadManager.prototype.step = function (skipAnimations) {
     // run each process until it gives up control, skipping processes
     // for sprites that are currently picked up, then filter out any
-    // processes that have been terminated
+    // processes that have been terminated.
+    // answer <true> if any process is animated or none are left
 
-    var isInterrupted;
+    var animating = false,
+        skipped = 0,
+        isInterrupted;
     if (Process.prototype.enableSingleStepping) {
         this.processes.forEach(proc => {
             if (proc.isInterrupted) {
@@ -379,17 +386,21 @@ ThreadManager.prototype.step = function () {
             if (this.wantsToPause) {
                 this.pauseAll();
             }
-            return;
+            return true;
         }
     }
 
     this.processes.forEach(proc => {
-        if (!proc.homeContext.receiver.isPickedUp() && !proc.isDead) {
+        if (proc.isAnimated && skipAnimations) {
+            skipped += 1;
+        } else if (!proc.homeContext.receiver?.isPickedUp() && !proc.isDead) {
             if (proc.wantsHalo) { this.highlight(proc, -1); }
             proc.runStep();
+            animating = animating || proc.isAnimated;
         }
     });
     this.removeTerminatedProcesses();
+    return animating || (this.processes.length - skipped < 1);
 };
 
 ThreadManager.prototype.removeTerminatedProcesses = function () {
@@ -410,7 +421,21 @@ ThreadManager.prototype.removeTerminatedProcesses = function () {
                     glow.threadCount = count;
                     glow.updateReadout();
                 } else {
-                    proc.topBlock.removeHighlight();
+                    // afterglow the script for a couple of frames
+                    // was: proc.topBlock.removeHighlight();
+                    if (!proc.isGenericCondition ||
+                        proc.hasFiredGenericCondition
+                    ) {
+                        if (proc.hasFiredGenericCondition &&
+                            !proc.topBlock.getHighlight()
+                        ) {
+                            proc.topBlock.addHighlight();
+                        }
+                        proc.topBlock.afterglow = this.afterglow;
+                        if (!this.halos.includes(proc.topBlock)) {
+                            this.halos.push(proc.topBlock);
+                        }
+                    }
                 }
             }
             if (proc.prompter) {
@@ -451,6 +476,19 @@ ThreadManager.prototype.removeTerminatedProcesses = function () {
         }
     });
     this.processes = remaining;
+};
+
+ThreadManager.prototype.stepHalos = function () {
+    var remaining = [];
+    this.halos.forEach(block => {
+        block.afterglow -= 1;
+        if (block.afterglow < 1) {
+            block.removeHighlight();
+        } else {
+            remaining.push(block);
+        }
+    });
+    this.halos = remaining;
 };
 
 ThreadManager.prototype.findProcess = function (block, receiver) {
@@ -608,6 +646,9 @@ function Process(topBlock, receiver, onComplete, yieldFirst) {
     this.flashingContext = null; // for single-stepping
     this.isInterrupted = false; // for single-stepping
     this.canBroadcast = true; // used to control "when I am stopped"
+    this.isAnimated = false; // temporary - used to control yields for animation
+    this.isGenericCondition = false; // used for displaying halos
+    this.hasFiredGenericCondition = false; // ised for displaying halos
 
     if (topBlock) {
         this.homeContext.variables.parentFrame =
@@ -634,6 +675,8 @@ Process.prototype.isRunning = function () {
 Process.prototype.runStep = function (deadline) {
     // a step is an an uninterruptable 'atom', it can consist
     // of several contexts, even of several blocks
+
+    this.isAnimated = false;
 
     if (this.isPaused) { // allow pausing in between atomic steps:
         return this.pauseStep();
@@ -805,6 +848,10 @@ Process.prototype.evaluateBlock = function (block, argCount) {
         // this.evaluateNextInput(block);
         this.evaluateNextInputSet(block); // frame-optimized version
     } else {
+        if (!this.isAnimated) {
+            this.isAnimated =
+                SpriteMorph.prototype.blocks[selector]?.animation || false;
+        }
         if (this.flashContext()) {return; } // yield to flash the block
         if (this[selector]) {
             rcvr = this;
@@ -2716,8 +2763,8 @@ Process.prototype.reportNumbers = function (start, end) {
 Process.prototype.reportBasicNumbers = function (start, end) {
     // answer a new arrayed list containing an linearly ascending progression
     // of integers beginning at start to end.
-    this.assertType(start, 'number');
-    this.assertType(end, 'number');
+    this.assertType(+start, 'number');
+    this.assertType(+end, 'number');
 
     var result, len, i,
         s = +start,
@@ -2866,6 +2913,7 @@ Process.prototype.receiveCondition = function (bool) {
     this.popContext();
     if ((bool === true || this.isClicked) && nb) {
         this.pushContext(nb.blockSequence(), outer);
+        this.hasFiredGenericCondition = true;
         this.wantsHalo = true;
     }
     this.pushContext();
@@ -2880,6 +2928,7 @@ Process.prototype.receiveConditionEvent = function (bool) {
         if ((bool === true && hatBlock.isLoaded) || this.isClicked) {
             hatBlock.isLoaded = this.enableSingleStepping; // false;
             this.pushContext(next.blockSequence(), outer);
+            this.hasFiredGenericCondition = true;
             this.wantsHalo = true;
         } else if (!bool) {
             hatBlock.isLoaded = true;
@@ -2907,6 +2956,7 @@ Process.prototype.dispatchRule = function (hatBlock, bool) {
     this.popContext();
     if ((bool === true || this.isClicked) && next) {
         this.pushContext(next.blockSequence(), outer);
+        this.hasFiredGenericCondition = true;
         this.wantsHalo = true;
     }
     this.pushContext();
@@ -2920,6 +2970,7 @@ Process.prototype.dispatchEvent = function (hatBlock, bool) {
         if ((bool === true && hatBlock.isLoaded) || this.isClicked) {
             hatBlock.isLoaded = this.enableSingleStepping; // false;
             this.pushContext(next.blockSequence(), outer);
+            this.hasFiredGenericCondition = true;
             this.wantsHalo = true;
         } else if (!bool) {
             hatBlock.isLoaded = true;
@@ -3412,8 +3463,8 @@ Process.prototype.doFor = function (upvar, start, end, script) {
     var vars = this.context.outerContext.variables,
         dta = this.context.accumulator;
     if (dta === null) {
-        this.assertType(start, 'number');
-        this.assertType(end, 'number');
+        this.assertType(+start, 'number');
+        this.assertType(+end, 'number');
         dta = this.context.accumulator = {
             test : +start < +end ?
                 (() => vars.getVar(upvar) > +end)
@@ -4986,7 +5037,12 @@ Process.prototype.reportRandom = function (a, b) {
 Process.prototype.reportBasicRandom = function (min, max) {
     var floor = Math.min(+min, +max),
         ceil = Math.max(+min, +max);
-    if ((floor % 1 !== 0) || (ceil % 1 !== 0)) {
+
+    function isFloat(n) {
+        return (+n % 1 !== 0) || (isString(n) && n.includes('.'));
+    }
+
+    if (isFloat(min) || isFloat(max)) {
         return Math.random() * (ceil - floor) + floor;
     }
     return Math.floor(Math.random() * (ceil - floor + 1)) + floor;
@@ -7247,14 +7303,14 @@ Process.prototype.doSet = function (attribute, value) {
     case 'rotation x':
     case 'my rotation x':
         this.assertType(rcvr, 'sprite');
-        this.assertType(value, 'number');
-        rcvr.setRotationX(value);
+        this.assertType(+value, 'number');
+        rcvr.setRotationX(+value);
         break;
     case 'rotation y':
     case 'my rotation y':
         this.assertType(rcvr, 'sprite');
-        this.assertType(value, 'number');
-        rcvr.setRotationY(value);
+        this.assertType(+value, 'number');
+        rcvr.setRotationY(+value);
         break;
     case 'microphone modifier':
         this.setMicrophoneModifier(value);
@@ -7725,11 +7781,23 @@ Process.prototype.reportGetImageAttribute = function (choice, name) {
 };
 
 Process.prototype.reportNewCostumeStretched = function (name, xP, yP) {
-    var cst;
+    var cst, shp, height, width, dim, xStretch, yStretch, result;
     if (name instanceof List) {
-        return this.reportNewCostume(name, xP, yP);
+        shp = name.quickShape();
+        if (shp.at(2) > 4) {
+            height = shp.at(1);
+            width = shp.at(2);
+            dim = new List([height * width]);
+            if (shp.length() === 3) {
+                dim.add(shp.at(3));
+            }
+            cst = this.reportNewCostume(name.reshape(dim), width, height);
+        } else {
+            return this.reportNewCostume(name, xP, yP);
+        }
+    } else {
+        cst = this.costumeNamed(name);
     }
-    cst = this.costumeNamed(name);
     if (!cst) {
         throw new Error(
             'expecting a costume\nbut getting none'
@@ -7741,10 +7809,18 @@ Process.prototype.reportNewCostumeStretched = function (name, xP, yP) {
             'expecting a finite number\nbut getting Infinity or NaN'
         );
     }
-    return cst.stretched(
-        Math.round(cst.width() * +xP / 100),
-        Math.round(cst.height() * +yP / 100)
-    );
+    xStretch = Math.round(cst.width() * +xP / 100);
+    yStretch = Math.round(cst.height() * +yP / 100);
+    result = cst.stretched(xStretch, yStretch);
+    if (shp instanceof List && shp.at(2) > 0) {
+        if (shp.at(3) < 1) {
+            return result.pixels().columns().at(1).reshape(
+                new List([yStretch, xStretch])
+            );
+        }
+        return result.pixels().reshape(new List([yStretch, xStretch, 0]));
+    }
+    return result;
 };
 
 Process.prototype.reportNewCostumeSkewed = function (name, angle, factor) {
@@ -8454,6 +8530,7 @@ Process.prototype.slotType = function (spec) {
 
         '1':            1,
         'n':            1, // spec
+        'ns':           1, // spec for random numbers reporter
         // mnemonics:
         '#':            1,
         'num':          1,
