@@ -7,7 +7,7 @@
     written by Jens Mönig and Brian Harvey
     jens@moenig.org, bh@cs.berkeley.edu
 
-    Copyright (C) 2025 by Jens Mönig and Brian Harvey
+    Copyright (C) 2026 by Jens Mönig and Brian Harvey
 
     This file is part of Snap!.
 
@@ -59,13 +59,13 @@ Color, Point, WatcherMorph, StringMorph, SpriteMorph, ScrollFrameMorph, isNil,
 CellMorph, ArrowMorph, MenuMorph, snapEquals, localize, isString, IDE_Morph,
 MorphicPreferences, TableDialogMorph, SpriteBubbleMorph, SpeechBubbleMorph,
 TableFrameMorph, TableMorph, Variable, isSnapObject, Costume, contains, detect,
-Context, ZERO, WHITE, ReadStream, Process*/
+Context, ZERO, WHITE, ReadStream, Process, Table*/
 
 /*jshint esversion: 6*/
 
 // Global settings /////////////////////////////////////////////////////
 
-modules.lists = '2025-February-27';
+modules.lists = '2026-January-19';
 
 var List;
 var ListWatcherMorph;
@@ -361,6 +361,18 @@ List.prototype.lookup = function (key, ifNone = '') {
     return typeof ifNone === 'function' ? ifNone() : ifNone;
 };
 
+List.prototype.hasKey = function (key) {
+    // look up if the given key is present and not inherited
+    var rec;
+    if (parseFloat(key) === +key) { // treat as numerical index
+        return true;
+    }
+    rec = this.itemsArray().find(elem => elem instanceof List &&
+        elem.length() > 0 &&
+        snapEquals(elem.at(1), key));
+    return !isNil(rec);
+};
+
 List.prototype.bind = function (key, value) {
     if (parseFloat(key) === +key) { // treat as numerical index
         return this.put(value, key);
@@ -401,6 +413,10 @@ List.prototype.forget = function (key) {
 
 List.prototype.isTable = function () {
     return this.enableTables && (this.length() > 100 || this.cols() > 1);
+};
+
+List.prototype.isADT = function () {
+    return this.lookup('_morph') instanceof Context;
 };
 
 List.prototype.get = function (col, row) {
@@ -465,6 +481,10 @@ List.prototype.rowName = function (row) {
 };
 
 List.prototype.columnNames = function () {
+    return [];
+};
+
+List.prototype.recordNames = function () {
     return [];
 };
 
@@ -695,6 +715,14 @@ List.prototype.quickRank = function () {
     // assuming regularly shaped nested lists
     var item = this.at(1);
     return item instanceof List ? item.quickRank() + 1 : 1;
+};
+
+List.prototype.firstAtom = function () {
+    // answer the first non-list value in my sublists,
+    // only look at the first item of each dimension,
+    // assuming regularly shaped nested lists
+    var item = this.at(1);
+    return item instanceof List ? item.firstAtom() : item;
 };
 
 List.prototype.shape = function () {
@@ -1140,8 +1168,15 @@ List.prototype.asJSON = function () {
             return obj;
         }
         return items.map(element => element instanceof List ?
-            objectify(element) : element
+            objectify(element) : numberize(element)
         );
+    }
+
+    function numberize(token) {
+        if (isString(token) && parseFloat(token) === +token) {
+            return +token;
+        }
+        return token;
     }
 
     function canBeObject(array) {
@@ -1194,6 +1229,19 @@ List.prototype.asWords = function () {
     return this.itemsArray().map(each =>
         each instanceof List ? each.asWords() : each.toString().trim()
     ).filter(word => word.length).join(' ');
+};
+
+List.prototype.asTable = function (columnNamesList) {
+    // experimental - create an internal table object with a specifiable
+    // list of column names to be displayed in a table view
+    // currently unused - not needed except for Shriram's tables extension
+    var dim = this.quickShape(),
+        table = new Table(dim.at(2), dim.at(1));
+    table.setRows(
+        this.itemsArray().map(row => row.itemsArray()),
+        columnNamesList.itemsArray()
+    );
+    return table;
 };
 
 // List to blocks parsing and encoding, highly experimental for v10
@@ -1461,7 +1509,7 @@ ListWatcherMorph.prototype.init = function (list, parentCell) {
 
     // elements declarations
     this.label = new StringMorph(
-        localize('length: ') + this.list.length(),
+        localize('length') + ': ' + this.list.length(),
         SyntaxElementMorph.prototype.fontSize,
         null,
         false,
@@ -1678,7 +1726,7 @@ ListWatcherMorph.prototype.update = function (anyway) {
 };
 
 ListWatcherMorph.prototype.updateLength = function (notDone) {
-    this.label.text = localize('length: ') + this.list.length();
+    this.label.text = localize('length') + ': ' + this.list.length();
     if (notDone) {
         this.label.color = new Color(0, 0, 100);
     } else {

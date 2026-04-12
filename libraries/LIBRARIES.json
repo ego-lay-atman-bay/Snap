@@ -13,8 +13,8 @@
     "translations": {
       "de": {
         "searchData": [
-          "verwandle Code _ in Blöcke",
-          "verwandle Blöcke _ in Code _ formatiert"
+          "verwandle Code _ in Blöcke\rca",
+          "verwandle Blöcke _ in Code _ formatiert\rca"
         ]
       },
       "ca": {
@@ -24,6 +24,10 @@
           "blocs del codi textual _",
           "codi textual dels blocs _ formatats _"
         ]
+      },
+      "zh_CN": {
+        "name": "积木与代码互转库",
+        "description": "伪Lisp代码与积木双向转换"
       }
     }
   },
@@ -33,7 +37,9 @@
     "description": "Data Objects with prototypical inheritance",
     "searchData": [
       "object _",
-      "clone object _"
+      "clone _ _",
+      "field _ of _ _",
+      "add _ to _"
     ],
     "categories": [
       "lists"
@@ -41,12 +47,18 @@
     "translations": {
       "de": {
         "searchData": [
-          "object _",
-          "clone object _"
+          "Objekt _",
+          "klone _ _",
+          "Feld _ von _ _",
+          "füge _ zu _ hinzu"
         ]
       },
       "ca": {
         "description": "Objectes amb herència per prototips"
+      },
+      "zh_CN": {
+        "name": "面向对象编程(OOP)库",
+        "description": "基于原型式的可继承(数据)对象"
       }
     }
   },
@@ -55,26 +67,208 @@
     "name": "Events",
     "description": "Write scripts that react to data transitions, state changes and sensor threshold passings",
     "searchData": [
-      "when _ happens",
-      "has _ happened?"
+      "when variable _ changes",
+      "when _ > _",
+      "when background switches to _",
+      "has _ happened?",
+      "has _ changed?",
+      "when _ changes"
     ],
     "categories": [
-      "looks",
-      "control",
+      "variables",
       "sensing",
+      "looks",
       "operators",
-      "variables"
+      "control"
     ],
     "translations": {
       "de": {
+        "name": "Ereignisse",
         "searchData": [
-          "Wenn _ sich ereignet",
-          "hat _ sich ereignet?"
+          "Wenn Variable _ sich ändert",
+          "Wenn _ > _",
+          "Wenn Hintergrund zu _ wechselt",
+          "hat _ sich ereignet?",
+          "hat _ sich verändert?",
+          "Wenn _ sich ändert"
         ]
       },
       "ca": {
         "name": "Esdeveniments",
         "description": "Crear escolta d'esdeveniments programats per canvi en les dades, canvis d'estat o creuament del llindar d'un sensor"
+      },
+      "zh_CN": {
+        "name": "更多事件库",
+        "description": "监测变量变化(包括值、舞台背景和外部传感器)"
+      }
+    }
+  },
+  {
+    "fileName": "colors_module.xml",
+    "name": "Colors",
+    "description": "mix, modify and transition colors",
+    "searchData": [
+      "mix _ with _ ratio _ %",
+      "color _ _ by _ %",
+      "shift _ of _ by _",
+      "transition _ over _"
+    ],
+    "categories": [
+      "pen"
+    ],
+    "translations": {
+      "de": {
+        "name": "Farben",
+        "searchData": [
+          "mische _ mit _ im Verhältnis _ %",
+          "Farbe _ _ um _ %",
+          "verschiebe _ von _ um _",
+          "Farbübergang _ Länge _"
+        ]
+      },
+      "ca": {
+        "name": "Colors",
+        "description": "Modifica, barreja i obté transicions de colors."
+      },
+      "es": {
+        "name": "Colores"
+      },
+      "it": {
+        "name": "Colori"
+      },
+      "ti": {
+        "name": "ሕብርታት"
+      },
+      "ua": {
+        "name": "Кольори"
+      },
+      "zh_CN": {
+        "name": "颜色调配库",
+        "description": "色彩调和、调整与渐变"
+      }
+    }
+  },
+  {
+    "fileName": "tables_module.xml",
+    "name": "Tables",
+    "description": "Create, select, filter, order, transform, extend and analyze tabular data sets with powerful functions. Modeled after Pyret's Tables, see https://pyret.org/docs/latest/tables.html. Thanks to Shriram Krishnamurthi for his inspiration, feedback and advice. Example project (under development): https://snap.berkeley.edu/versions/dev/snap.html#present:Username=jens&ProjectName=Shriram%20Tables&editMode",
+    "searchData": [
+      "table from _",
+      "header of _",
+      "cells of _",
+      "select _ from _",
+      "sieve _ using _ _",
+      "order _ _",
+      "transform _ using _ _",
+      "extend _ using _ _",
+      "running sum of _",
+      "difference of _",
+      "difference from _ of _",
+      "running mean of _",
+      "running min of _",
+      "running max of _",
+      "running reduce _",
+      "running fold _ _",
+      "pipe _",
+      "let _ then report _"
+    ],
+    "categories": [
+      "control",
+      "operators",
+      "other",
+      "Tables"
+    ],
+    "translations": {
+      "zh_CN": {
+        "name": "表格处理库",
+        "description": "使用强大、通用的函数创建、选择、筛选、排序、转换、扩展和分析表格数据集。其设计灵感源自 Pyret 的 Tables 数据，详情可参阅：https://pyret.org/docs/latest/tables.html。感谢 Shriram Krishnamurthi 的启发、反馈与建议。示例作品(仍在开发中)：https://snap.berkeley.edu/versions/dev/snap.html#present:Username=jens&ProjectName=Shriram%20Tables&editMode"
+      }
+    }
+  },
+  {
+    "fileName": "neural_networks_module.xml",
+    "name": "Neural Networks",
+    "description": "Classify data vectors using neural networks, train and validate your own deep neural models",
+    "searchData": [
+      "plot bars _ _",
+      "render neural model _ _",
+      "_ times _",
+      "normalize table _",
+      "normalization for table _",
+      "partition table _ by _",
+      "generate _ for _ in _ _",
+      "clone _ _",
+      "object _",
+      "new neural network _",
+      "_ network _ on _",
+      "_ _ with network _",
+      "_ of network _",
+      "_ of network _ to _",
+      "blockify _",
+      "new perceptron sprite"
+    ],
+    "categories": [
+      "pen",
+      "control",
+      "lists",
+      "Neural Networks"
+    ],
+    "translations": {
+      "de": {
+        "name": "Neuronale Netzwerke",
+        "description": "Datenvektoren mit eigenen tiefen neuronalen Netzwerken klassifizieren",
+        "searchData": [
+          "male Balken _ _",
+          "male neurales Modell _ _",
+          "_ mal _",
+          "normalisiere Tabelle _",
+          "Normalisierung für Tabelle _",
+          "teile Tabelle _ im Verhältnis _",
+          "generiere _ für _ in _ _",
+          "klone _ _",
+          "Objekt _",
+          "neues neuronales Netzwerk _",
+          "_ Netzwerk _ mit _",
+          "_ _ mit Netzwerk _",
+          "_ von Netzwerk _",
+          "_ von Netzwerk _ auf _",
+          "blockifiziere _",
+          "neues Perzeptron Objekt"
+        ]
+      },
+      "ca": {
+        "name": "Xarxes Neuronals",
+        "description": "Classifica dades vectoritzades utilitzant xarxes neuronals. Entrena i valida els teus propis models interns."
+      },
+      "zh_CN": {
+        "name": "神经网络训练库",
+        "description": "借助神经网络对数据向量进行分类，训练并验证你自己的深度神经网络模型。本库完全用Snap!本身实现"
+      }
+    }
+  },
+  {
+    "fileName": "edge AI.xml",
+    "name": "Edge Computer Vision",
+    "description": "Detect hand, face and body features or gestures by using Google's AI Edge computer vision API",
+    "searchData": [
+      "hand landmarks on _",
+      "hand handedness on _",
+      "hand gesture on _",
+      "finger _ in hand landmarks _",
+      "face landmarks on _",
+      "feature _ in face landmarks _",
+      "face bounds on _",
+      "body landmarks on _",
+      "feature _ in body landmarks _",
+      "feature _ touching _"
+    ],
+    "categories": [
+      "Edge Computer Vision"
+    ],
+    "translations": {
+      "zh_CN": {
+        "name": "Edge AI视觉检测库",
+        "description": "通过 Google 的 Edge AI 计算机视觉 API 检测手部、人脸和身体特征或手势"
       }
     }
   },
@@ -107,7 +301,9 @@
           "fange _ _\rca",
           "wirf _ _\rca",
           "falls _ dann _ und pause $-1-255-220-0\rca",
-          "ignoriere _\rca"
+          "ignoriere _\rca",
+          "führe _ mit Continuation aus",
+          "rufe _ mit Continuation auf"
         ]
       },
       "es": {
@@ -151,7 +347,7 @@
           "a composição de _ com _\rca",
           "repete _ até que _ $-0.7\rca",
           "repete _ enquanto _ $-0.7\rca",
-          "enquanto _ , repete _ $-0.7",
+          "enquanto _ , repete _ $-0.7\rpl",
           "repete _ vezes _ _ $-0.7\rca",
           "para _ de _ com passo _ a _ _ $-0.7\rca",
           "tendo _ o valor inicial _ , executa _ definido como _\rca"
@@ -174,8 +370,8 @@
         "description": "Традиційні конструкції циклу (while, until тощо) плюс Lisp \"named let\" (узагальнення FOR) плюс функціональна ітерація (повторний виклик функції) і композиція функції."
       },
       "zh_CN": {
-        "name": "迭代,组合",
-        "description": "传统的循环结构（如while、until等），加上Lisp中的\"named let\"（FOR的一般化），再加上函数迭代（反复调用一个函数）和函数组合。"
+        "name": "循环、函数迭代和组合库",
+        "description": "传统的循环结构(如while、until等)，加上Lisp中的\"named let\"(FOR的一般化)，再加上函数迭代(反复调用一个函数)和函数组合。"
       }
     },
     "searchData": [
@@ -193,7 +389,9 @@
       "repeat while _ _",
       "repeat _ _ _",
       "for _ = _ step _ to _ _",
-      "let _ be _ in _ _"
+      "let _ be _ in _ _",
+      "run _ with continuation",
+      "call _ with continuation"
     ],
     "categories": [
       "control"
@@ -208,12 +406,12 @@
         "name": "Utilitats per a llistes",
         "description": "Funcions estàndard per a llistes (capgira, ordena, etc.)",
         "searchData": [
-          "ordena _ segons criteri _",
-          "associació _ _",
-          "_ per cada _ de _ _",
-          "notació textual de _",
-          "frase _",
-          "multi-mapeja _ sobre _"
+          "ordena _ segons criteri _\rpl",
+          "associació _ _\rpl",
+          "_ per cada _ de _ _\rpl",
+          "notació textual de _\rpl",
+          "frase _\rpl",
+          "multi-mapeja _ sobre _\rpl"
         ]
       },
       "de": {
@@ -249,7 +447,10 @@
         "name": "Liste verktøy"
       },
       "pl": {
-        "name": "Metody listy"
+        "name": "Metody listy",
+        "searchData": [
+          "flash turbo fast spakuj _"
+        ]
       },
       "pt": {
         "name": "Utilitários para listas"
@@ -272,8 +473,8 @@
         "description": "Деякі стандартні функції для списків (перевертання, сортування тощо)"
       },
       "zh_CN": {
-        "name": "列表工具",
-        "description": "一些列表上的标准函数(反转、排序等)"
+        "name": "列表处理库",
+        "description": "一些应用在列表上的标准(高阶)函数(反转、排序等)"
       }
     },
     "searchData": [
@@ -324,7 +525,7 @@
         "name": "Кольори та олівці"
       },
       "zh_CN": {
-        "name": "颜色和蜡笔"
+        "name": "颜色和蜡笔库"
       }
     },
     "searchData": [
@@ -435,9 +636,9 @@
         "name": "Llapis de colors",
         "description": "Només els llapis de colors, sense la resta de la llibreria de colors. Més ràpida i simple.",
         "searchData": [
-          "fixa el llapis de color _",
-          "canvia de llapis de color saltant _",
-          "llapis de color"
+          "fixa el llapis de color _\rpl",
+          "canvia de llapis de color saltant _\rpl",
+          "llapis de color\rpl"
         ]
       },
       "es": {
@@ -453,7 +654,7 @@
         "name": "Олівці"
       },
       "zh_CN": {
-        "name": "蜡笔"
+        "name": "蜡笔库"
       }
     },
     "searchData": [
@@ -484,7 +685,8 @@
         "name": "Великі, раціональні, комплексні числа #s"
       },
       "zh_CN": {
-        "name": "大数、有理数、复数"
+        "name": "Scheme数字类型库",
+        "description": "集成了Scheme的完整数字类型，可通过\"使用Scheme的数字类型系统？ <True>\"导入这些数据类型"
       }
     },
     "searchData": [
@@ -505,7 +707,7 @@
       "ca": {
         "name": "Detecta errors",
         "searchData": [
-          "prova de forma segura reportant _ i si _ reportant _"
+          "prova de forma segura reportant _ i si _ reportant _\rpl"
         ]
       },
       "it": {
@@ -518,7 +720,7 @@
         "name": "Відстежити помилки"
       },
       "zh_CN": {
-        "name": "捕获错误"
+        "name": "异常处理库"
       }
     },
     "searchData": [
@@ -571,7 +773,7 @@
         "description": "Запустіть кілька сценаріїв паралельно та зачекайте, поки всі будуть виконані"
       },
       "zh_CN": {
-        "name": "平行化",
+        "name": "并行编程库",
         "description": "并行运行多个脚本并等待所有脚本完成."
       }
     },
@@ -613,7 +815,6 @@
         "description": "Lei de Eisenberg: O quer que se possa fazer através da interface com o utilizador deve ser possível de fazer a partir da linguagem de programação e vice-versa.",
         "searchData": [
           "o valor da configuração _\rca",
-          "altera o valor da configuração _ para _\rca",
           "altera o valor da configuração _ para _\rca"
         ]
       },
@@ -625,7 +826,7 @@
         "description": "Закон Айзенберга: усе, що можна зробити за допомогою графічного інтерфейсу користувача, має бути можливим за допомогою мови програмування, і навпаки."
       },
       "zh_CN": {
-        "name": "获取器和设置器",
+        "name": "获取器和设置器库",
         "description": "艾森伯格定律：任何可以通过图形用户界面完成的事情都应该能够通过编程语言完成，反之亦然。"
       }
     },
@@ -646,6 +847,10 @@
       "ca": {
         "name": "Compressió de llistes",
         "description": "Versió HOF (amb funcions d'ordre superior) de la compressió ZIP, que permet \"hiperitzar\" qualsevol funció diàdica (amb dos arguments)"
+      },
+      "zh_CN": {
+        "name": "超运算化(基本实现)库",
+        "description": "ZIP的HOF(高阶函数)版本，可以让你“Hyperize”(超运算化)任何动态运行的计算函数"
       }
     },
     "searchData": [
@@ -668,13 +873,117 @@
     "name": "~"
   },
   {
+    "fileName": "mobile_sensors.xml",
+    "name": "Mobile Device Sensors",
+    "description": "Access sensors on phones and tablets",
+    "searchData": [
+      "tilt _"
+    ],
+    "categories": [
+      "sensing"
+    ],
+    "translations": {
+      "de": {
+        "searchData": [
+          "Neigung _\rar"
+        ]
+      },
+      "ca": {
+        "name": "Sensors de dispositius mòbils",
+        "description": "Lectures dels sensors de mòbils i tauletes."
+      },
+      "zh_CN": {
+        "name": "移动设备传感器库",
+        "description": "访问手机和平板上的传感器"
+      }
+    }
+  },
+  {
+    "fileName": "microblocks.xml",
+    "name": "MicroBlocks",
+    "description": "Interact with MicroBlocks devices over a USB cable or wirelessly through BLE. Broadcasts generated by the MicroBlocks device will automatically be received on the Snap! side after connecting.",
+    "translations": {
+      "ca": {
+        "description": "Interactua amb dispositius programats amb Microblocks conentant-los per USB o per BLE. Els missatges enviats per Microblocks es reben automàticament a Snap! després de la connexió"
+      },
+      "zh_CN": {
+        "description": "通过USB或BLE无线连接与MicroBlocks设备进行交互。连接后，MicroBlocks设备生成的广播将自动在Snap!端接收"
+      }
+    },
+    "searchData": [
+      "connect to MicroBlocks via _",
+      "disconnect from MicroBlocks",
+      "connected to MicroBlocks",
+      "broadcast _ _",
+      "broadcast _ _ and wait"
+    ],
+    "categories": [
+      "MicroBlocks",
+      "control"
+    ]
+  },
+  {
+    "fileName": "s4aConn.xml",
+    "name": "S4A Connector",
+    "description": "Snap for All firmata boards Connector, Adding all Snap4Arduino features. Connecting Snap! to any Firmata compatible board: UNO, Nano, Mega, Leonardo, Micro, Due, 101, ESP8266, NodeMCU... to dynamically control their functionalities. Firmata firmware uploaded is required.",
+    "searchData": [
+      "board connected ?",
+      "set digital pin _ to _",
+      "set pin _ to value _",
+      "set servo _ to _",
+      "analog reading _",
+      "digital reading _"
+    ],
+    "categories": [
+      "S4A Connector"
+    ],
+    "translations": {
+      "ca": {
+        "name": "Connector S4A",
+        "description": "Connector de Snap! a per totes les plaques compatibles amb firmata: UNO, Nano, Mega, Leonardo, Micro, Due, 101, ESP8266, NodeMCU... per controlar dinàmicament les seves funcionalitats. Necessita que la placa tingui el Firmata carregat prèviament.",
+        "searchData": [
+          "placa connectada?\res",
+          "posa el pin digital _ a _\res",
+          "posa el pin _ al valor _\res",
+          "posa el servo _ a _\res",
+          "lectura analògica _\res",
+          "lectura digital _\res"
+        ]
+      },
+      "zh_CN": {
+        "name": "Snap!4Arduino硬件连接库",
+        "description": "增加Snap4Arduino(Snap!改版)的所有功能。将Snap!连接到任何兼容Firmata的板卡：UNO、Nano、Mega、Leonardo、Micro、Due、101、ESP8266、NodeMCU……以动态控制它们的功能。需要上传Firmata固件"
+      }
+    }
+  },
+  {
     "fileName": "beetle.xml",
     "name": "3D Beetle Geometry",
     "description": "Generate 3D geometry by extruding points, lines or polygons along a path in 3D space.",
     "searchData": [
       "reset",
+      "set _ scale to _",
+      "set shape offset to _",
       "go home",
-      "move _ steps"
+      "go to _",
+      "stop extruding",
+      "move _ steps",
+      "change relative _ by _",
+      "set _ position to _",
+      "_ position",
+      "change absolute _ by _",
+      "rotate _ by _",
+      "set _ rotation to _",
+      "push position",
+      "_ rotation",
+      "point to _",
+      "start extruding _",
+      "log sprite positions in _",
+      "shape points",
+      "change _ scale by _",
+      "_ scale",
+      "pop position",
+      "beetle view"
     ],
     "categories": [
       "3D Beetle"
@@ -682,7 +991,36 @@
     "translations": {
       "ca": {
         "name": "Geometria 3D de l'escarbat",
-        "description": "Crea geometria 3D extruint punts, línies o polígons al llarg d'un camí dins l'espai 3D."
+        "description": "Crea geometria 3D extruint punts, línies o polígons al llarg d'un camí dins l'espai 3D.",
+        "searchData": [
+          "reinicia",
+          "torna a casa",
+          "mou-te _ passos",
+          "vés a _",
+          "fixa la coordenada _ a _",
+          "augmenta la coordenada _ en _",
+          "mou-te en la _ pròpia _ passos",
+          "posició _",
+          "gira sobre _ propi en _ graus",
+          "fixa l'angle _ propi a _",
+          "apunta cap a _",
+          "angle _",
+          "comença a extrudir amb _ de base",
+          "deixa d'extrudir",
+          "enregistra les posicions de la tortuga _",
+          "punts de la base",
+          "fixa el desplaçament de la base a _",
+          "fixa l'escala de _ a _",
+          "augmenta l'escala de _ en _",
+          "escala de _",
+          "enregistra posició actual",
+          "torna a la posició enregistrada",
+          "vista de l'escarbat"
+        ]
+      },
+      "zh_CN": {
+        "name": "3D甲虫教学库",
+        "description": "在三维空间中沿路径绘制点、线或多边形，以生成3D几何图形。\n对于TurboWarp或Gandi IDE用户：本库并非Snap! 3D的实现，\n而是Snap!改版Beetle Blocks的Snap! DSL(领域特定语言)重写版本\n(由于此前Beetle Blocks的服务器数据丢失，因此，在Snap! 10版本，Beetle Blocks被重写为Snap!库。)\n详见\nhttps://snapwiki.miraheze.org/wiki/Beetle_Blocks"
       }
     }
   },
@@ -691,17 +1029,33 @@
     "name": "Embroidery",
     "description": "Generate embroidery files for stitching pen trails on a sewing machine, experimental and under construction.",
     "searchData": [
-      "stitch",
-      "embroider",
-      "density"
+      "stop stitching",
+      "_ stitch by _ width _ center _",
+      "_ stitch by _",
+      "satin stitch width _ center _",
+      "arc turn right rotate radius: _ degrees: _",
+      "arc turn left rotate radius: _ degrees: _",
+      "_ of stitch",
+      "move _ steps",
+      "go to x: _ y: _",
+      "go to _",
+      "change x by _",
+      "set x to _",
+      "change y by _",
+      "set y to _"
     ],
     "categories": [
-      "Embroidery"
+      "Embroidery",
+      "motion"
     ],
     "translations": {
       "ca": {
         "name": "Brodats digitals",
         "description": "Generació d'arxius per les brodadores digitals afegint les funcionalitats de brodadora al dibuix de tortuga estàndard. Experimental"
+      },
+      "zh_CN": {
+        "name": "刺绣库",
+        "description": "生成刺绣文件，用于在缝纫机上缝制画笔轨迹(实验性功能，正在建设中)"
       }
     }
   },
@@ -741,8 +1095,8 @@
         "description": "Додати інтерактивні карти до проектів"
       },
       "zh_CN": {
-        "name": "世界地图",
-        "description": "向项目中添加交互式地图"
+        "name": "世界地图库",
+        "description": "向作品中添加交互式地图"
       }
     },
     "searchData": [
@@ -774,6 +1128,10 @@
     "translations": {
       "ca": {
         "description": "Demana a l'usuari que triï una opció."
+      },
+      "zh_CN": {
+        "name": "问答菜单库",
+        "description": "在询问框上提示用户选择一个选项"
       }
     },
     "searchData": [
@@ -824,8 +1182,8 @@
         "description": "Генерування костюмів з букв та слів"
       },
       "zh_CN": {
-        "name": "文本样式",
-        "description": "从文本的字母或单词生成造型。"
+        "name": "文本转造型库",
+        "description": "将文本转化为造型。"
       }
     },
     "searchData": [
@@ -843,7 +1201,15 @@
     "translations": {
       "de": {
         "name": "Spracherkennung und Sprachausgabe",
-        "description": "Gesprochene Worte als Text verarbeiten, und Text als Sprache ausgeben"
+        "description": "Gesprochene Worte als Text verarbeiten, und Text als Sprache ausgeben",
+        "searchData": [
+          "sprich _ mit _ Aussprache _ und Höhe _ Geschwindigkeit _\rpt",
+          "sprich _ mit _ Aussprache _ und Höhe _ Geschwindigkeit _ und warte\rpt",
+          "erkenne Gesprochenes\rar",
+          "Sprachantwort begonnen?",
+          "aktiviere Sprachausgabe _",
+          "stoppe Spracherkennung"
+        ]
       },
       "ca": {
         "name": "Lector de text",
@@ -864,16 +1230,21 @@
         "description": "Виведення тексту за допомогою синтезу мовлення."
       },
       "zh_CN": {
-        "name": "文本转语音",
-        "description": "使用语音合成输出文本。"
+        "name": "文本与语音互转库",
+        "description": "通过文本输出声音，或通过外部声音输出文本"
       }
     },
     "searchData": [
       "speak _ with _ accent  and pitch _ rate _",
-      "speak _ with _ accent  and pitch _ rate _ and wait"
+      "speak _ with _ accent  and pitch _ rate _ and wait",
+      "recognize speech",
+      "started speech response?",
+      "activate speech synthesis _",
+      "stop speech recognition"
     ],
     "categories": [
-      "sound"
+      "sound",
+      "sensing"
     ]
   },
   {
@@ -910,8 +1281,8 @@
         "description": "Ковзайте, збільшуйте та обертайте за допомогою функцій полегшення."
       },
       "zh_CN": {
-        "name": "动画",
-        "description": "使用缓动函数进行滑动、放大和旋转。"
+        "name": "动画库",
+        "description": "通过变换函数进行滑动、放大和旋转(包括非线性动画实现)"
       }
     },
     "searchData": [
@@ -960,7 +1331,7 @@
       "pt": {
         "name": "Píxeis",
         "searchData": [
-          "$camera a imagem actual do vídeo"
+          "$camera a imagem actual do vídeo\rpl"
         ]
       },
       "ti": {
@@ -987,7 +1358,8 @@
       "rectangle costume _ width: _ height: _",
       "kernel  _ _ _  _ _ _  _ _ _",
       "convolve matrix _ * kernel _",
-      "stretch _ by _"
+      "stretch _ by _",
+      "compress _ by _"
     ],
     "categories": [
       "looks",
@@ -1001,8 +1373,9 @@
     "name": "Outlines and Halos",
     "description": "Compute and display outlines of costumes and halos around sprites",
     "searchData": [
-      "outline",
-      "halo"
+      "outline color: _ width: _",
+      "halo color: _ width: _ while _",
+      "halo color: _ width: _ for _ secs"
     ],
     "categories": [
       "looks"
@@ -1083,15 +1456,17 @@
       "note from _ hz",
       "hz from note _",
       "name of note _",
-      "average of _",
-      "fade in _ for _"
+      "fade in _ for _",
+      "compress _ by _",
+      "stretch _ by _"
     ],
     "categories": [
       "other",
       "sound",
       "operators",
       "sensing",
-      "pen"
+      "pen",
+      "lists"
     ]
   },
   {
@@ -1169,9 +1544,9 @@
         "description": "Desa al navegador dades (clau-valor) persistents entre sessions d'Snap!",
         "searchData": [
           "desa clau",
-          "dades desades al navegador",
+          "dades desades al navegador\rpl",
           "esborra clau",
-          "esborra dades del navegador",
+          "esborra dades del navegador\rpl",
           "obté valor de clau"
         ]
       },
@@ -1190,8 +1565,8 @@
         "description": "Постійне зберігання ключ-значення в Snap! сесій в одному браузері"
       },
       "zh_CN": {
-        "name": "数据库",
-        "description": "在同一浏览器中跨Snap!会话保持持久化的键值存储,这是关于在Snap!编程环境中实现在不同会话之间保持数据持久性的描述。"
+        "name": "数据缓存库",
+        "description": "在同一浏览器中缓存基于键值对的数据，且可以跨Snap!编辑器访问。"
       }
     },
     "searchData": [
@@ -1213,11 +1588,16 @@
       "ca": {
         "name": "Rajoles d'escenari",
         "description": "Divideix l'escenari en diferents regions iguals per realitzar la mateixa acció repetitivament"
+      },
+      "zh_CN": {
+        "name": "子区域库",
+        "description": "将舞台分成若干大小相同的区域，并对每个区域执行相同的程序"
       }
     },
     "searchData": [
       "for each tile sized _ _",
-      "for each _ in _ _ by _ _ _"
+      "for each _ in _ _ by _ _ _",
+      "render each _ in table _ _"
     ],
     "categories": [
       "control"
@@ -1230,10 +1610,15 @@
     "translations": {
       "ca": {
         "description": "Creeu arcs tot girant els objectes un número de graus i movent-los en un radi determinat"
+      },
+      "zh_CN": {
+        "name": "圆周运动库",
+        "description": "通过给定半径及角度，使角色进行圆周运动"
       }
     },
     "searchData": [
-      "arc turn right rotate _ ° radius _"
+      "arc turn right rotate radius: _ degrees: _",
+      "arc turn left rotate radius: _ degrees: _"
     ],
     "categories": [
       "motion"
@@ -1316,8 +1701,7 @@
           "a última palavra de _\rca",
           "a palavra _ está vazia\rca",
           "a frase _ está vazia\rca",
-          "lança o erro _",
-          "a primeira palavra de _\rca"
+          "lança o erro _\rpl"
         ]
       },
       "sk": {
@@ -1336,7 +1720,8 @@
         "name": "Слова, речення"
       },
       "zh_CN": {
-        "name": "单词，句子"
+        "name": "单词、句子处理库",
+        "description": "Scratch 遗漏了 Logo 的一个重要思想：将字符串视为由单词和句子组成的结构，而不仅仅是有若干字符组合成的字符串。这个库重新引入了这一思想。\n对于国内的Scratcher/Snapper：由于中文不像英文一样，每个词之间都有一个空格。因此，本库一开始的设计就只适用于英文句子处理"
       }
     },
     "searchData": [
@@ -1373,6 +1758,10 @@
       "ca": {
         "name": "Només paraules",
         "description": "Utilitza els textos com si fossin llistes de paraules. Una variant mínima de la llibreria 'Paraules i Frases' per a projectes lingüístics com ara un xat amb un robot."
+      },
+      "zh_CN": {
+        "name": "纯单词处理库",
+        "description": "将文本视为单词列表来使用。这是单词、句子处理库的一个最小变体，适用于聊天机器人等语言项目。\n对于国内的Scratcher/Snapper：由于中文不像英文一样，每个词之间都有一个空格。因此，本库一开始的设计就只适用于英文句子处理"
       }
     },
     "searchData": [
@@ -1470,8 +1859,8 @@
         "description": "Додає функції з мови APL, що підтримують гіперблоки."
       },
       "zh_CN": {
-        "name": "APL原语",
-        "description": "添加支持超级块的APL语言功能."
+        "name": "APL(领域特定语言)库",
+        "description": "引入基于超运算积木构建的的APL语言实现."
       }
     },
     "searchData": [
@@ -1543,7 +1932,10 @@
     "translations": {
       "ca": {
         "name": "Streams (llistes presconstruides)",
-        "description": "Variació del tipus de dades \"llistes\" on els elements de la llista no són avaluats fins que s'utilitzen. D'aquesta manera es poden construir llistes amb milions d'elements sense un gran consum de memòria i fins i tot construir llistes de mida infinita. (S'inclou un bloc d'exemple que reporta tots els números primers.) Veieu el tutorial a SICP 3.5."
+        "description": "Variació del tipus de dades \"llistes\" on els elements de la llista no són avaluats fins que s'utilitzen. D'aquesta manera es poden construir llistes amb milions d'elements sense un gran consum de memòria i fins i tot construir llistes de mida infinita. (S'inclou un bloc d'exemple que reporta tots els números primers.) Veieu el tutorial a SICP 3.5.",
+        "searchData": [
+          "ordena _ segons criteri _"
+        ]
       },
       "es": {
         "name": "Streams (listas perezosas)"
@@ -1560,15 +1952,15 @@
       "pt": {
         "name": "Canais (listas preguiçosas)",
         "searchData": [
-          "a prefixação de _ ao canal _",
           "o primeiro item do canal _",
           "um canal com todos os itens de _ menos o primeiro",
-          "a aplicação de _ aos itens dos canais _",
-          "os itens tais que _ do canal _",
-          "uma lista com os itens do canal _ até ao _ º",
+          "a prefixação de _ ao canal _",
           "um canal com _",
-          "a crivagem do canal _",
-          "um canal com os números a partir de _"
+          "um canal com os números a partir de _",
+          "um canal com _",
+          "um canal com os números a partir de _",
+          "a aplicação de _ aos itens dos canais _",
+          "os itens tais que _ do canal _"
         ]
       },
       "sv": {
@@ -1581,23 +1973,63 @@
         "name": "Потоки (ліниві списки)"
       },
       "zh_CN": {
-        "name": "流(惰性列表)"
+        "name": "流(按需求值的列表)",
+        "description": "这是列表数据类型的一种变体，其中每个列表项只有在需要时才会被计算，因此你可以构建包含百万项甚至无限大小的列表，而不会真正占用那么多时间或内存(其中包含一个用于报告所有质数的积木作为示例。)。相关教程详见《计算机程序的构造与解释》(SICP)第三章第五节"
       }
     },
     "searchData": [
-      "_ in front of stream _",
       "head of stream _",
       "tail of stream _",
-      "map _ over stream _",
-      "keep items such that _ from stream _",
-      "show stream _ _",
+      "_ in front of stream _",
+      "comment _",
+      "the empty stream",
+      "$speechBubble _",
+      "is stream _ empty?",
       "stream _",
-      "sieve _",
       "stream with numbers from _",
-      "stream demo"
+      "stream repeating _",
+      "generate stream _ _ w/seeds: _",
+      "map _ over stream(s) _",
+      "_ from _",
+      "flatmap _ over stream(s) _",
+      "keep items _ from stream _",
+      "ignore _",
+      "delay _",
+      "_ followed by _",
+      "let _ from _",
+      "· _",
+      "first item+index _ from stream _",
+      "incrementally combine stream _  using _",
+      "uniques of stream _",
+      "substitute vars _",
+      "blockify _",
+      "append streams _",
+      "GCD (or) _ $-1.2-255-255-0 _",
+      "shape of $-1-255-255-0 _",
+      "multimap _ over _",
+      "_",
+      "round robin _",
+      "interleave streams _",
+      "merge streams _",
+      "list _ items of stream _",
+      "item _ of stream _",
+      "flash turbo fast sort _ ordering with _",
+      "log stream _  to list _ labeled _ indexed? _",
+      "is _ empty?",
+      "segment of stream _  starting with first item that _  ending with next item that _ inclusive? _",
+      "stream demo",
+      "MORE stream blocks …",
+      "$speechBubble _ _",
+      "_ following _",
+      "square _"
     ],
     "categories": [
-      "lists"
+      "Streams",
+      "other",
+      "variables",
+      "control",
+      "lists",
+      "operators"
     ]
   },
   {
@@ -1653,7 +2085,7 @@
       }
     },
     "searchData": [
-      "plot bars _ fill _ center _"
+      "plot bars _ _"
     ],
     "categories": [
       "pen"
@@ -1721,7 +2153,7 @@
         "name": "Доступ до веб-служб (https)"
       },
       "zh_CN": {
-        "name": "网络服务访问（https）"
+        "name": "网络服务访问(https)"
       }
     },
     "searchData": [
@@ -1742,15 +2174,19 @@
     "name": "Declare & Initialize Script Variables",
     "description": "Declare and initialize multiple script variables",
     "searchData": [
-      "let _"
+      "let _",
+      "let _ then report _"
     ],
     "categories": [
-      "variables"
+      "other"
     ],
     "translations": {
       "de": {
+        "name": "Skriptvariablen deklarieren und initialisieren",
+        "description": "Mehrere Skriptvariablen auf einmal anlegen und mit Werten initialisieren",
         "searchData": [
-          "let _"
+          "deklariere _",
+          "deklariere _ dann berichte _"
         ]
       },
       "ca": {
@@ -1792,7 +2228,7 @@
         "searchData": [
           "cria as variáveis _ _\rca",
           "remove as variáveis _\rca",
-          "o valor de _",
+          "o valor de _\rpl",
           "a variável _ existe\rca"
         ]
       },
@@ -1805,8 +2241,8 @@
         "description": "Створення глобальних/спрайтових/скриптових змінних у сценарії та керування ними"
       },
       "zh_CN": {
-        "name": "创建变量",
-        "description": "在脚本中创建和管理全局/精灵/脚本变量"
+        "name": "变量管理库",
+        "description": "在脚本中创建和管理全局/私有/脚本变量"
       }
     },
     "searchData": [
@@ -1853,7 +2289,9 @@
       "write _ size _ stats _",
       "text costume _ size _ stats _",
       "font _  bold _  italic _",
-      "font _  weight _  italic _"
+      "font _  weight _  italic _",
+      "write _ size _ stats _ wrap _",
+      "width of text _ size _ stats _"
     ],
     "categories": [
       "pen"
@@ -1882,10 +2320,9 @@
     "name": "Sprite Method API",
     "description": "Run and call a sprite's local custom blocks from another sprite",
     "searchData": [
-      "api",
-      "methods",
-      "run",
-      "call"
+      "run api: _ . _ ( _ )",
+      "call api: _ . _ ( _ )",
+      "_ methods of _"
     ],
     "categories": [
       "control",
@@ -1925,205 +2362,78 @@
       }
     },
     "searchData": [
-      "start SciSnap!",
-      "set SciSnap! global variables and properties",
-      "set SciSnap! global property _ to _",
-      "show global message title: _  message: _",
-      "report SciSnap! error _",
-      "copy of costume _",
-      "costume of _",
-      "random",
-      "π",
-      "e",
-      "round _ to _ digits",
-      "_ !",
-      "( _ )  ( _ )",
-      "is _ a _",
-      "substring of _ from _ to _",
-      "delete _ _ in _",
-      "upper case _",
-      "lower case _",
-      "write text _ to TXT-file _",
-      "index of _ in _",
-      "replace _ _ with _ in _",
+      "INFO \"My own blocks\"",
+      "create a _ ( of _ )  with name _",
+      "import Sprite",
+      "is JavaScript enabled?",
+      "is key _ pressed?",
       "datetime",
       "datetime: _ to _",
-      "all of _",
-      "any of _",
-      "new costume _ _ _ _ _",
-      "configure _ as a PlotPad width: _  height: _ color: _ _ _",
-      "is _ a PlotPad?",
-      "PlotPadProperty _ of _",
-      "set PlotPadProperty _ of _ to _",
-      "set PlotPad costume properties width: _ height: _  back color: _ _ _ front color: _ _ _  offsets: _ _ on _",
-      "set PlotPad line properties style: _  width: _ color: _ _ _ on _",
-      "set PlotPad marker properties style: _ width: _  color: _ _ _ connected? _ on _",
-      "set PlotPad scale properties precision: _ _  textheight: _ _ number of intervals: _ _  on _",
-      "set PlotPad labels on _ to  title: _ titleheight: _  x-label: _ xLabelheight: _  y-label: _ yLabelheight: _",
-      "set PlotPad offsets from edges on _",
-      "set PlotPad ranges for x: _ _ y: _ _  with border? _ of _ pretty formatted? _  on _",
-      "add graph _ to PlotPad _",
-      "add dataplot of numeric data: _ to PlotPad _",
-      "add dataplot of mixed data: _  y-scale? _ x-scale? _ to PlotPad _",
-      "add histogram of _ with _ groups  pretty formated? _ to PlotPad _",
-      "add axes and scales to PlotPad _",
-      "clear plot of _",
-      "set pretty ranges on PlotPad _",
-      "pretty values for a PlotPad from _  to _ with _ intervals",
-      "get ranges for PlotPad _  from _ with border _",
-      "ranges of 2-dim table _",
-      "convert value _ to coordinate _  of PlotPad _",
-      "PlotPad _ on _ by mouse",
-      "EXAMPLE 1:  Plot of random data width _ height _  title _ labels _ _  line _ marker _ color _ _ _",
-      "EXAMPLE 2:  Histogram of random data width _ height _  title _ labels _ _ line _ color _ _ _",
-      "Example 3:  Simple plot of data: _  x: _ y: _ width: _ height: _  title: _ labels: _ _  line: _ marker: _ color: _ _ _",
-      "Switch to SciSnap! logo",
-      "configure SQL",
-      "is SQL configured?",
-      "connect to database server",
-      "import SQL-data from _ to SQLData",
-      "read databases",
-      "choose database no. _",
-      "read tables",
-      "attributes of table no. _",
-      "choose table no. _",
-      "SELECT _ _ FROM _ WHERE _",
-      "SELECT _ _ FROM _ WHERE _  GROUP BY _ HAVING _ ORDER BY _ _ LIMIT _",
-      "exec SQL-command _",
-      "_ = _",
-      "_ < _",
-      "_ > _",
-      "_ OR _",
-      "_ AND _",
-      "NOT _",
-      "_ IN ( _ )",
-      "_ LIKE _",
-      "AVG ( _ )",
-      "COUNT ( _ )",
-      "MIN ( _ )",
-      "MAX ( _ )",
-      "SUM ( _ )",
-      "configure _ as a GraphPad width: _  height: _ color: _ _ _",
-      "is _ a GraphPad?",
-      "GraphPadProperty _ of _",
-      "set GraphPadProperty _ of _ to _",
-      "set GraphPad costume properties width: _  height: _ color: _ _ _ on _",
-      "set GraphPad vertex properties minSize: _  growing? _ showsContent? _ on _",
-      "set GraphPad edge properties lineWidth: _  color: _ _ _ directed? _ weighted? _  showsWeight? _ on _",
-      "new vertex at _ _ content: _ on graph of _",
-      "add _ random vertices to graph on _",
-      "move vertex _ of graph on _ to _ _",
-      "add _ random edges to graph on _",
-      "add edge from vertex _ to vertex _ to graph on _",
-      "draw graph on _",
-      "delete vertex _ of graph on _",
-      "delete edge from vertex _ to vertex _  of graph on _",
-      "weight of edge from vertex _ to vertex _  of graph on _",
-      "change weight of edge from vertex _ to vertex _  to _ of graph on _",
-      "ask for new weight of graph on _",
-      "ask for new start vertex width of graph on _",
-      "content of vertex _ of graph on _",
-      "change content of vertex _ to _ of graph on _",
-      "ask for new vertex content in graph on _",
-      "set marker of vertex _ of graph on _",
-      "remove marker of vertex _ of graph on _",
-      "remove all markers of graph on _",
-      "depth first search of content _  starting at vertex _ of graph on _",
-      "breadth first search of content _  starting at vertex _ of graph on _",
-      "distance on _ from vertex _ to vertex _",
-      "shortest path in graph from vertex _  to vertex _ on _",
-      "list of all shortest paths in graph from vertex _  to all connected vertices of graph on _",
-      "vertexnumber at _ _ of graph on _",
-      "point _ _ on sprite/stage toOutline point on graph _",
-      "vertexnumber of _ in graph of _",
-      "Graph example 1: small worlds (needs some seconds)",
-      "Graph example 2: distribution of links",
-      "import Sprite",
-      "import library to category _",
-      "configure _ as a NeuralNetPad width: _  height: _ color: _ _ _",
-      "is _ a NNPad?",
-      "NNPadProperty _ of _",
-      "set NNPadProperty _ of _ to _",
-      "set NNPad costume properties width: _  height: _ color: _ _ _  offsets: _ _ on _",
-      "set NNPad properties numberOfLayers: _ layerWidth: _  imageWidth: _ imageHeight: _ on _",
-      "NN output of _ layer with input _ on _",
-      "NN add new weights for _ layers of width _ on _",
-      "NN show status with input _ on _",
-      "teach NN with input _ and target output _ by back-  propagation with learning factor _ on _",
-      "NN Example 1 on _",
-      "Example 4: regression line",
-      "remove this sprite",
       "input dialog on _ with title _  and items _",
-      "empty table",
-      "_ x _ table initialized with _",
-      "new _ by _ table with labels: _",
-      "copy of _",
-      "import _ from  _ to SciSnap!Data",
-      "write _ to CSV-file _",
-      "_ random points with ranges x: _ _  y: _ _ inside of a _",
-      "_ random points near a straight x-range _ _  gradient _ y-axis-intercept _ range _",
-      "_ random points near _  between _ and _ range _",
-      "transpose table or list _",
-      "add _ _ to _",
-      "_ _ of _ with first item? _",
-      "delete _ _ of _",
-      "element _ _ of _",
-      "set element _ _ of _ to _",
-      "columns _ of _  from row _ to _",
-      "subsection of _ in _ from  _ _ to _ _",
-      "select rows of _ where  column _ is _ _",
-      "count values in _",
-      "entropy of _",
-      "_ without duplicates",
-      "_ normalized by _",
-      "_ compressed with  factor _ by averaging",
-      "_ pooling of _  with stride _",
-      "sort _ with predicate _",
-      "_ sorted by column _  ascending _ considering headline? _",
-      "_ of column _ of _  grouped by column _ considering headline? _",
-      "_ of column _ and _  of _ considering headline? _",
-      "regression line parameters of _",
-      "_ next neighbors of _  in _",
-      "convolution kernel _ applied  to _ _ width _ height _",
-      "_ -means clustering for _  with Euclidean metrics",
-      "_ -means clustering for _ with metric _",
-      "Levenshtein-distance of _ and _",
-      "DBSCAN clustering for _ radius _ minMembers _",
-      "decision tree ID3 for _  with labeled data in last column",
-      "SQL-Example 1: simple query",
-      "empty",
-      "copy current costume of _ to sprite costumes",
-      "vertexnumber of graph on _ at mouse position",
-      "classify _ with ID3-tree _",
+      "setting _",
+      "set flag _ to _",
+      "INFO \"Math tools\"",
+      "show global message title: _  message: _",
       "vector _",
-      "vector dim _ with random  components range _ to _",
+      "random vector dim _  range _ to _",
       "matrix of vectors _",
-      "_ x _ matrix with random  components range _ to _",
+      "random _ x _ matrix  range _ to _",
       "transpose _",
-      "_ of vector _",
+      "_ of _",
       "linear operation _ _ _",
-      "apply _ to points _",
+      "apply _ to _",
       "solve _ *x= _",
-      "apply Gauss method to matrix _",
-      "polynomial interpolation for points _",
+      "apply Gauss method to _",
+      "polynomial interpolation for _",
       "_ ( _ )",
-      "affine transformation of _  by _ --> _ for MathPad",
-      "complex _ + _ * i",
-      "complex _ * e^i _",
-      "complex _ polar style",
-      "complex _ Cartesian style",
-      "complex _ of _",
-      "complex _ _ _",
-      "configure sprite _ as a MathPad  width: _ height: _ color: _ _ _",
-      "is _ a MathPad?",
-      "MathPadProperty _ of _",
+      "affine transformation of _  by _ --> _",
+      "_ + _ * i",
+      "_ * e^i _",
+      "_ toThin _ - form",
+      "_ of a _",
+      "complex operation _ _ _",
+      "configure _ as a MathPad width: _ height: _  color: _ with close-button _ left? _ size: _",
+      "new dictionary",
+      "create _ var _",
+      "_ as _",
+      "new costume size: _ _ _",
+      "is variable _ in the scope of _ ?",
       "set MathPadProperty _ of _ to _",
-      "set MathPad costume properties width: _  height: _ color: _ _ _  offsets: _ _ on _",
-      "set MathPad properties lineWidth: _ onlyPoints? _  dimension: _ maxValue: _ startPoint: _ _ _  on _",
-      "add centered axes to a MathPad on _",
-      "plot _ _ color: _ _ _  on MathPad _ Change startpoint? _",
-      "MathPad Example 1: vektor addition",
-      "MathPad Example 2: affine transformation",
+      "MathPadProperty _ of _",
+      "set MathPad costume properties width: _ height: _  color: _ offsets: _ _  with close-button _ left? _ size _ on _",
+      "set MathPad properties lineWidth: _ onlyPoints? _ grid? _  dimension: _ xMin: _ xMax: _ yMin: _ yMax: _  zMin: _ zMax: _ startPoint: _ _ _ on _",
+      "plot _ _ color: _ on MathPad _  Change startpoint? _",
+      "plot set _ setname: _  color: _ linewidth: _ level(1..5): _ on MathPad _ ",
+      "MathPad Example: vektor addition",
+      "MathPad Example: affine transformation",
+      "MathPad Example: set operations",
+      "rename costume _ to _",
+      "add key _ value _ to dictionary _",
+      "set value _ to _",
+      "set _ of _ to _",
+      "get _ of sprite _",
+      "delete var _",
+      "value of key _ in dictionary _",
+      "replace value of key _ in dictionary _ with _",
+      "remove entry of key _ in dictionary _",
+      "read dictionary from JSON file",
+      "write dictionary _ to JSON file _",
+      "copy of costume _",
+      "costume of _",
+      "show _ as dialog",
+      "close all open dialog windows",
+      "layer",
+      "set layer to _",
+      "set cursor _",
+      "is _ a _",
+      "random",
+      "𝝅",
+      "e",
+      "_ !",
+      "( _ )  ( _ )",
+      "round _ to _ digits",
+      "replace _ _ with _ in _",
+      "index of _ in _",
       "root of _  starting at _ by Newton´s method",
       "sequence element _ ( _ )",
       "first _ elements of sequence _",
@@ -2143,68 +2453,306 @@
       "𝜙",
       "|R",
       "set of { _ }",
-      "set of {x| _ }",
       "set of {x| _ _ x _ _ }",
-      "_ ε _ ?",
+      "set of {x| _ }",
+      "is _ ε _ ?",
       "_ _ _",
       "is _ ⊆ _ ?",
       "is _ = _ ?",
-      "_ elements of _ (numbers ε |N)",
+      "_ elements ε |N of _",
+      "section _ of _",
+      "_ edge of interval _",
       "element _ toOutline text",
       "text _ toOutline elements",
-      "configure _ as an ImagePad width: _  height: _ color: _ _ _",
+      "INFO \"Data tools\"",
+      "empty table",
+      "copy of _",
+      "data _ as _",
+      "_ x _ table  initialized with _",
+      "_ by _ table  with labels: _",
+      "_ random points with ranges x: _ _  y: _ _ inside of a _",
+      "_ random points near a straight line  x-range _ _ gradient _  y-axis-intercept _ range _",
+      "_ random points near _  between _ and _ range _",
+      "_ _ of _ with first item? _",
+      "add _ _ to _",
+      "delete _ _ of _",
+      "element _ _ of _",
+      "set element _ _ of _ to _",
+      "columns _ of _  from row _ to _",
+      "subsection of _ in _ from  _ _ to _ _",
+      "select rows of _ where  column _ is _ _",
+      "count values in _",
+      "sort _ with predicate _",
+      "entropy of _",
+      "_ without duplicates",
+      "_ normalized by _",
+      "_ vertical compressed  with factor _ by averaging",
+      "_ pooling of _  with stride _",
+      "_ sorted by column _  ascending _ considering headline? _",
+      "_ of column _ of _  grouped by column _ considering headline? _",
+      "_ of column _ and _  of _ considering headline? _",
+      "regression line parameters of _",
+      "_ next neighbors of _  in _",
+      "convolution kernel _ applied  to _ _ width _ height _",
+      "_ -means clustering for _  with Euclidean metrics",
+      "_ -means clustering for _  with metric _",
+      "DBSCAN clustering for _  radius _ minMembers _",
+      "decision tree ID3 for _  with labeled data in last column",
+      "classify _ with ID3-tree _",
+      "INFO \"PlotPad\" for dealing with diagrams",
+      "configure _ as a PlotPad width: _ height: _  color: _ with close-button? _ left? _ size: _",
+      "is _ a PlotPad?",
+      "set PlotPadProperty _ of _ to _",
+      "PlotPadProperty _ of _",
+      "set PlotPad costume properties width: _ height: _  back color: _ front color: _  offsets: _ _ on _",
+      "set PlotPad labels on _ to  title: _ titleheight: _  x-label: _ xLabelheight: _  y-label: _ yLabelheight: _",
+      "set PlotPad line properties style: _  width: _ color: _ on _",
+      "set PlotPad marker properties style: _ width: _  color: _ connected? _ on _",
+      "set PlotPad scale properties precision: _ _  textheight: _ _ number of intervals: _ _  on _ pretty formated? _",
+      "set PlotPad offsets from edges on _",
+      "set PlotPad ranges for x: _ _ y: _ _  with border? _ of _ on _",
+      "add graph _ to PlotPad _",
+      "add dataplot of numeric data: _ to PlotPad _",
+      "add dataplot of mixed data: _  y-scale? _ x-scale? _ to PlotPad _",
+      "add histogram of _ with _ groups  to PlotPad _ y-axis starting with 0? _",
+      "add axes and scales to PlotPad _",
+      "clear _ on _",
+      "restore PlotPad content of _",
+      "set pretty ranges on PlotPad _",
+      "pretty values for a PlotPad from _  to _ with _ intervals",
+      "get ranges for PlotPad _  from _ with border _",
+      "convert value _ to coordinate _  of PlotPad _",
+      "PlotPad _ on _ by mouse",
+      "Example:  Plot of random data width _ height _  line _ marker _ color _",
+      "Example:  Histogram of random data width _ height _  line _ color _",
+      "Example:  Simple plot of data: _  x: _ y: _ width: _ height: _  title: _ labels: _ _  line: _ marker: _ color: _",
+      "Example: regression line",
+      "change SpriteName of _ to _",
+      "list of sprites with names  starting with _",
+      "list _ contains _ anywhere",
+      "INFO \"SQL tools\"",
+      "configure SQL",
+      "is SQL configured?",
+      "connect to database server",
+      "read databases",
+      "choose database no. _",
+      "read tables",
+      "choose table no. _",
+      "attributes of table no. _",
+      "SELECT _ _ FROM _ WHERE _",
+      "SELECT _ _ FROM _ WHERE _  GROUP BY _ HAVING _ ORDER BY _ _ LIMIT _",
+      "exec SQL-command _",
+      "import query result _ to SQLData",
+      "_ = _",
+      "_ < _",
+      "_ > _",
+      "_ OR _",
+      "_ AND _",
+      "NOT _",
+      "_ LIKE _",
+      "_ IN ( _ )",
+      "AVG ( _ )",
+      "COUNT ( _ )",
+      "MIN ( _ )",
+      "MAX ( _ )",
+      "SUM ( _ )",
+      "SQL-Example: simple query",
+      "SQL-Example: a bit advanced query",
+      "where is the _ block used?",
+      "make a drop at _ _ bounded by a rectangle _ _  shifted by _ _ percent, main color _  with _ particles on _",
+      "list length _ initialized with _",
+      "Example: \"drip painting\"",
+      "INFO \"ImagePad\" for dealing with images",
+      "configure _ as an ImagePad width: _ height: _  color: _ with close-button? _ left? _ size: _",
       "is _ an ImagePad?",
       "ImagePadProperty _ of _",
       "set ImagePadProperty _ of _ to _",
-      "set ImagePad costume properties width: _  height: _ back color: _ _ _  offsets: _ _ on _",
-      "set ImagePad line properties style: _  width: _ color: _ _ _  fill color: _ _ _ on _",
-      "set ImagePad grid properties on _  horizontal cells: _ vertical cells: _",
-      "import _ from _  to myData on _",
-      "add _ image of _ to ImagePad  min/max: _ _ log? _ on _",
-      "add grid _ on _ with grid lines? _",
-      "draw line from _ _ to _ _ on _",
-      "draw rectangle from _ _ to _ _ on _",
-      "fill rectangle from _ _ to _ _ on _",
-      "draw circle center: _ _ radius: _ on _",
-      "fill circle center: _ _ radius: _ on _",
-      "draw text _ at _ _ height: _  horizontal? _ on _",
-      "draw list of points _ as _ size: _ on _",
-      "set RGB at _ _ on _ to _ _ _",
-      "RGB at _ _ on _",
-      "set image value of myData at _ _  on _ to _",
-      "image value of myData at _ _ on _",
-      "_ on _ by mouse",
-      "affine transformation of costume _  by _ --> _",
-      "brightness around _ _ within radius _  of myData of ImagePad _",
-      "fill all cells on _ range x: _ _ y: _ _  randomly with numbers _",
+      "set ImagePad costume properties width: _ height: _  back color: _ offsets: _ _ on _",
+      "set ImagePad line properties style: _  width: _ color: _ fill color: _ on _",
+      "import image data from _  to myData of _ and set properties",
+      "_ _ image log? _ alpha _  from myData on _",
+      "draw list of points _ as _ size: _ on _  using Snap! coordinates? _ with noise? _ range: _",
+      "set _ at _ on _ to _  using Snap! coordinates _",
+      "_ at _ on _  using Snap! coordinates _",
+      "_ on _ by mouse  using Snap! coordinates _",
+      "affine transformation of costume _  by _ --> _ using Snap! coordinates _",
+      "brightness around _ within radius _  calculated with _ of ImagePad _  using Snap! coordinates _",
+      "remove sprite _",
+      "select sprite _",
+      "let _ respond to _",
+      "image data _ width _ height _  _ image data _ width _ height _  with offsets _ _",
+      "Example: slice data of an image",
+      "Example: false color image of moon crater Albertarius",
+      "Example: random points on an image",
+      "Example: space modulation",
+      "INFO \"SciSnap! globals\"",
+      "INFO \"Window to ImagePads\"",
+      "configure _ as a window to ImagePad _",
+      "is _ a window to Imagepads?",
+      "_ ImagePad _ to/from image stack  of window _ and adjust width/height _",
+      "switch to _ image of window _  and adjust width/height _",
+      "update window _",
+      "magnify or shrink image on window _ by _ %",
+      "move image of window _ by _ _",
+      "scroll image of window _",
+      "stage position _ toOutline _ on _  using Snap! coordinates _",
+      "_ _ on _ toOutline stage position  using Snap! coordinates _",
+      "position _ is in window _",
+      "is _ deleted?",
+      "attach part _ to sprite _",
+      "start SciSnap! stage: _ X _",
+      "create costume data",
+      "create SciSnap! costumes",
+      "create SciSnap! global variables and properties",
+      "set SciSnap! global property _ to _",
+      "SciSnap! global property _",
+      "configure _ as a SketchPad width: _ height: _  color: _ with close-button _ left? _ size: _",
+      "is _ a _ ?",
+      "reshape and clear SketchPad _  to width: _ height: _",
+      "delete SketchPad _",
+      "adjust close-button of _",
+      "_ _ - tool for window _ size _",
+      "_ _ of window _",
+      "update tool positions on _",
+      "update tool coordinates on _",
+      "move _ _",
+      "detach all parts from _",
+      "on _ run _",
+      "delete _ _ in _",
+      "substring of _ from _ to _",
+      "trim _ by _",
+      "Euclidean distance between  point _ and point _",
+      "Levenshtein distance of _ and _",
+      "delete all closeButtons",
+      "set SketchPadProperty _ of _ to _",
+      "SketchPadProperty _ of _",
+      "draw line from _ to _ on _  using Snap! coordinates? _",
+      "_ rectangle from: _ to: _ on _  using Snap! coordinates? _",
+      "_ circle center: _ radius: _ on _  using Snap! coordinates? _",
+      "draw text _ at: _ height: _ horizontal? _  on _ using Snap! coordinates? _",
+      "width of text _ in height _ on _",
+      "Example: rectangles, inspired by Frank Stella",
+      "Example: circles",
+      "Example: why?",
+      "read _ data from URL _",
+      "read _ -file with filepicker",
+      "select _ with filepicker",
+      "read file as BLOB _",
+      "write _ to _ -file _",
+      "import _ from _ to SciSnap!Data",
+      "report SciSnap! error _  from _ and stop all scripts",
+      "INFO \"GraphPad\" for dealing with graphs",
+      "configure _ as a GraphPad width: _ height: _  color: _ with close-button? _ left? _ size: _",
+      "is _ a GraphPad?",
+      "set GraphPadProperty _ of _ to _",
+      "GraphPadProperty _ of _",
+      "set GraphPad costume properties width: _ height: _  back color: _ on _",
+      "set GraphPad vertex properties minSize: _  growing? _ showsContent? _ on _",
+      "set GraphPad edge properties lineWidth: _  color: _ directed? _ weighted? _  showsWeight? _ on _",
+      "new vertex at _ content: _ on graph of _  using Snap! coordinates? _",
+      "add _ random vertices to graph on _",
+      "move vertex _ of graph on _ to _  using Snap! coordinates? _",
+      "add edge from vertex _ to vertex _ to graph on _",
+      "add _ random edges to graph on _",
+      "draw graph on _",
+      "delete vertex _ of graph on _",
+      "delete edge from vertex _ to vertex _  of graph on _",
+      "weight of edge from vertex _ to vertex _  of graph on _",
+      "change weight of edge from vertex _ to vertex _  to _ of graph on _",
+      "ask for new weight of graph on _",
+      "ask for new start vertex width of graph on _",
+      "content of vertex _ of graph on _",
+      "change content of vertex _ to _ of graph on _",
+      "ask for new vertex content in graph on _",
+      "set marker of vertex _ of graph on _",
+      "remove marker of vertex _ of graph on _",
+      "remove all markers of graph on _",
+      "depth first search of content _  starting at vertex _ of graph on _",
+      "breadth first search of content _  starting at vertex _ of graph on _",
+      "distance on _ from vertex _ to vertex _",
+      "shortest path in graph from vertex _  to vertex _ on _",
+      "list of all shortest paths in graph from vertex _  to all connected vertices of graph on _",
+      "vertexnumber at _ of graph on _  using Snap! coordinates? _",
+      "vertexnumber of _ in graph of _",
+      "Graph Example: small worlds (needs some seconds)",
+      "Graph Example: distribution of links",
+      "INFO \"NNPad\" for dealing with Neural Nets",
+      "configure _ as a NeuralNetPad width: _ height: _  color: _ with close-button? _ left? _ size: _",
+      "is _ a NNPad?",
+      "set NNPadProperty _ of _ to _",
+      "NNPadProperty _ of _",
+      "set NNPad costume properties width: _ height: _  color: _ offsets: _ on _",
+      "set NNPad net properties numberOfLayers: _ layerWidth: _  on _",
+      "NN add new weights for _ layers of width _ on _",
+      "NN output of _ layer on _",
+      "NN show status on _",
+      "teach NN with input _ and target output _ by back-  propagation with learning factor _ on _",
+      "NN Example: on _",
+      "INFO \"GridPad\" for dealing with cellular automata",
+      "configure _ as an GridPad width: _ height: _  color: _ with close-button? _ left? _ size: _",
+      "is _ a GridPad?",
+      "set GridPadProperty _ of _ to _",
+      "GridPadProperty _ of _",
+      "set GridPad costume properties width: _ height: _  back color: _ offsets: _ _ on _",
+      "set GridPad line properties style: _  width: _ color: _ fill color: _ on _",
+      "set GridPad grid properties on _  horizontal cells: _ vertical cells: _  initial cell colornumber: _ with grid lines? _",
+      "add grid _ on _",
+      "fill cells on _ range x: _ _ y: _ _  randomly with color numbers _",
       "set cell value on _ to _ by mouse",
-      "set cell value on _ at _ _ to _ with grid lines? _",
-      "_ -neighborhood as torus? _ of _ _ on _",
+      "_ on _ by mouse",
+      "set cell value on _ at _ _ to _  with grid lines? _",
+      "cell value on _ at _ _",
+      "_ -neighborhood as torus? _ of _ _  on _",
       "all cells on _ as torus? _ swapped _ times  randomly inside radius _ range x: _ _ y: _ _",
       "all cells on _ as torus? _ with value _  take value _ if number of surrounding value _ is _ _  else take value _ with noise? _ of _ %  range x: _ _ y: _ _",
       "all cells on _ as torus? _ take _  of surrounding cells x: _ _ y: _ _ range: _",
-      "combine grid1 _ and grid2 _ by value1= _ _ value2= _ to _ else _",
+      "combine grid1 _ and grid2 _ by value1= _ _ value2= _  to _ else _",
+      "Example: plot of mixed data",
+      "set _ to full size, bounded by  left _ right _ top _ bottom _",
+      "convert _ on _ to _ - coordinates",
+      "let part _ of the TheLineTool respond to _",
+      "let SquareTool _ respond to _",
+      "Example: Use of a window to an image",
+      "Example: get line data with the LineTool",
+      "Example: get brightness data with SquareTools",
+      "Example: graphical noise",
+      "Example: create dynamically a new sprite  that responds to three events",
+      "variadic position _ toOutline position",
+      "variadic color _ toOutline RGB(A)-value",
+      "translate _",
       "apply Wolfram automaton no _ to grid _  with colors for 0: _ and 1: _",
-      "Example 1: slice data of FITS-image",
-      "Example 2: false color image of moon crater albertarius",
-      "Example 3: Wolfram Automaton No. 30",
-      "is the global _ property _  with value _ present ?",
-      "SciSnap! global property _"
+      "is _ numerical?",
+      "install eventhandler _ for _",
+      "Example: diffusion",
+      "Example: Wolfram Automaton No. 30",
+      "extract pure text from _",
+      "prepare data für naive Bayes text classification  from text list of category 1 _  and text list of other categories _",
+      "naive Bayes classification of _  based on trained data _",
+      "list _ from item _ to item _",
+      "remove all custom blocks in _",
+      "_ category _ color _ _ _",
+      "_ block _",
+      "Example: configure SciSnap! as a MathTool",
+      "call %#1 %#2"
     ],
     "categories": [
-      "1. SciSnap! globals",
-      "looks",
-      "operators",
+      "0. My own blocks",
+      "control",
       "sensing",
+      "2. Math tools",
+      "looks",
+      "lists",
+      "variables",
+      "pen",
+      "operators",
+      "3. Data tools",
       "5. PlotPad for data plots",
       "4. SQL tools",
+      "6. ImagePad for image operations",
+      "1. SciSnap! globals",
       "7. GraphPad for graph operations",
-      "control",
       "8. NNPad for neural networks",
-      "3. Data tools",
-      "0. My own blocks",
-      "2. Math tools",
-      "6. ImagePad for image operations"
+      "9. GridPad for grid operations"
     ]
   },
   {
@@ -2280,24 +2828,6 @@
     "name": "~"
   },
   {
-    "fileName": "mobile_sensors.xml",
-    "name": "Mobile Device Sensors",
-    "description": "Access sensors on phones and tablets",
-    "searchData": [
-      "tilt",
-      "sensor",
-      "mobile",
-      "phone",
-      "tablet",
-      "iPad",
-      "orientation",
-      "accelerometer"
-    ],
-    "categories": [
-      "sensing"
-    ]
-  },
-  {
     "fileName": "serial_module.xml",
     "name": "Serial Ports",
     "description": "Connect to hardware extensions through the Web Serial API (Chromium, Chrome or Edge required)",
@@ -2349,20 +2879,39 @@
       }
     },
     "searchData": [
-      "$-1-192-192-192 _",
-      "$-1-192-192-192 _",
-      "$-1-192-192-192 _",
+      "$cloudOutline MQTT connect to _ _",
+      "$cloudOutline MQTT subscribe to _ topic _  on each message run _ _",
+      "$cloudOutline MQTT publish to _ topic _ payload _ _",
       "$cloudOutline MQTT unsubscribe from _ topic _",
       "$cloudOutline MQTT disconnect from _",
-      "$-1-192-192-192 _",
-      "$-1-192-192-192 _",
+      "$cloudOutline MQTT response _ topic _  reply _ _",
+      "$cloudOutline MQTT request _ topic _  response topic _ payload _  on response run _ _",
       "$cloudOutline MQTT example response reporter payload _ topic _",
-      "$-1-192-192-192 _",
+      "$cloudOutline MQTT request _ topic _  response topic _ payload _ _",
+      "_ to base64",
+      "_ from base64 _",
       "MQTT Extension Examples"
     ],
     "categories": [
       "MQTT"
     ]
+  },
+  {
+    "fileName": "websockets.xml",
+    "name": "WebSockets",
+    "description": "Connect to a WebSockets server and exchange data with it. Each spite can connect to a different WebSocket address.",
+    "searchData": [
+      "connect to _",
+      "connected?",
+      "disconnect",
+      "send _",
+      "when I receive _"
+    ],
+    "categories": [
+      "WebSockets"
+    ],
+    "translations": {
+    }
   },
   {
     "fileName": "signada.xml",
@@ -2406,8 +2955,8 @@
         "description": "Взаємодія з пристроями MicroBlocks через Wi-Fi. Потрібно, щоб пристрій мав TFT-дисплей, дві кнопки та можливість Wi-Fi, а також завантажений проект Signada MicroBlocks. Citilab ED1 і низка плат M5Stack є одними з пристроїв, які працюють з Signada"
       },
       "zh_CN": {
-        "name": "Signada（网络远程控制）",
-        "description": "通过WiFi与MicroBlocks设备进行交互。需要设备具备TFT显示屏、两个按钮和WiFi功能，以及加载了Signada MicroBlocks项目。Citilab ED1和一些M5Stack开发板是与Signada兼容的设备之一。"
+        "name": "Signada(网络远程控制)",
+        "description": "通过WiFi与MicroBlocks设备进行交互。需要设备具备TFT显示屏、两个按钮和WiFi功能，以及加载了Signada MicroBlocks作品。Citilab ED1和一些M5Stack开发板是与Signada兼容的设备之一。"
       }
     },
     "searchData": [
@@ -2443,26 +2992,37 @@
     ]
   },
   {
-    "fileName": "microblocks.xml",
-    "name": "MicroBlocks",
-    "description": "Interact with MicroBlocks devices over a USB cable or wirelessly through BLE. Broadcasts generated by the MicroBlocks device will automatically be received on the Snap! side after connecting.",
+    "fileName": "~",
+    "name": "~"
+  },
+  {
+    "fileName": "~",
+    "name": "~"
+  },
+  {
+    "fileName": "~",
+    "name": "~"
+  },
+  {
+    "fileName": "tutorial_module.xml",
+    "name": "Tutorials",
+    "description": "Position and scale the tutorial window",
+    "searchData": [
+      "when _ bounds change",
+      "position tutorial at _ _",
+      "set tutorial size to _ %",
+      "tutorial size",
+      "current editor _",
+      "exit tutorial"
+    ],
+    "categories": [
+      "tutorials"
+    ],
     "translations": {
       "ca": {
-        "description": "Interactua amb dispositius programats amb Microblocks conentant-los per USB o per BLE. Els missatges enviats per Microblocks es reben automàticament a Snap! després de la connexió"
+        "description": "Posiciona i ajusta la mida de la finstra del tutorial."
       }
     }
-  },
-  {
-    "fileName": "~",
-    "name": "~"
-  },
-  {
-    "fileName": "~",
-    "name": "~"
-  },
-  {
-    "fileName": "~",
-    "name": "~"
   },
   {
     "fileName": "metaprogramming_module.xml",
@@ -2472,18 +3032,27 @@
       "scriptify _",
       "blockify _",
       "callers of _",
-      "inject _  into _  _ each _"
+      "inject _  into _  _ each _",
+      "call stack",
+      "get _ of caller",
+      "set _ of caller to _",
+      "expand _ to _ slots"
     ],
     "categories": [
       "control",
       "lists",
       "sensing",
-      "other"
+      "other",
+      "variables"
     ],
     "translations": {
       "ca": {
         "name": "Metaprogramació",
         "description": "Analitza, transforma i genera blocs i programes dinàmicament"
+      },
+      "zh_CN": {
+        "name": "元编程库",
+        "description": "分析、转换、生成积木和程序"
       }
     }
   },
@@ -2502,8 +3071,63 @@
       "ca": {
         "name": "Continuacions",
         "description": "Captura dinàmicament les continuacions en temps d'execució i crea diferents estructures de control"
+      },
+      "zh_CN": {
+        "name": "延续 + call/cc库",
+        "description": "动态获取continuation(延续)，以实现更多控制流\n译者注：call/cc的全称是“call-with-current-continuation”，Snap!的中文翻译传统之一是将其译为“带延续运行”/“带延续调用”。\ncall/cc的用例如：\n“循环、函数迭代和组合”库里的“非本地退出”积木、协程(Coroutine)、生成器(Generator)"
       }
     }
+  },
+  {
+    "fileName": "drawPath_module.xml",
+    "name": "Draw Paths",
+    "description": "Draw filled or stroked polylines and polygons without moving the pen sprite",
+    "searchData": [
+      "draw path _ _"
+    ],
+    "categories": [
+      "pen"
+    ],
+    "translations": {
+      "de": {
+        "name": "Male Pfade",
+        "description": "Male Vektorpfade und Polygone direkt, ohne den Stift zu bewegen, wahlweise ausgefüllt oder umrandet"
+      }
+    }
+  },
+  {
+    "fileName": "shapes_module.xml",
+    "name": "Shapes",
+    "description": "Create, combine, transform and display geometric shapes for a functions-first approach to teaching programming. Inspired by Pyret's image library, see: https://pyret.org/docs/horizon/image.html - under development",
+    "searchData": [
+      "draw  _",
+      "costume from _",
+      "square _ _",
+      "circle _ _",
+      "rectangle w: _ h: _ _",
+      "ellipse w: _ h: _ _",
+      "path _",
+      "rotate _ by _",
+      "scale _ by _",
+      "move _ by _",
+      "beside _ _ _ align y: _",
+      "above _ _ _ align x: _",
+      "overlay _ _ _ align x: _ y: _",
+      "layer _",
+      "left of _",
+      "right of _",
+      "bottom of _",
+      "top of _",
+      "center x of _",
+      "center y of _",
+      "centroid x of _",
+      "centroid y of _",
+      "width of _",
+      "height of _"
+    ],
+    "categories": [
+      "tables"
+    ]
   },
   {
     "fileName": "~",
@@ -2536,10 +3160,10 @@
     "name": "(EDC) Fancy Text",
     "description": "Text formatting and basic fraction support for SAY and THINK blocks.",
     "searchData": [
-      "fancy think _ size: _ max width: _ color: _ in my _ for _ seconds",
-      "fancy think _ size: _ max width: _ color: _ in my _",
-      "fancy say _ size: _ max width: _ color: _ in my _ for _ seconds",
-      "fancy say _ size: _ max width: _ color: _ in my _",
+      "fancy think _ size: _ max width: _ max height: _ color: _ in my _ for _ seconds",
+      "fancy think _ size: _ max width: _ max height: _ color: _ in my _",
+      "fancy say _ size: _ max width: _ max height: _ color: _ in my _ for _ seconds",
+      "fancy say _ size: _ max width: _ max height: _ color: _ in my _",
       "fancy text costume _ size: _ max width: _ color: _ align: _ font: _"
     ],
     "categories": [

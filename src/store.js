@@ -7,7 +7,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2025 by Jens Mönig
+    Copyright (C) 2026 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -53,17 +53,17 @@
 WatcherMorph, Point, CustomBlockDefinition, Context, ReporterBlockMorph, Sound,
 CommandBlockMorph, detect, CustomCommandBlockMorph, CustomReporterBlockMorph,
 Color, List, newCanvas, Costume, Audio, IDE_Morph, ScriptsMorph, ArgLabelMorph,
-BlockMorph, ArgMorph, InputSlotMorph, TemplateSlotMorph, CommandSlotMorph,
+BlockMorph, ArgMorph, InputSlotMorph, TemplateSlotMorph, CommandSlotMorph, ZOOM,
 FunctionSlotMorph, MultiArgMorph, ColorSlotMorph, nop, CommentMorph, isNil,
 localize, SVG_Costume, MorphicPreferences, Process, isSnapObject, Variable,
 SyntaxElementMorph, BooleanSlotMorph, normalizeCanvas, contains, Scene,
-Project, CustomHatBlockMorph, SnapVersion*/
+Project, CustomHatBlockMorph, SnapVersion, ADT_SlotMorph, SnapTranslator*/
 
 /*jshint esversion: 11*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.store = '2025-March-12';
+modules.store = '2026-April-11';
 
 // XML_Serializer ///////////////////////////////////////////////////////
 /*
@@ -323,16 +323,21 @@ XML_Serializer.prototype.mediaXML = function (name) {
 
 // SnapSerializer loading:
 
-SnapSerializer.prototype.load = function (xmlString, ide, noPrims) {
+SnapSerializer.prototype.load = function (xmlString, ide, noPrims, keepRoles) {
     // public - answer a new Project represented by the given XML String
     var obj;
     this.noPrims = noPrims || false;
-    obj = this.loadProjectModel(this.parse(xmlString), ide);
+    obj = this.loadProjectModel(this.parse(xmlString), ide, null, keepRoles);
     this.noPrims = false;
     return obj;
 };
 
-SnapSerializer.prototype.loadProjectModel = function (xmlNode, ide, remixID) {
+SnapSerializer.prototype.loadProjectModel = function (
+    xmlNode,
+    ide,
+    remixID,
+    keepRoles // bool - don't change templates into work
+) {
     // public - answer a new Project represented by the given XML top node
     // show a warning if the origin apps differ
 
@@ -340,7 +345,22 @@ SnapSerializer.prototype.loadProjectModel = function (xmlNode, ide, remixID) {
         app = appInfo ? appInfo.split(' ')[0] : null,
         appVersion = appInfo ? parseFloat(appInfo.split(' ')[1]) || 0 : 0,
         scenesModel = xmlNode.childNamed('scenes'),
-        project = new Project();
+        lang = xmlNode.attributes.lang,
+        zoom = xmlNode.attributes.zoom,
+        fade = xmlNode.attributes.fade,
+        flat = xmlNode.attributes.flat,
+        bright = xmlNode.attributes.bright,
+        shouldRefresh = false,
+        project = new Project(),
+        loop;
+
+    function isLoadingAssets() {
+        return ide.sprites.asArray().concat([ide.stage]).some(any =>
+            (any.costume ? any.costume.loaded !== true : false) ||
+            any.costumes.asArray().some(each => each.loaded !== true) ||
+            any.sounds.asArray().some(each => each.loaded !== true)
+        );
+    }
 
     if (ide && app && app !== this.app.split(' ')[0]) {
         ide.inform(
@@ -350,22 +370,68 @@ SnapSerializer.prototype.loadProjectModel = function (xmlNode, ide, remixID) {
                 '\n\nand may be incompatible or fail to load here.'
         ).nag = true;
     }
+    if (ide) {
+        if (!isNil(flat)) {
+            if (flat === 'true') {
+                ide.setFlatDesign();
+            } else {
+                ide.setDefaultDesign();
+            }
+            shouldRefresh = true;
+        }
+        if (!isNil(bright)) {
+            if (bright === 'true') {
+                ide.setBrightTheme();
+            } else {
+                ide.setDefaultTheme();
+            }
+            shouldRefresh = true;
+        }
+        if (lang) {
+            loop = setInterval(() => {
+                if (isLoadingAssets()) {
+                    return;
+                }
+                clearInterval(loop);
+                ide.setLanguage(lang, null, true); // no save
+            });
+        }
+        if (shouldRefresh) {
+            ide.buildPanes();
+            ide.fixLayout();
+        }
+        if (zoom) {
+            ide.setZoom(+zoom, true); // no save
+        }
+        if (fade) {
+            ide.setBlockTransparency(+fade, false); // no save
+        }
+    }
     if (scenesModel) {
         if (scenesModel.attributes.select) {
             project.sceneIdx = +scenesModel.attributes.select;
         }
         scenesModel.childrenNamed('scene').forEach(model => {
             ide.scene.captureGlobalSettings();
-            project.scenes.add(this.loadScene(model, appVersion));
+            project.scenes.add(
+                this.loadScene(model, appVersion, remixID, keepRoles)
+            );
             ide.scene.applyGlobalSettings();
         });
     } else {
-        project.scenes.add(this.loadScene(xmlNode, appVersion, remixID));
+        project.scenes.add(
+            this.loadScene(xmlNode, appVersion, remixID, keepRoles)
+        );
     }
     return project.initialize();
 };
 
-SnapSerializer.prototype.loadScene = function (xmlNode, appVersion, remixID) {
+SnapSerializer.prototype.loadScene = function (
+    xmlNode,
+    appVersion,
+    remixID,
+    keepRoles
+) {
     // private
     var scene = new Scene(),
         model,
@@ -400,6 +466,9 @@ SnapSerializer.prototype.loadScene = function (xmlNode, appVersion, remixID) {
     scene.showPaletteButtons = model.scene.attributes.buttons !== 'false';
     scene.disableClickToRun = model.scene.attributes.clickrun === 'false';
     scene.disableDraggingData = model.scene.attributes.dragdata === 'false';
+    scene.hideEmptyCategories = model.scene.attributes.empty === 'false';
+    scene.hideSprites = model.scene.attributes.blocksonly === 'true';
+    scene.enforceTypes = model.scene.attributes.strict === 'true';
     scene.penColorModel = model.scene.attributes.colormodel === 'hsl' ?
         'hsl' : 'hsv';
     model.notes = model.scene.childNamed('notes');
@@ -410,6 +479,25 @@ SnapSerializer.prototype.loadScene = function (xmlNode, appVersion, remixID) {
     if (model.palette) {
         scene.customCategories = this.loadPalette(model.palette);
         SpriteMorph.prototype.customCategories = scene.customCategories;
+    }
+    scene.role = model.scene.attributes.role || null;
+    model.template = model.scene.childNamed('template');
+    if (model.template) {
+        hidden = new List();
+        hidden.add(
+            this.loadValue(model.template.childNamed('primitives').children[0])
+        );
+        hidden.add(
+            this.loadValue(model.template.childNamed('custom').children[0])
+        );
+        hidden.add(
+            this.loadValue(model.template.childNamed('variables').children[0])
+        );
+        scene.template = {
+            name: model.template.attributes.name,
+            version: model.template.attributes.version,
+            hide: hidden
+        };
     }
     model.globalVariables = model.scene.childNamed('variables');
 
@@ -699,6 +787,11 @@ SnapSerializer.prototype.loadScene = function (xmlNode, appVersion, remixID) {
     );
 
     this.objects = {};
+    if (scene.role === 'template' && !keepRoles) {
+        scene.name = '';
+        scene.role = null;
+        scene.createdFromTemplate = true;
+    }
     return scene.initialize();
 };
 
@@ -1068,8 +1161,10 @@ SnapSerializer.prototype.loadCustomBlocks = function (
         }
         definition.type = child.attributes.type || 'command';
         definition.selector = child.attributes.selector || null;
+        definition.reports = child.attributes.reports || null;
         definition.setPrimitive(child.attributes.primitive || null);
         definition.isHelper = (child.attributes.helper === 'true') || false;
+        definition.enforceTypes = (child.attributes.strict === 'true') || false;
         definition.spaceAbove = (child.attributes.space === 'true') || false;
         definition.semantics = child.attributes.semantics || null;
         definition.isGlobal = (isGlobal === true);
@@ -1191,8 +1286,10 @@ SnapSerializer.prototype.loadCustomizedPrimitives = function (
         }
         definition.type = child.attributes.type || 'command';
         definition.selector = sel || null;
+        definition.reports = child.attributes.reports || null;
         definition.setPrimitive(child.attributes.primitive || null);
         definition.isHelper = (child.attributes.helper === 'true') || false;
+        definition.enforceTypes = (child.attributes.strict === 'true') || false;
         definition.semantics = child.attributes.semantics || null;
         definition.isGlobal = true;
 
@@ -1651,7 +1748,8 @@ SnapSerializer.prototype.loadInput = function (model, input, block, object) {
         input.setColor(this.loadColor(model.contents));
     } else {
         val = this.loadValue(model);
-        if (!isNil(val) && !isNil(input) && input.setContents) {
+        if (!isNil(val) && !isNil(input) && input.setContents &&
+                !(input instanceof ADT_SlotMorph)) {
             // checking whether "input" is nil should not
             // be necessary, but apparently is after retina support
             // was added.
@@ -1954,6 +2052,8 @@ SnapSerializer.prototype.loadValue = function (model, object, silently) {
         }
         record();
         return v;
+    case 'color':
+        return this.loadColor(model.contents);
     case 'wish':
     	def = new CustomBlockDefinition(model.attributes.s);
      	def.type = model.attributes.type;
@@ -2017,7 +2117,9 @@ Array.prototype.toXML = function (serializer) {
 // Scenes & multi-scene projects
 
 Project.prototype.toXML = function (serializer) {
-    var thumbdata;
+    var thumbdata,
+        scenes = this.scenes.asArray(),
+        hasTemplate = scenes.some(any => any.role === 'template');
 
     // thumb data catch cross-origin tainting exception when using SVG costumes
     try {
@@ -2026,8 +2128,12 @@ Project.prototype.toXML = function (serializer) {
         thumbdata = null;
     }
 
+    if (scenes.some(any => any.createdFromTemplate) && !hasTemplate) {
+        scenes = scenes.filter(each => each.role !== 'tutorial');
+    }
+
     return serializer.format(
-        '<project name="@" app="@" version="@">' +
+        '<project name="@" app="@" version="@"%%%%%>' +
             '<notes>$</notes>' +
             '<thumbnail>$</thumbnail>' +
             '<scenes select="@">%</scenes>' +
@@ -2035,11 +2141,23 @@ Project.prototype.toXML = function (serializer) {
         this.name || localize('Untitled'),
         serializer.app,
         serializer.version,
+        hasTemplate ?
+            ' lang="' + SnapTranslator.language + '"' : '',
+        hasTemplate ?
+            ' zoom="' + Math.round(ZOOM * 100) + '"' : '',
+        hasTemplate ?
+            ' fade="' +
+                Math.round(100 - (SyntaxElementMorph.prototype.alpha * 100)) +
+                '"'
+            : '',
+        hasTemplate ?
+            ' flat="' + MorphicPreferences.isFlat.toString() + '"' : '',
+        hasTemplate ?
+            ' bright="' + IDE_Morph.prototype.isBright.toString() + '"' : '',
         this.notes || '',
         thumbdata,
-        this.scenes.asArray().indexOf(
-            this.currentScene) + 1,
-        serializer.store(this.scenes.itemsArray())
+        scenes.indexOf(this.currentScene) + 1,
+        serializer.store(scenes)
     );
 };
 
@@ -2062,6 +2180,27 @@ Scene.prototype.toXML = function (serializer) {
         return str;
     }
 
+    function templateXML(dict) {
+        var blocks = dict.hide;
+        return '<template version="' +
+            dict.version +
+            '" name="' +
+            dict.name +
+        '">' +
+            '<primitives>' + serializer.store(blocks.at(1)) + '</primitives>' +
+            '<custom>' + serializer.store(blocks.at(2)) + '</custom>' +
+            '<variables>' + serializer.store(blocks.at(3)) + '</variables>' +
+        '</template>';
+    }
+
+    if (this.role === 'template') {
+        this.template = {
+            name: this.name || localize('Untitled'),
+            version: SnapVersion,
+            hide: this.stage.hiddenGlobalBlocks()
+        };
+    }
+
     serializer.scene = this; // keep the order of sprites in the corral
 
     // capture primitives and apply own ones
@@ -2069,10 +2208,11 @@ Scene.prototype.toXML = function (serializer) {
     SpriteMorph.prototype.blocks = this.blocks;
 
     xml = serializer.format(
-        '<scene name="@"%%%%%%>' +
+        '<scene name="@"%%%%%%%%%%>' +
             '<notes>$</notes>' +
             '%' +
             '<hidden>$</hidden>' +
+            '%' + // template
             '<headers>%</headers>' +
             '<code>%</code>' +
             '<blocks>%</blocks>' +
@@ -2081,6 +2221,7 @@ Scene.prototype.toXML = function (serializer) {
             '<variables>%</variables>' +
             '</scene>',
         this.name || localize('Untitled'),
+        this.role ? ' role="' + this.role + '"' : '',
         this.unifiedPalette ? ' palette="single"' : '',
         this.unifiedPalette && !this.showCategories ?
             ' categories="false"' : '',
@@ -2089,12 +2230,16 @@ Scene.prototype.toXML = function (serializer) {
         this.disableClickToRun ? ' clickrun="false"' : '',
         this.disableDraggingData ? ' dragdata="false"' : '',
         this.penColorModel === 'hsl' ? ' colormodel="hsl"' : '',
+        this.hideEmptyCategories ? ' empty="false"' : '',
+        this.hideSprites ? ' blocksonly="true"' : '',
+        this.enforceTypes ? ' strict="true"' : '',
         this.notes || '',
         serializer.paletteToXML(this.customCategories),
         Object.keys(this.hiddenPrimitives).reduce(
                 (a, b) => a + ' ' + b,
                 ''
             ),
+        this.template ? templateXML(this.template) : '',
         code('codeHeaders'),
         code('codeMappings'),
         serializer.store(this.stage.globalBlocks),
@@ -2566,7 +2711,7 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
     }
 
     return serializer.format(
-        '<block-definition s="@" type="@" category="@"%%%%%>' +
+        '<block-definition s="@" type="@" category="@"%%%%%%%>' +
             '%' +
             (this.variableNames.length ? '<variables>%</variables>' : '@') +
             '<header>@</header>' +
@@ -2583,8 +2728,12 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
         this.primitive && this.isGlobal ?
             ' primitive="' + this.primitive + '"'
             : '',
+        this.reports ?
+            ' reports="' + this.reports + '"'
+            : '',
         this.isHelper ? ' helper="true"' : '',
         this.spaceAbove ? ' space="true"' : '',
+        this.enforceTypes ? ' strict="true"' : '',
         this.type === 'hat' && this.semantics === 'rule' ?
             ' semantics="rule"' : '',
         this.comment ? this.comment.toXML(serializer) : '',
@@ -2819,6 +2968,16 @@ Context.prototype.toXML = function (serializer) {
         this.receiver ? serializer.store(this.receiver) : '',
         this.receiver ? serializer.store(this.origin) : '',
         this.outerContext ? serializer.store(this.outerContext) : ''
+    );
+};
+
+Color.prototype.toXML = function (serializer) {
+    return serializer.format(
+        '<color>$,$,$,$</color>',
+        this.r,
+        this.g,
+        this.b,
+        this.a
     );
 };
 

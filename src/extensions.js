@@ -6,7 +6,7 @@
 
     written by Jens Mönig
 
-    Copyright (C) 2025 by Jens Mönig
+    Copyright (C) 2026 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -30,12 +30,13 @@
 /*global modules, List, StageMorph, Costume, SpeechSynthesisUtterance, Sound,
 IDE_Morph, CamSnapshotDialogMorph, SoundRecorderDialogMorph, isSnapObject, nop,
 Color, Process, contains, localize, SnapTranslator, isString, detect, Point,
-SVG_Costume, newCanvas, WatcherMorph, BlockMorph, HatBlockMorph, invoke,
-BigUint64Array, DeviceOrientationEvent, console*/
+SVG_Costume, newCanvas, WatcherMorph, BlockMorph, HatBlockMorph, invoke, isNil,
+BigUint64Array, DeviceOrientationEvent, DialogBoxMorph, Animation, TableMorph,
+TableFrameMorph, console, Morph, MenuMorph*/
 
 /*jshint esversion: 11, bitwise: false*/
 
-modules.extensions = '2025-March-11';
+modules.extensions = '2026-April-07';
 
 // Global stuff
 
@@ -317,9 +318,11 @@ SnapExtensions.primitives.set(
             ['comment'],
             ['category'],
             ['type'],
+            ['answer'],
             ['scope'],
             ['selector'],
             ['slots'],
+            ['strict'],
             ['defaults'],
             ['menus'],
             ['editables'],
@@ -360,6 +363,13 @@ SnapExtensions.primitives.set(
     'snap_quicksteps(on?)',
     function (bool) {
         StageMorph.prototype.enableQuicksteps = (bool === true);
+    }
+);
+
+SnapExtensions.primitives.set(
+    'snap_extensionexists(prim)',
+    function (prim) {
+        return !isNil(SnapExtensions.primitives.get(prim));
     }
 );
 
@@ -440,6 +450,33 @@ SnapExtensions.primitives.set(
             arr = new Uint8Array(arr);
         }
         return new TextDecoder("utf-8").decode(arr);
+    }
+);
+
+SnapExtensions.primitives.set(
+    'txt_width(txt, fontsize)',
+    function (text, size) {
+        // answer the width of the given text and size in the writing font
+        // also works for hacks that abuse the size paramter
+        // for fancy typography, as in the "writing and formatting" library
+        if (typeof text !== 'string' && typeof text !== 'number') {
+            throw new Error(
+                localize('can only write text or numbers, not a') + ' ' +
+                typeof text
+            );
+        }
+
+        var stage = this.parentThatIsA(StageMorph),
+            context = stage.penTrails().getContext('2d'),
+            len;
+
+        context.save();
+        context.font = size + 'px monospace';
+        context.textAlign = 'left';
+        context.textBaseline = 'alphabetic';
+        len = context.measureText(text).width;
+        context.restore();
+        return len;
     }
 );
 
@@ -605,6 +642,144 @@ SnapExtensions.primitives.set(
     }
 );
 
+SnapExtensions.primitives.set(
+    'dta_export(data, name, type)',
+    function (data, mime, name, proc) {
+        var ide = this.parentThatIsA(IDE_Morph),
+            type = mime.toString() || 'text/txt'; // also for 'text/csv' etc.
+        name = name || localize('data');
+        name = name.toString();
+        ide.saveFileAs(data, type, name);
+    }
+);
+
+SnapExtensions.primitives.set(
+    'dta_import(raw?)',
+    function (raw, proc) {
+        // raw is a Boolean flag selecting to keep the data unparsed
+        var ide = this.parentThatIsA(IDE_Morph),
+            wrld = ide.world(),
+            acc = proc.context.accumulator,
+            inp;
+
+        function userImport() {
+
+            function txtOnlyMsg(ftype, anyway) {
+                ide.confirm(
+                    localize(
+                        'Can only import "text" files. ' +
+                            'You selected a file of type "' +
+                            ftype +
+                            '".'
+                    ) + '\n\n' + localize('Open anyway?'),
+                    'Unable to import',
+                    anyway // callback
+                );
+            }
+
+            function readText(aFile) {
+                var frd = new FileReader(),
+                    ext = aFile.name.split('.').pop().toLowerCase();
+
+                function isTextFile(aFile) {
+                    // special cases for Windows
+                    // check the file extension for text-like-ness
+                    return aFile.type.indexOf('text') !== -1 ||
+                        contains(['txt', 'csv', 'xml', 'json', 'tsv'], ext);
+                }
+
+                function isType(aFile, string) {
+                    return aFile.type.indexOf(string) !== -1 ||
+                        (ext === string);
+                }
+
+                frd.onloadend = function (e) {
+                    if (!raw && isType(aFile, 'csv')) {
+                        acc.data = Process.prototype.parseCSV(e.target.result);
+                    } else if (!raw && isType(aFile, 'json')) {
+                        acc.data = Process.prototype.parseJSON(e.target.result);
+                    } else {
+                        acc.data = e.target.result;
+                    }
+                };
+
+                if (raw || isTextFile(aFile)) {
+                    frd.readAsText(aFile);
+                } else {
+                    // show a warning and an option
+                    // letting the user load the file anyway
+                    txtOnlyMsg(
+                        aFile.type,
+                        () => frd.readAsText(aFile)
+                    );
+                }
+            }
+
+            document.body.removeChild(inp);
+            ide.filePicker = null;
+            if (inp.files.length > 0) {
+                readText(inp.files[inp.files.length - 1]);
+            }
+        }
+
+        if (!acc) {
+            acc = proc.context.accumulator = {
+                data: null
+            };
+            if (ide.filePicker) {
+                document.body.removeChild(ide.filePicker);
+                ide.filePicker = null;
+            }
+            inp = document.createElement('input');
+            inp.type = 'file';
+            inp.style.color = "transparent";
+            inp.style.backgroundColor = "transparent";
+            inp.style.border = "none";
+            inp.style.outline = "none";
+            inp.style.position = "absolute";
+            inp.style.top = "0px";
+            inp.style.left = "0px";
+            inp.style.width = wrld.width() + 'px';
+            inp.style.height = wrld.height() + 'px';
+            inp.addEventListener(
+                "change",
+                userImport,
+                false
+            );
+            inp.addEventListener(
+                "cancel",
+                () => {
+                    acc.data = '';
+                    document.body.removeChild(inp);
+                    ide.filePicker = null;
+                },
+                false
+            );
+            document.body.appendChild(inp);
+            ide.filePicker = inp;
+            inp.click();
+        } else if (acc.data !== null) {
+            return acc.data;
+        }
+        proc.pushContext('doYield');
+        proc.pushContext();
+    }
+);
+
+// Custom Data Types (adt_):
+
+SnapExtensions.primitives.set(
+    'adt_table(data)',
+    function (data, proc) {
+        proc.assertType(data, 'list');
+        return new TableFrameMorph(
+            new TableMorph(
+                data.lookup('cells').asTable(data.lookup('header'))
+            )
+        );
+    }
+);
+
 // World map (map_):
 
 SnapExtensions.primitives.set(
@@ -725,6 +900,48 @@ SnapExtensions.primitives.set(
 );
 
 SnapExtensions.primitives.set(
+    'tts_activate(msg)',
+    function (label, proc) {
+        // create a DOM button element covering the stage displaying the
+        // given label text, if any, blocking the current script's
+        // execution until the user has clicked the button, which will
+        // enable speech synthesis on stupid iOS / iPadOS devices,
+        // where Apple forgot to activate speech synthesis when the user
+        // interacts with a canvas element. Sigh.
+        var button = document.getElementById('morphic_speechActivator'),
+            area = this.parentThatIsA(StageMorph).extent(),
+            center = this.worldPoint(new Point(0, 0)),
+            acc = proc.context.accumulator;
+        if (button) {
+            acc = proc.context.accumulator = { blocking: true };
+            proc.pushContext('doYield');
+            proc.pushContext();
+        } else if (!acc?.blocking) {
+            acc = proc.context.accumulator = { blocking: true };
+            button = document.createElement("button");
+            button.setAttribute('id', 'morphic_speechActivator');
+            button.textContent = label;
+            button.style.position = 'absolute';
+            button.style.width = Math.max(20, area.x) + 'px';
+            button.style.height = Math.max(10, area.y) + 'px';
+
+            button.onclick = () => {
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance());
+                document.body.removeChild(button);
+                acc.blocking = false;
+            };
+
+            document.body.appendChild(button);
+            button.style.left = center.x - (button.offsetWidth / 2) + 'px';
+            button.style.top = center.y - (button.offsetHeight / 2) + 'px';
+            button.focus();
+            proc.pushContext('doYield');
+            proc.pushContext();
+        }
+    }
+);
+
+SnapExtensions.primitives.set(
     'tts_recognize',
     function (proc) {
         var sprec, done,
@@ -738,22 +955,47 @@ SnapExtensions.primitives.set(
                 throw new Error('Speech Recognition is unavailable');
             }
             acc = proc.context.accumulator = {
+                start: false,
                 voice: new sprec(),
                 text: null
             };
             acc.voice.onresult = (event) => {
                 acc.text = event.results[0][0].transcript;
             };
+            acc.voice.onspeechstart = () => acc.start = true;
             done = () => acc.text = '';
             acc.voice.onnomatch = done;
             acc.voice.orreror = done;
             acc.voice.start();
-
         } else if (acc.text !== null) {
             return acc.text;
         }
         proc.pushContext('doYield');
         proc.pushContext();
+    }
+);
+
+SnapExtensions.primitives.set(
+    'tts_started',
+    function () {
+        var started = false;
+        this.parentThatIsA(StageMorph).threads.processes.forEach(proc => {
+            if (proc?.context?.accumulator?.voice) {
+                started = proc.context.accumulator.start;
+            }
+        });
+        return started;
+    }
+);
+
+SnapExtensions.primitives.set(
+    'tts_stop',
+    function () {
+        this.parentThatIsA(StageMorph).threads.processes.forEach(proc => {
+            if (proc?.context?.accumulator?.voice) {
+                proc.context.accumulator.text = '';
+            }
+        });
     }
 );
 
@@ -1088,19 +1330,49 @@ SnapExtensions.primitives.set(
 SnapExtensions.primitives.set(
     'cst_load(url)',
     function (url, proc) {
-        if (!proc.context.accumulator) {
-            proc.context.accumulator = {
+        if (!url) {
+            return '';
+        }
+
+        proc.assertType(url, 'text');
+
+        let context = proc.context;
+
+        if (!context.accumulator) {
+            context.accumulator = {
                 img: new Image(),
                 cst: null,
+                svg: false,
             };
-            proc.context.accumulator.img.onload = function () {
-                var canvas = newCanvas(new Point(this.width, this.height));
-                canvas.getContext('2d').drawImage(this, 0, 0);
-                proc.context.accumulator.cst = new Costume(canvas);
+            context.accumulator.img.onload = function () {
+                if (context.accumulator.svg) {
+                    context.accumulator.cst = new SVG_Costume(this, 'Costume');
+                } else {
+                    var canvas = newCanvas(new Point(this.width, this.height));
+                    canvas.getContext('2d').drawImage(this, 0, 0);
+                    context.accumulator.cst = new Costume(canvas, 'Costume');
+                }
             };
-            proc.context.accumulator.img.src = url;
-        } else if (proc.context.accumulator.cst) {
-            return proc.context.accumulator.cst;
+            context.accumulator.img.onerror = function () {
+                context.accumulator.cst = '';
+            };
+            fetch(url).then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                if (response.headers.get('content-type') === 'image/svg+xml') {
+                    context.accumulator.svg = true;
+                }
+
+                return response.blob();
+            }).catch(() => {
+                context.accumulator.cst = '';
+            }).then((response) => {
+                context.accumulator.img.src = URL.createObjectURL(response);
+            });
+        } else if (context.accumulator.cst || context.accumulator.cst === '') {
+            return context.accumulator.cst;
         }
         proc.pushContext('doYield');
         proc.pushContext();
@@ -1139,6 +1411,94 @@ SnapExtensions.primitives.set(
         cst.embeddedData = data || null;
         cst.version = Date.now();
         ide.recordUnsavedChanges();
+    }
+);
+
+SnapExtensions.primitives.set(
+    'cst_morph(cst)',
+    function (costume, proc) {
+        var m = new Morph(),
+            imageView = () => new DialogBoxMorph().inform(
+                'Image view',
+                null,
+                this.world(),
+                costume.contents,
+                true // enable exporting
+            ),
+            img;
+        proc.assertType(costume, 'costume');
+        img = costume.contents;
+        m.isCachingImage = true;
+        m.bounds.setWidth(img.width);
+        m.bounds.setHeight(img.height);
+        m.cachedImage = img;
+        m.isCustomSwatch = true;
+
+        m.mouseDoubleClick = imageView;
+
+        // support exporting costumes directly from speech balloons:
+        m.userMenu = function () {
+            var menu = new MenuMorph(this),
+                ide = this.parentThatIsA(IDE_Morph)||
+                    this.world().childThatIsA(IDE_Morph);
+
+            if (ide.isAppMode) {return; }
+            menu.addItem('open in dialog...', imageView);
+            menu.addItem(
+                'export',
+                () => ide.saveCanvasAs(img, costume.name || 'image')
+            );
+            return menu;
+        };
+
+        return m;
+    }
+);
+
+SnapExtensions.primitives.set(
+    'cst_shrink-wrap(cst)',
+    function (costume) {
+        costume.shrinkWrap();
+        return costume;
+    }
+);
+
+// Sounds (snd_):
+
+SnapExtensions.primitives.set(
+    'snd_load(url)',
+    function (url, proc) {
+        if (!url) {
+            return '';
+        }
+        
+        proc.assertType(url, 'text');
+
+        let context = proc.context;
+
+        if (!context.accumulator) {
+            context.accumulator = {
+                snd: null,
+            };
+
+            fetch(url).then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                return response.blob();
+            }).catch(() => {
+                context.accumulator.snd = '';
+            }).then((response) => {
+                context.accumulator.snd = new Sound(
+                    new Audio(URL.createObjectURL(response))
+                );
+            });
+        } else if (context.accumulator.snd || context.accumulator.snd === '') {
+            return context.accumulator.snd;
+        }
+        proc.pushContext('doYield');
+        proc.pushContext();
     }
 );
 
@@ -1296,7 +1656,7 @@ SnapExtensions.primitives.set(
         this.changeBlockVisibility(context.expression, true);
         ide.flushBlocksCache();
         ide.refreshPalette();
-        ide.categories.refreshEmpty();
+        ide.refreshEmptyCategories();
     }
 );
 
@@ -1308,7 +1668,7 @@ SnapExtensions.primitives.set(
         this.changeBlockVisibility(context.expression, false);
         ide.flushBlocksCache();
         ide.refreshPalette();
-        ide.categories.refreshEmpty();
+        ide.refreshEmptyCategories();
     }
 );
 
@@ -1426,6 +1786,216 @@ SnapExtensions.primitives.set(
     }
 );
 
+SnapExtensions.primitives.set(
+    'ide_switch_to_palette(category)',
+    function (category) {
+        var ide = this.parentThatIsA(IDE_Morph);
+        if (ide.scene.unifiedPalette) {
+            ide.scrollPaletteToCategory(category);
+        } else {
+            ide.currentCategory = category;
+            ide.categories.buttons.forEach(each =>
+                each.refresh()
+            );
+            ide.refreshPalette(true);
+        }
+    }
+);
+
+// Tutorials & Cloned Scenes (scn_)
+
+SnapExtensions.primitives.set(
+    'scn_exit',
+    function () {
+        var stage = this.parentThatIsA(StageMorph);
+        if (!stage.tutorialMode) {return; }
+        stage.parentThatIsA(DialogBoxMorph).ok();
+    }
+);
+
+SnapExtensions.primitives.set(
+    'scn_scale(num)',
+    function (scale, proc) {
+        var wrld = this.world(),
+            stage = this.parentThatIsA(StageMorph),
+            acc = proc.context.accumulator,
+            dlg, center;
+        if (!stage.tutorialMode) {return; }
+        if (!scale) {return stage.scale; }
+        dlg = stage.parentThatIsA(DialogBoxMorph);
+        center = dlg.center();
+        if (dlg.ide.isAnimating) {
+            if (!proc.context.accumulator) {
+                acc = proc.context.accumulator = {progress: true };
+                wrld.animations.push(new Animation(
+                    s => { // setter
+                        stage.setScale(s);
+                        dlg.fixLayout();
+                        dlg.setCenter(center);
+                        dlg.keepWithin(wrld);
+                        center = dlg.center();
+                    },
+                    () => stage.scale, // getter
+                    Math.max(scale, dlg.minScale) - stage.scale, // delta
+                    300, // duration in ms
+                    t => Math.pow(t, 6), // easing
+                    () => acc.progress = false // null // onComplete
+                ));
+            } else if (!acc.progress) {
+                return;
+            }
+            proc.pushContext('doYield');
+            proc.pushContext();
+        } else {
+            stage.setScale(scale);
+            dlg.fixLayout();
+            dlg.setCenter(center);
+            dlg.keepWithin(wrld);
+        }
+    }
+);
+
+SnapExtensions.primitives.set(
+    'scn_position(pane, x, y)',
+    function (pane, x = 0, y = 0, proc = null) {
+        var stage = this.parentThatIsA(StageMorph),
+            acc = proc.context.accumulator,
+            dlg, rect, area, target;
+
+        if (!stage.tutorialMode) {return; }
+        dlg = stage.parentThatIsA(DialogBoxMorph);
+
+        switch(pane.toLowerCase()) {
+        case 'ide':
+            rect = dlg.ide.bounds;
+            break;
+        case 'stage':
+            rect = dlg.ide.stage.bounds;
+            break;
+        case 'palette':
+            rect = dlg.ide.palette.bounds;
+            break;
+        case 'corral':
+            rect = dlg.ide.corral.bounds;
+            break;
+        case 'scripts':
+            rect = dlg.ide.spriteEditor.bounds;
+            break;
+        default:
+            return;
+        }
+        area = rect.extent().subtract(dlg.extent());
+        target = rect.origin.add(
+            area.multiplyBy(new Point(+x, -(+y)).add(1).divideBy(2))
+        );
+
+        if (dlg.ide.isAnimating) {
+            if (!proc.context.accumulator) {
+                acc = proc.context.accumulator = {progress: true };
+                dlg.glideTo(
+                    target,
+                    300, // msecs
+                    t => Math.pow(t, 6), // easing
+                    () => {
+                        // dlg.keepWithin(wrld);
+                        acc.progress = false;
+                    }
+                );
+            } else if (!acc.progress) {
+                return;
+            }
+            proc.pushContext('doYield');
+            proc.pushContext();
+        } else {
+            dlg.setPosition(target);
+        }
+    }
+);
+
+SnapExtensions.primitives.set(
+    'scn_dimensions(pane)',
+    function (pane) {
+        var stage = this.parentThatIsA(StageMorph),
+            dlg, rect;
+
+        if (!stage.tutorialMode) {return ''; }
+        dlg = stage.parentThatIsA(DialogBoxMorph);
+
+        switch(pane.toLowerCase()) {
+        case 'ide':
+            rect = dlg.ide.bounds;
+            break;
+        case 'stage':
+            rect = dlg.ide.stage.bounds;
+            break;
+        case 'palette':
+            rect = dlg.ide.palette.bounds;
+            break;
+        case 'corral':
+            rect = dlg.ide.corral.bounds;
+            break;
+        case 'scripts':
+            rect = dlg.ide.spriteEditor.bounds;
+            break;
+        case 'tutorial':
+            rect = dlg.bounds;
+            break;
+        default:
+            return;
+        }
+        return new List([rect.left(), rect.top(), rect.right(), rect.bottom()]);
+    }
+);
+
+// Autograding / Code-critique / structural help - mostly for tutorials (meta_)
+
+SnapExtensions.primitives.set(
+    'meta_current(asset)', // sprite, sprites, stage, scripts, category, tab
+    function (choice, proc) {
+        var stage = this.parentThatIsA(StageMorph),
+            dlg, ide;
+        if (!stage.tutorialMode) {return; }
+        dlg = stage.parentThatIsA(DialogBoxMorph);
+        ide = dlg ? dlg.ide : stage.parentThatIsA(IDE_Morph);
+        if (!ide) {return ''; }
+
+        switch (choice) {
+        case 'scripts':
+            return new List(
+                ide.currentSprite.scripts.sortedElements().filter(
+                    each => each instanceof BlockMorph
+                ).map(
+                    each => each.fullCopy().reify()
+                )
+            );
+        case 'sprites':
+            return ide.sprites;
+        case 'stage':
+            return ide.stage;
+        case 'tab':
+            return ide.currentTab;
+        case 'category':
+            return ide.categories.buttons.find(each =>
+                each.state).category;
+        default: // 'sprite'
+            return ide.currentSprite;
+        }
+    }
+);
+
+SnapExtensions.primitives.set(
+    'meta_current_sprite',
+    function (proc) {
+        var stage = this.parentThatIsA(StageMorph),
+            dlg, ide;
+        if (!stage.tutorialMode) {return; }
+        dlg = stage.parentThatIsA(DialogBoxMorph);
+        ide = dlg ? dlg.ide : stage.parentThatIsA(IDE_Morph);
+        if (!ide) {return ''; }
+        return ide.currentSprite;
+    }
+);
+
 // Synchronization
 
 SnapExtensions.primitives.set(
@@ -1436,6 +2006,20 @@ SnapExtensions.primitives.set(
         }
         proc.assertType(xml, 'text');
         this.synchScriptsFrom(xml);
+    }
+);
+
+// Pen - drawing shapes
+
+SnapExtensions.primitives.set(
+    'pen_path(points, [fill, close])',
+    function (points, fill, close, proc) {
+        proc.assertType(this, 'sprite');
+        proc.assertType(points, 'list');
+        if (points.itemsArray().some(any => !proc.isCoordinate(any))) {
+            throw new Error('expecting a list of x/y coordinates');
+        }
+        this.drawPath(points, fill, close);
     }
 );
 

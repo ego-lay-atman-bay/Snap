@@ -1,6 +1,6 @@
 /*global self, caches*/
 /*jshint esversion: 6*/
-var snapVersion = '10.7.2',
+var snapVersion = '12-dev',
     cacheName = `snap-pwa-${snapVersion}`,
     filesToCache = [
         'snap.html',
@@ -42,6 +42,7 @@ var snapVersion = '10.7.2',
         'locale/lang-de.js',
         'locale/lang-dk.js',
         'locale/lang-el.js',
+        'locale/lang-en_BR.js',
         'locale/lang-eo.js',
         'locale/lang-es.js',
         'locale/lang-et.js',
@@ -78,12 +79,14 @@ var snapVersion = '10.7.2',
         'locale/lang-ua.js',
         'locale/lang-zh_CN.js',
         'locale/lang-zh_TW.js',
+        'locale/lang-vi.js',
 
         //libraries
         'libraries/LIBRARIES.json',
 
         'libraries/animation_module.xml',
         'libraries/apl.xml',
+        'libraries/arcs_module.xml',
         'libraries/audioComp_module.xml',
         'libraries/bar-charts.xml',
 
@@ -120,9 +123,17 @@ var snapVersion = '10.7.2',
 
         'libraries/code2blocks_module.xml',
         'libraries/colors.xml',
+        'libraries/colors_module.xml',
         'libraries/continuations_module.xml',
         'libraries/crayons.xml',
+        'libraries/drawPath_module.xml',
         'libraries/Eisenbergification.xml',
+
+        // Edge
+        'libraries/edge AI.xml',
+        'libraries/edge/init.js',
+        'libraries/edge/edge.js',
+
         'libraries/embroidery_module.xml',
         'libraries/events_module.xml',
         'libraries/frequency_distribution_module.xml',
@@ -134,7 +145,6 @@ var snapVersion = '10.7.2',
         'libraries/list-utilities.xml',
         'libraries/localstorage_module.xml',
         'libraries/tiles_module.xml',
-        'libraries/arcs_module.xml',
         'libraries/make-variables.xml',
         'libraries/maps_module.xml',
         'libraries/menu_module.xml',
@@ -146,19 +156,41 @@ var snapVersion = '10.7.2',
         'libraries/mqtt.js',
         'libraries/mqtt.xml',
 
+        'libraries/neural_networks_module.xml',
         'libraries/OOP_module.xml',
         'libraries/parallel_module.xml',
         'libraries/pixel_module.xml',
         'libraries/plot_bars_module.xml',
         'libraries/replace_letters_module.xml',
+
+        // Snap4Arduino
+        'libraries/s4aConn.xml',
+        'libraries/s4aConn/init.js',
+        'libraries/s4aConn/s4aConn.js',
+        'libraries/s4aConn/firmata-web/WebSerialTransport.js',
+        'libraries/s4aConn/firmata-web/firmata.js',
+        'libraries/s4aConn/firmata-web/index.js',
+        'libraries/s4aConn/firmata-web/types.js',
+        'libraries/s4aConn/firmata-web/events.js',
+        'libraries/s4aConn/firmata-web/onewireutils.js',
+        'libraries/s4aConn/firmata-web/encoder7bit.js',
+        'libraries/s4aConn/firmata-web/buffer-es6/package.json',
+        'libraries/s4aConn/firmata-web/buffer-es6/index.js',
+        'libraries/s4aConn/firmata-web/buffer-es6/isArray.js',
+        'libraries/s4aConn/firmata-web/buffer-es6/base64.js',
+        'libraries/s4aConn/firmata-web/buffer-es6/ieee754.js',
+
         'libraries/schemeNumber.js',
 
+        // SciSnap
         'libraries/SciSnap3Blocks.xml',
         'libraries/SciSnap3Extensions.js',
         // 'libraries/SciSnap3Costumedata.js', // commented out b/c it crashes Chrome
 
+        'libraries/shapes_module.xml',
         'libraries/sprite_api_module.xml',
 
+        // TuneScope
         'libraries/TuneScope.xml',
 
             // TuneScope dependencies
@@ -203,16 +235,28 @@ var snapVersion = '10.7.2',
             'libraries/TuneScope/0320_GeneralUserGS_sf2_file.js',
             'libraries/TuneScope/0230_Aspirin_sf2_file.js',
 
+        // serial port
         'libraries/serial_module.xml',
+        'libraries/serial/init.js',
+        'libraries/serial/serial.js',
+
         'libraries/signada.js',
         'libraries/signada.xml',
         'libraries/speech_module.xml',
         'libraries/stream-tools.xml',
         'libraries/strings.xml',
+        'libraries/tables_module.xml',
         'libraries/textCostumes_module.xml',
         'libraries/textformat_module.xml',
+        'libraries/tutorial_module.xml',
         'libraries/try-catch.xml',
         'libraries/variable_declaration_module.xml',
+
+        // websockets
+        'libraries/websockets.xml',
+        'libraries/websockets/websockets.js',
+        'libraries/websockets/init.js',
+
         'libraries/word-sentence.xml',
         'libraries/words_module.xml',
 
