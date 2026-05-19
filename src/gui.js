@@ -81,17 +81,17 @@ BlockRemovalDialogMorph,TableMorph, isSnapObject, isRetinaEnabled, SliderMorph,
 disableRetinaSupport, enableRetinaSupport, isRetinaSupported, MediaRecorder,
 Animation, BoxMorph, BlockDialogMorph, RingMorph, Project, ZERO, BLACK, CLEAR,
 BlockVisibilityDialogMorph, ThreadManager, isString, SnapExtensions, snapEquals,
-HatBlockMorph*/
+HatBlockMorph, ZOOM*/
 
-/*jshint esversion: 8*/
+/*jshint esversion: 11*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.gui = '2025-May-05';
+modules.gui = '2025-December-19';
 
 // Declarations
 
-var SnapVersion = '10.7.2';
+var SnapVersion = '12-dev';
 
 var IDE_Morph;
 var ProjectDialogMorph;
@@ -127,12 +127,16 @@ IDE_Morph.prototype.setDefaultDesign = function () { // skeuomorphic
     MorphicPreferences.isFlat = false;
     IDE_Morph.prototype.scriptsPaneTexture = this.scriptsTexture();
     SyntaxElementMorph.prototype.contrast = 65;
+    DialogBoxMorph.prototype.corner = 12;
+    DialogBoxMorph.prototype.padding = 14;
 };
 
 IDE_Morph.prototype.setFlatDesign = function () {
     MorphicPreferences.isFlat = true;
     IDE_Morph.prototype.scriptsPaneTexture = null;
     SyntaxElementMorph.prototype.contrast = 20;
+    DialogBoxMorph.prototype.corner = 8;
+    DialogBoxMorph.prototype.padding = 10;
 };
 
 IDE_Morph.prototype.setDefaultTheme = function () { // dark
@@ -177,6 +181,8 @@ IDE_Morph.prototype.setDefaultTheme = function () { // dark
     SceneIconMorph.prototype.labelColor
         = IDE_Morph.prototype.buttonLabelColor;
 
+    DialogBoxMorph.prototype.color = PushButtonMorph.prototype.color;
+
     ScriptsMorph.prototype.feedbackColor = WHITE;
 };
 
@@ -219,6 +225,8 @@ IDE_Morph.prototype.setBrightTheme = function () {
         = IDE_Morph.prototype.buttonLabelColor;
     SceneIconMorph.prototype.labelColor
         = IDE_Morph.prototype.buttonLabelColor;
+
+    DialogBoxMorph.prototype.color = IDE_Morph.prototype.frameColor;
 
     ScriptsMorph.prototype.feedbackColor = new Color(153, 255, 213);
 };
@@ -279,6 +287,7 @@ function IDE_Morph(config = {}) {
                                 with unsaved changes
         preserveTitle:  bool, do not set the tab title dynamically to reflect
                                 the current Snap! version
+        zoom:           num, global zoom factor, e.g. 1.25
         blocksZoom:     num, zoom factor for blocks, e.g. 1.5
         blocksFade:     num, fading percentage for blocks, e.g. 85
         zebra:          num, contrast percentage for nesting same-color blocks
@@ -309,6 +318,9 @@ IDE_Morph.prototype.init = function (config) {
     this.scene = this.scenes.at(1);
     this.isAddingScenes = false;
     this.isAddingNextScene = false;
+
+    // tutorial scene(s)
+    this.tutorial = null; // active dialog box or tutorial pane, if any
 
     // editor
     this.globalVariables = this.scene.globalVariables;
@@ -350,6 +362,7 @@ IDE_Morph.prototype.init = function (config) {
     this.paletteWidth = 200; // initially same as logo width
     this.stageRatio = 1; // for IDE animations, e.g. when zooming
     this.performerMode = false;
+    this.performerScale = 1;
 
     this.wasSingleStepping = false; // for toggling to and from app mode
 
@@ -423,6 +436,8 @@ IDE_Morph.prototype.openIn = function (world) {
 
     this.buildPanes();
     world.add(this);
+    this.applySavedMagnification();
+    // this.applySavedStageScale(); // commented out for now
     world.userMenu = this.userMenu;
 
     // override SnapCloud's user message with Morphic
@@ -468,10 +483,10 @@ IDE_Morph.prototype.openIn = function (world) {
         }
         if (dict.hideControls) {
             myself.controlBar.hide();
-            window.onbeforeunload = nop;
+            window.noExitWarning = true;
         }
         if (dict.noExitWarning) {
-            window.onbeforeunload = window.cachedOnbeforeunload;
+            window.noExitWarning = true;
         }
         if (dict.blocksZoom) {
             myself.savingPreferences = false;
@@ -487,6 +502,12 @@ IDE_Morph.prototype.openIn = function (world) {
     }
 
     function autoRun () {
+        // if we're going to run the project anyway, remove the embed
+        // overlay in case we're in embedMode
+        if (myself.embedOverlay) {
+            myself.embedPlayButton.destroy();
+            myself.embedOverlay.destroy();
+        }
         // wait until all costumes and sounds are loaded
         if (isLoadingAssets()) {
             myself.world().animations.push(
@@ -848,6 +869,8 @@ IDE_Morph.prototype.applyConfigurations = function () {
                 this.getURL(
                     cnf.load,
                     projectData => {
+                        this.buildPanes();
+                        this.fixLayout();
                         if (projectData.indexOf('<snapdata') === 0) {
                             this.rawOpenCloudDataString(projectData);
                         } else if (
@@ -959,7 +982,7 @@ IDE_Morph.prototype.applyConfigurations = function () {
 
     // disable onbeforeunload close warning
     if (cnf.noExitWarning) {
-        window.onbeforeunload = window.cachedOnbeforeunload;
+        window.noExitWarning = true;
     }
 };
 
@@ -970,7 +993,7 @@ IDE_Morph.prototype.applyPaneHidingConfigurations = function () {
     if (cnf.hideControls) {
         this.logo.hide();
         this.controlBar.hide();
-        window.onbeforeunload = nop;
+        window.noExitWarning = true;
     }
 
     // hide categories
@@ -1521,7 +1544,18 @@ IDE_Morph.prototype.createControlBar = function () {
         steppingButton.setRight(slider.left() - padding);
 
         settingsButton.setCenter(myself.controlBar.center());
-        settingsButton.setLeft(this.left());
+        settingsButton.setLeft(
+            Math.max(
+                this.left() - 55,
+                Math.min(
+                    this.left(),
+                    steppingButton.left() -
+                        settingsButton.width() -
+                        padding -
+                        35
+                )
+            )
+        );
 
         if (myself.config.hideSettings) {
             settingsButton.hide();
@@ -1912,10 +1946,10 @@ IDE_Morph.prototype.createPalette = function (forSearching) {
         };
     }
 
+    this.palette.wantsDropOf = (morph) => !(morph instanceof DialogBoxMorph);
+
     this.palette.reactToDropOf = (droppedMorph, hand) => {
-        if (droppedMorph instanceof DialogBoxMorph) {
-            this.world().add(droppedMorph);
-        } else if (droppedMorph instanceof SpriteMorph) {
+        if (droppedMorph instanceof SpriteMorph) {
             this.removeSprite(droppedMorph);
         } else if (droppedMorph instanceof SpriteIconMorph) {
             droppedMorph.destroy();
@@ -2163,7 +2197,10 @@ IDE_Morph.prototype.createSpriteBar = function () {
         tabColors,
         null, // target
         () => tabBar.tabTo('scripts'),
-        localize('Scripts'), // label
+        [ // label
+            new SymbolMorph('blocks', 10),
+            localize('Scripts')
+        ],
         () => this.currentTab === 'scripts' // query
     );
     tab.padding = 3;
@@ -2191,9 +2228,11 @@ IDE_Morph.prototype.createSpriteBar = function () {
         tabColors,
         null, // target
         () => tabBar.tabTo('costumes'),
-        localize(this.currentSprite instanceof SpriteMorph ?
-            'Costumes' : 'Backgrounds'
-        ),
+        [ // label
+            new SymbolMorph('brush', 10),
+            localize(this.currentSprite instanceof SpriteMorph ? 'Costumes'
+                : 'Backgrounds')
+        ],
         () => this.currentTab === 'costumes' // query
     );
     tab.padding = 3;
@@ -2209,7 +2248,10 @@ IDE_Morph.prototype.createSpriteBar = function () {
         tabColors,
         null, // target
         () => tabBar.tabTo('sounds'),
-        localize('Sounds'), // label
+        [ // label
+            new SymbolMorph('speaker', 10),
+            localize('Sounds')
+        ],
         () => this.currentTab === 'sounds' // query
     );
     tab.padding = 3;
@@ -2539,7 +2581,7 @@ IDE_Morph.prototype.createCorral = function (keepSceneAlbum) {
         this.stageIcon.setLeft(this.left() + padding);
 
         // scenes
-        if (myself.scenes.length() < 2) {
+        if (myself.tutorial || myself.scenes.length() < 2) {
             this.album.hide();
         } else {
             this.stageIcon.setTop(this.top());
@@ -2623,6 +2665,7 @@ IDE_Morph.prototype.fixLayout = function (situation) {
         cnf = this.config,
         border = cnf.border || 0,
         flag,
+        mz,
         maxPaletteWidth;
 
     // logo
@@ -2669,13 +2712,17 @@ IDE_Morph.prototype.fixLayout = function (situation) {
             this.stageRatio = 1;
             this.isSmallStage = false;
             this.stage.dimensions = new Point(
-                    this.width() - this.palette.width(),
-                    this.palette.height() -
+                    (this.width() - this.palette.width()) / this.performerScale,
+                    (this.palette.height() -
                         this.corralBar.height() -
                         this.corral.childThatIsA(SpriteIconMorph).height()
+                    ) / this.performerScale
             );
             this.stage.stopVideo();
-            this.stage.setExtent(this.stage.dimensions);
+            this.stage.setExtent(new Point(
+                this.stage.dimensions.x * this.performerScale,
+                this.stage.dimensions.y * this.performerScale
+            ));
             this.stage.resizePenTrails();
             Costume.prototype.maxDimensions = this.stage.dimensions;
             this.paletteHandle.fixLayout();
@@ -2794,6 +2841,12 @@ IDE_Morph.prototype.fixLayout = function (situation) {
             this.corral.fixLayout();
         }
     }
+
+    // adjust the global zoom if necessary
+    mz = this.maxZoom();
+    if (mz < (ZOOM * 100) && mz >= 100) {
+        this.setZoom(mz);
+    }
 };
 
 // IDE_Morph project properties
@@ -2836,14 +2889,14 @@ IDE_Morph.prototype.setProjectNotes = function (string) {
 
 IDE_Morph.prototype.setExtent = function (point) {
     var cnf = this.config,
-        padding = new Point(430, 110),
         minExt,
         ext,
         maxWidth,
-        minWidth,
         maxHeight,
         minRatio,
-        maxRatio;
+        maxRatio,
+        newRatio,
+        delta;
 
     // determine the minimum dimensions making sense for the current mode
     if (this.isAppMode) {
@@ -2854,13 +2907,7 @@ IDE_Morph.prototype.setExtent = function (point) {
     } else if (cnf.noSprites) {
         minExt = new Point(100, 100);
     } else {
-        if (this.stageRatio > 1) {
-            minExt = padding.add(this.stage.dimensions);
-        } else {
-            minExt = padding.add(
-                this.stage.dimensions.multiplyBy(this.stageRatio)
-            );
-        }
+        minExt = new Point(this.minWidth(), this.minHeight());
     }
     if (this.performerMode) {
         ext = point;
@@ -2873,23 +2920,85 @@ IDE_Morph.prototype.setExtent = function (point) {
         if (!cnf.noSprites) {
             maxWidth = ext.x -
                 (200 + this.spriteBar.tabBar.width() + (this.padding * 2));
-            minWidth = SpriteIconMorph.prototype.thumbSize.x * 3;
-            maxHeight = (ext.y - SpriteIconMorph.prototype.thumbSize.y * 3.5);
-            minRatio = minWidth / this.stage.dimensions.x;
+            maxHeight = ext.y -
+                SpriteIconMorph.prototype.thumbSize.y * 3;
+            minRatio = Math.max(
+                this.minStageWidth() / this.stage.dimensions.x,
+                this.minStageHeight() / this.stage.dimensions.y
+            );
             maxRatio = Math.min(
-                (maxWidth / this.stage.dimensions.x),
-                (maxHeight / this.stage.dimensions.y)
+                maxWidth / this.stage.dimensions.x,
+                maxHeight / this.stage.dimensions.y
             );
-            this.stageRatio = Math.min(
+            newRatio = Math.min(
                 maxRatio,
-                Math.max(minRatio,this.stageRatio)
+                Math.max(minRatio, this.stageRatio)
             );
+            if (
+                ext.gt(this.extent()) &&
+                newRatio < 1 &&
+                this.stage.extent().lt(new Point(maxWidth, maxHeight))
+            ) {
+                delta = ext.divideBy(this.extent());
+                delta = Math.min(delta.x, delta.y);
+                newRatio = Math.min(newRatio * delta, 1);
+            }
+            this.stageRatio = newRatio;
+            this.isSmallStage = (this.stageRatio !== 1);
+            this.controlBar.stageSizeButton.refresh();
         }
     }
 
     // apply
     IDE_Morph.uber.setExtent.call(this, ext);
     this.fixLayout();
+};
+
+IDE_Morph.prototype.minWidth = function () {
+    // answer the minimum horizontal space required to render the full IDE
+    // in edit mode with all panes and UI elements,
+    // constrained by displaying all elements in the control bar
+    var buttons = this.controlBar.children.filter(morph =>
+            morph instanceof PushButtonMorph),
+        minControlBarWidth = this.logo.width() - 60 +
+            buttons.map(each => each.width()).reduce((a, b) => a + b) +
+                this.controlBar.steppingSlider.width(),
+        minTabBarWidth = this.minStageWidth() +
+            this.spriteBar.tabBar.width() +
+            this.logo.width();
+    return Math.max(minControlBarWidth, minTabBarWidth);
+};
+
+IDE_Morph.prototype.minHeight = function () {
+    // answer the minimum vertical space required to render the full IDE
+    // in edit mode with all panes and UI elements,
+    // constrained by displaying the control bar, and whichever requires more
+    // space:
+    // - a minimal stage and the corral with a single row of icons
+    //      - the stage height is constrained by the minimum stage width
+    // - the category buttons including user defined ones, a minimal palette
+    // - the sprite bar (name field and tabs) and a minimal scripts pane
+    var left = this.categories.height() + 100,
+        middle = this.spriteBar.height() + 100,
+        right = this.minStageHeight() +
+            SpriteIconMorph.prototype.thumbSize.y * 3;
+    return this.controlBar.height() + Math.max(left, middle, right);
+};
+
+IDE_Morph.prototype.minStageWidth = function () {
+    // answer the minimum horizontal space to which the stage with its current
+    // dimensions can be reduced without distorting the layout of the IDE in
+    // edit mode, constrained by being able to display a minimal corral with
+    // 2 icons and scroll bars
+    return SpriteIconMorph.prototype.thumbSize.x * 3;
+};
+
+IDE_Morph.prototype.minStageHeight = function () {
+    // answer the minimum vertical space required to display a minimal
+    // renditions of the stage in its current dimensions,
+    // constrained by the stage's dimensions and its minimum width
+    var ratio = this.minStageWidth() / this.stage.dimensions.x;
+    return this.stage.dimensions.y * ratio;
 };
 
 // IDE_Morph rendering
@@ -3005,7 +3114,7 @@ IDE_Morph.prototype.droppedSVG = function (anImage, name) {
         svgObj = new DOMParser().parseFromString(
             atob(svgStrEncoded), "image/svg+xml"
         ).firstElementChild,
-        normalizing = false;
+        normalizing = true; // false; // v11.1: always reconfigure SVGs
 
     name = name.split('.')[0];
 
@@ -3204,6 +3313,20 @@ IDE_Morph.prototype.droppedBinary = function (anArrayBuffer, name) {
     }
 };
 
+// IDE_Morph global zoom gesture events
+
+IDE_Morph.prototype.mouseScroll = function (y) {
+    if (this.world().currentKey === 16 && !this.config.hideSettings) {
+        this.setZoom(ZOOM * 100 - y * 5);
+    }
+};
+
+IDE_Morph.prototype.mouseDoubleClick = function () {
+    if (this.world().currentKey === 16 && !this.config.hideSettings) {
+        this.setZoom(100);
+    }
+};
+
 // IDE_Morph button actions
 
 IDE_Morph.prototype.refreshPalette = function (shouldIgnorePosition) {
@@ -3350,7 +3473,11 @@ IDE_Morph.prototype.isPaused = function () {
 
 IDE_Morph.prototype.stopAllScripts = function () {
     if (this.world().currentKey === 16) { // shiftClicked
-        this.scenes.map(scn => scn.stop(true));
+        this.scenes.map(scn => {
+            if (scn !== this.tutorial?.scene) {
+                scn.stop(true);
+            }
+        });
     } else {
         this.scene.stop();
     }
@@ -3450,7 +3577,20 @@ IDE_Morph.prototype.brightTheme = function () {
 };
 
 IDE_Morph.prototype.refreshIDE = function () {
-    var projectData;
+    var projectData, onComplete, name, tutorial;
+
+    if (this.scene.createdFromTemplate) {
+        name = this.scene.name;
+        tutorial = !isNil(this.tutorial);
+        this.scene.createdFromTemplate = false;
+        onComplete = () => {
+            this.scene.createdFromTemplate = true;
+            this.setProjectName(name);
+            if (tutorial) {
+                this.launchProjectTutorial();
+            }
+        };
+    }
 
     this.scene.captureGlobalSettings();
     if (Process.prototype.isCatchingErrors) {
@@ -3472,7 +3612,13 @@ IDE_Morph.prototype.refreshIDE = function () {
     if (this.loadNewProject) {
         this.newProject();
     } else {
-        this.openProjectString(projectData);
+        this.openProjectString(
+            projectData,
+            null,
+            null,
+            true,  // keepRoles
+            onComplete // restore name and template origin
+        );
     }
 };
 
@@ -3582,6 +3728,28 @@ IDE_Morph.prototype.applySavedSettings = function () {
     if (solidshadow) {
         window.useBlurredShadows = false;
         this.rerender();
+    }
+};
+
+IDE_Morph.prototype.applySavedMagnification = function () {
+    var magnification = this.getSetting('magnification');
+    if (magnification && magnification !== 1) {
+        this.setZoom(magnification * 100);
+    } else if (this.config.zoom) {
+        this.setZoom(this.config.zoom * 100, true); // noSave
+    }
+};
+
+IDE_Morph.prototype.applySavedStageScale = function () {
+    // experimental, currently unused / commented out
+    var stagescale = this.getSetting('stagescale');
+    if (stagescale && stagescale !== 1) {
+        this.stageRatio = stagescale;
+        if (this.isSmallStage !== (this.stageRatio !== 1)) {
+            this.isSmallStage = (this.stageRatio !== 1);
+            this.controlBar.stageSizeButton.refresh();
+        }
+        this.setExtent(this.world().extent());
     }
 };
 
@@ -4430,21 +4598,13 @@ IDE_Morph.prototype.settingsMenu = function () {
         ],
         'languageMenu'
     );
+    menu.addItem(localize(
+        'Magnification') + '...',
+        'userZoom'
+    );
     menu.addItem(
         localize('Looks') + '...',
         'looksMenu'
-    );
-    menu.addItem(
-        'Zoom blocks...',
-        'userSetBlocksScale'
-    );
-    menu.addItem(
-        'Fade blocks...',
-        'userFadeBlocks'
-    );
-    menu.addItem(
-        'Afterglow blocks...',
-        'userSetBlocksAfterglow'
     );
     menu.addItem(
         'Stage size...',
@@ -4671,7 +4831,16 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to have the stage use up\nall space and go behind the\n' +
         'scripting area'
     );
-    menu.addLine(); // everything visible below is persistent
+    if (this.performerMode) {
+        menu.addItem(
+            'Performer mode scale...',
+            'userSetPerformerModeScale',
+            'specify the scale of the stage\npixels in performer mode'
+        );
+    }
+    if (shiftClicked) {
+        menu.addLine(); // everything visible below is currently hidden
+    }
     addPreference(
         'Blurred shadows',
         'toggleBlurredShadows',
@@ -4703,34 +4872,6 @@ IDE_Morph.prototype.settingsMenu = function () {
         'uncheck to allow dropped\nreporters to kick out others',
         'settings menu prefer empty slots hint',
         true
-    );
-    addPreference(
-        'Long form input dialog',
-        'toggleLongFormInputDialog',
-        InputSlotDialogMorph.prototype.isLaunchingExpanded,
-        'uncheck to use the input\ndialog in short form',
-        'check to always show slot\ntypes in the input dialog'
-    );
-    addPreference(
-        'Plain prototype labels',
-        'togglePlainPrototypeLabels',
-        BlockLabelPlaceHolderMorph.prototype.plainLabel,
-        'uncheck to always show (+) symbols\nin block prototype labels',
-        'check to hide (+) symbols\nin block prototype labels'
-    );
-    addPreference(
-        'Clicking sound',
-        () => {
-            BlockMorph.prototype.toggleSnapSound();
-            if (BlockMorph.prototype.snapSound) {
-                this.saveSetting('click', true);
-            } else {
-                this.removeSetting('click');
-            }
-        },
-        BlockMorph.prototype.snapSound,
-        'uncheck to turn\nblock clicking\nsound off',
-        'check to turn\nblock clicking\nsound on'
     );
     addPreference(
         'Animations',
@@ -4876,6 +5017,22 @@ IDE_Morph.prototype.settingsMenu = function () {
         true
     );
     menu.addLine(); // everything below this line is stored in the project
+    addPreference(
+        'Template',
+        () => this.scene.role = this.scene.role === 'template' ?
+            null : 'template',
+        this.scene.role === 'template',
+        'uncheck to save this\nscene regularly',
+        'check to turn this scene into an uneditable\ntemplate when saving it'
+    );
+    addPreference(
+        'Tutorial',
+        () => this.scene.role = this.scene.role === 'tutorial' ?
+            null : 'tutorial',
+        this.scene.role === 'tutorial',
+        'uncheck to treat this\nscene regularly',
+        'check to turn this scene\ninto a tutorial'
+    );
     addPreference(
         'Thread safe scripts',
         () => stage.isThreadSafe = !stage.isThreadSafe,
@@ -5027,7 +5184,8 @@ IDE_Morph.prototype.projectMenu = function () {
         graphicsName = this.currentSprite instanceof SpriteMorph ?
                 'Costumes' : 'Backgrounds',
         shiftClicked = (world.currentKey === 16),
-        backup = this.availableBackup(shiftClicked);
+        backup = this.availableBackup(shiftClicked),
+        scns, help, work;
 
     menu = new MenuMorph(this);
     menu.addItem('Notes...', 'editNotes');
@@ -5180,6 +5338,24 @@ IDE_Morph.prototype.projectMenu = function () {
                     this.currentSprite
                 ).popUp(world)
         );
+        if (this.scene.template) {
+            menu.addItem(
+                'Restore palette',
+                () => this.stage.restoreHiddenGlobalBlocks(
+                    this.scene.template.hide,
+                    this.scene.template.version
+                ),
+                '"' + this.scene.template.name + '"'
+            );
+            if (shiftClicked) {
+                menu.addItem(
+                    'Remove template',
+                    () => this.scene.template = null,
+                    '"' + this.scene.template.name + '"',
+                    new Color(100, 0, 0)
+                );
+            }
+        }
         menu.addItem(
             'New category...',
             () => this.createNewCategory()
@@ -5201,10 +5377,21 @@ IDE_Morph.prototype.projectMenu = function () {
         }
         menu.addLine();
         if (this.scenes.length() > 1) {
+            if (!this.tutorial) {
+                scns = this.scenes.itemsArray();
+                help = scns.find(any => any.role === 'tutorial');
+                work = scns.find(any => any.role !== 'tutorial');
+                if (help && work) {
+                    menu.addItem('Launch tutorial...', 'launchProjectTutorial');
+                }
+            }
             menu.addItem('Scenes...', 'scenesMenu');
         }
         menu.addPair('New scene', 'createNewScene');
         menu.addPair('Add scene...', 'addScene');
+        if (this.tutorial) {
+            menu.addPair('Exit tutorial', 'escapeTutorial');
+        }
         menu.addLine();
     }
     menu.addItem(
@@ -6615,10 +6802,16 @@ IDE_Morph.prototype.exportProjectSummary = function (useDropShadows) {
     );
 };
 
-IDE_Morph.prototype.openProjectString = function (str, callback, noPrims) {
+IDE_Morph.prototype.openProjectString = function (
+    str,
+    callback,
+    noPrims,
+    keepRoles,
+    onDone = nop
+) {
     var msg;
     if (this.bulkDropInProgress || this.isAddingScenes) {
-        this.rawOpenProjectString(str, noPrims);
+        this.rawOpenProjectString(str, noPrims, keepRoles);
         if (callback) {callback(); }
         return;
     }
@@ -6628,27 +6821,28 @@ IDE_Morph.prototype.openProjectString = function (str, callback, noPrims) {
     this.nextSteps([
         () => msg = this.showMessage('Opening project...'),
         () => {
-            this.rawOpenProjectString(str, noPrims);
+            this.rawOpenProjectString(str, noPrims, keepRoles);
             msg.destroy();
             if (callback) {callback(); }
-        }
+        },
+        onDone
     ]);
 };
 
-IDE_Morph.prototype.rawOpenProjectString = function (str, noPrims) {
+IDE_Morph.prototype.rawOpenProjectString = function (str, noPrims, keepRoles) {
     this.toggleAppMode(false);
     this.spriteBar.tabBar.tabTo('scripts');
     if (Process.prototype.isCatchingErrors) {
         try {
             this.openProject(
-                this.serializer.load(str, this, noPrims)
+                this.serializer.load(str, this, noPrims, keepRoles)
             );
         } catch (err) {
             this.showMessage('Load failed: ' + err);
         }
     } else {
         this.openProject(
-            this.serializer.load(str, this, noPrims)
+            this.serializer.load(str, this, noPrims, keepRoles)
         );
     }
     this.autoLoadExtensions();
@@ -7026,18 +7220,30 @@ IDE_Morph.prototype.openProjectName = function (name) {
 };
 
 IDE_Morph.prototype.openProject = function (project, purgeCustomizedPrims) {
-    var scn = project.currentScene || project.scenes.at(1);
+    var scn = project.currentScene || project.scenes.at(1),
+        tutorial;
     if (this.isAddingScenes) {
         project.scenes.itemsArray().forEach(scene => {
             scene.name = this.newSceneName(scene.name, scene);
             this.scenes.add(scene);
         });
     } else {
+        this.escapeTutorial();
         this.scenes = project.scenes;
     }
     this.performerMode = false;
     if (purgeCustomizedPrims) {
         scn.blocks = SpriteMorph.prototype.primitiveBlocks();
+    }
+    if (scn.createdFromTemplate) {
+        // launch tutorial, if any exist
+        tutorial = detect(
+            project.scenes.asArray(),
+            each => each.role == 'tutorial'
+        );
+        if (tutorial) {
+            this.launchTutorial(tutorial);
+        }
     }
     this.switchToScene(
         scn,
@@ -7048,16 +7254,18 @@ IDE_Morph.prototype.openProject = function (project, purgeCustomizedPrims) {
     );
 };
 
-IDE_Morph.prototype.autoLoadExtensions = function () {
+IDE_Morph.prototype.autoLoadExtensions = function (optionalScene) {
     // experimental - allow auto-loading extensions from urls specified
     // in global variables whose names start with "__module__".
     // Still very much under construction, also needs to be tweaked for
     // asynch operation
-    var urls = [];
-    Object.keys(this.globalVariables.vars).forEach(vName => {
+    var urls = [],
+        context = this;
+    if (optionalScene) { context = optionalScene; }
+    Object.keys(context.globalVariables.vars).forEach(vName => {
         var val;
         if (vName.startsWith('__module__')) {
-            val = this.globalVariables.getVar(vName);
+            val = context.globalVariables.getVar(vName);
             if (isString(val)) {
                 urls.push(val);
             }
@@ -7113,6 +7321,7 @@ IDE_Morph.prototype.switchToScene = function (
     this.add(scene.stage);
     this.stage = scene.stage;
     this.stage.messageCallbacks = listeners;
+    this.stage.tutorialMode = null;
     this.sprites = scene.sprites;
     if (pauseHats) {
         this.stage.pauseGenericHatBlocks();
@@ -7143,6 +7352,7 @@ IDE_Morph.prototype.switchToScene = function (
     this.toggleAppMode(appMode);
     this.controlBar.stopButton.refresh();
     this.world().keyboardFocus = this.stage;
+    this.autoLoadExtensions();
     if (msg) {
         this.stage.fireChangeOfSceneEvent(msg, data);
     }
@@ -7424,7 +7634,11 @@ IDE_Morph.prototype.toggleSliderExecute = function () {
 };
 
 IDE_Morph.prototype.togglePerformerMode = function () {
-    this.performerMode = !this.performerMode;
+    this.setPerformerModeTo(!this.performerMode);
+};
+
+IDE_Morph.prototype.setPerformerModeTo = function (bool = false) {
+    this.performerMode = bool;
     if (!this.performerMode) {
         this.setStageExtent(new Point(480, 360));
     }
@@ -7461,6 +7675,29 @@ IDE_Morph.prototype.setEmbedMode = function () {
     this.add(this.embedPlayButton);
 
     this.fixLayout();
+};
+
+IDE_Morph.prototype.userSetPerformerModeScale = function () {
+   new DialogBoxMorph(
+        this,
+        num => {
+            this.performerScale = Math.min(Math.max(+num, 1), 32);
+            this.parentThatIsA(IDE_Morph).fixLayout();
+        },
+        this
+    ).prompt(
+        "Performer mode scale",
+        this.performerScale.toString(),
+        this.world(),
+        null, // pic
+        null, // choices
+        null, // read only
+        true, // numeric
+        1,    // slider min
+        32,   // slider max
+        nop,  // slider action
+        0     // decimals
+    );
 };
 
 IDE_Morph.prototype.toggleAppMode = function (appMode) {
@@ -7573,6 +7810,13 @@ IDE_Morph.prototype.toggleStageSize = function (isSmall, forcedRatio) {
             () => {
                 myself.isSmallStage = (targetRatio !== 1);
                 myself.controlBar.stageSizeButton.refresh();
+                /* // save the stage size as setting, commented out for now
+                if (myself.stageRatio === 1) {
+                    myself.removeSetting('stagescale');
+                } else {
+                    myself.saveSetting('stagescale', myself.stageRatio);
+                }
+                */
             }
         ));
     }
@@ -7810,10 +8054,22 @@ IDE_Morph.prototype.setLanguage = function (lang, callback, noSave) {
 };
 
 IDE_Morph.prototype.reflectLanguage = function (lang, callback, noSave) {
-    var projectData,
+    var projectData, onComplete, name, tutorial,
         urlBar = location.hash;
     SnapTranslator.language = lang;
     if (!this.loadNewProject) {
+        if (this.scene.createdFromTemplate) {
+            name = this.scene.name;
+            tutorial = !isNil(this.tutorial);
+            this.scene.createdFromTemplate = false;
+            onComplete = () => {
+                this.scene.createdFromTemplate = true;
+                this.setProjectName(name);
+                if (tutorial) {
+                    this.launchProjectTutorial();
+                }
+            };
+        }
         this.scene.captureGlobalSettings();
         if (Process.prototype.isCatchingErrors) {
             try {
@@ -7841,7 +8097,13 @@ IDE_Morph.prototype.reflectLanguage = function (lang, callback, noSave) {
         location.hash = urlBar;
         if (callback) {callback.call(this); }
     } else {
-        this.openProjectString(projectData, callback);
+        this.openProjectString(
+            projectData,
+            callback,
+            null,
+            true, // keepRoles
+            onComplete // restore name and template origin
+        );
     }
     if (!noSave) {
         this.saveSetting('language', lang);
@@ -7934,7 +8196,115 @@ IDE_Morph.prototype.looksMenuData = function () {
         'check for alternative\nGUI theme',
         false
     );
+    menu.addLine();
+    menu.addItem('Fade blocks...', 'userFadeBlocks');
+    menu.addItem('Afterglow blocks...', 'userSetBlocksAfterglow');
+    menu.addItem('Zoom blocks...', 'userSetBlocksScale');
+    menu.addLine();
+    menu.addPreference(
+        'Long form input dialog',
+        'toggleLongFormInputDialog',
+        InputSlotDialogMorph.prototype.isLaunchingExpanded,
+        'uncheck to use the input\ndialog in short form',
+        'check to always show slot\ntypes in the input dialog'
+    );
+    menu.addPreference(
+        'Plain prototype labels',
+        'togglePlainPrototypeLabels',
+        BlockLabelPlaceHolderMorph.prototype.plainLabel,
+        'uncheck to always show (+) symbols\nin block prototype labels',
+        'check to hide (+) symbols\nin block prototype labels'
+    );
+    menu.addPreference(
+        'Clicking sound',
+        () => {
+            BlockMorph.prototype.toggleSnapSound();
+            if (BlockMorph.prototype.snapSound) {
+                this.saveSetting('click', true);
+            } else {
+                this.removeSetting('click');
+            }
+        },
+        BlockMorph.prototype.snapSound,
+        'uncheck to turn\nblock clicking\nsound off',
+        'check to turn\nblock clicking\nsound on'
+    );
     return menu;
+};
+
+// IDE_Morph zoom
+
+IDE_Morph.prototype.userZoom = function () {
+    var max = Math.floor(this.maxZoom()),
+        options = {},
+        scales = [100, 110, 125, 150, 175, 200, 250, 300, 400, 500, max].filter(
+            n => n <= max),
+        initial = ZOOM,
+        ratio = this.stageRatio,
+        last = ZOOM * 100,
+        update,
+        dlg;
+    scales.forEach(n => options[n + '%'] = n);
+    dlg = new DialogBoxMorph(
+        this,
+        'setZoom'
+    ).withKey('zoom');
+    /*
+    if (MorphicPreferences.isTouchDevice) {
+        dlg.isDraggable = false;
+    }
+    */
+    dlg.cancel = () => {
+        // restore initial zoom and stage scale
+        this.setZoom(initial * 100);
+        this.stageRatio = ratio;
+        this.isSmallStage = (this.stageRatio !== 1);
+        this.controlBar.stageSizeButton.refresh();
+        this.setExtent(this.world().extent());
+        dlg.destroy();
+    };
+    update = n => {
+        var normal = dlg.position().divideBy(last / 100),
+            target = normal.multiplyBy(n / 100),
+            delta = dlg.position().subtract(target);
+        this.setZoom(n);
+        dlg.moveBy(delta);
+        last = n;
+    };
+    dlg.prompt(
+        'Magnification',
+        Math.round(ZOOM * 100).toString(),
+        this.world(),
+        null, // pic
+        options,
+        false, // read only?
+        true, // numeric
+        100, // slider min
+        max, // slider max
+        update, // slider action
+        2 // decimals
+    );
+};
+
+IDE_Morph.prototype.setZoom = function (percent, noSave) {
+    var wrld = this.world();
+    this.controlBar.stageSizeButton.refresh();
+    this.world().zoom(Math.max(Math.min(percent, this.maxZoom()), 100) / 100);
+    this.siblings().forEach(morph => morph.keepWithin(wrld));
+    if (noSave) {return; }
+    if (ZOOM > 1) {
+        this.saveSetting('magnification', ZOOM);
+    } else {
+        this.removeSetting('magnification');
+    }
+};
+
+IDE_Morph.prototype.maxZoom = function () {
+    var wc = this.world().worldCanvas;
+    return Math.min(
+        wc.width / this.minWidth(),
+        wc.height / this.minHeight()
+    ) * 100;
 };
 
 // IDE_Morph blocks scaling
@@ -8018,7 +8388,19 @@ IDE_Morph.prototype.userSetBlocksScale = function () {
 };
 
 IDE_Morph.prototype.setBlocksScale = function (num) {
-    var projectData;
+    var projectData, onComplete, name, tutorial;
+    if (this.scene.createdFromTemplate) {
+        name = this.scene.name;
+        tutorial = !isNil(this.tutorial);
+        this.scene.createdFromTemplate = false;
+        onComplete = () => {
+            this.scene.createdFromTemplate = true;
+            this.setProjectName(name);
+            if (tutorial) {
+                this.launchProjectTutorial();
+            }
+        };
+    }
     this.scene.captureGlobalSettings();
     if (Process.prototype.isCatchingErrors) {
         try {
@@ -8042,7 +8424,13 @@ IDE_Morph.prototype.setBlocksScale = function (num) {
     this.createCorralBar();
     this.refreshCustomizedPalette();
     this.fixLayout();
-    this.openProjectString(projectData);
+    this.openProjectString(
+            projectData,
+            null,
+            null,
+            true,  // keepRoles
+            onComplete // restore name and template origin
+        );
     this.saveSetting('zoom', num);
 };
 
@@ -8288,7 +8676,19 @@ IDE_Morph.prototype.userSetDragThreshold = function () {
 IDE_Morph.prototype.userCustomizePalette = function (callback = nop) {
     // highly experimental for v10 - tweak the palette blocks,
     // e.g. replace all primitives with custom block definitions etc.
-    var projectData;
+    var projectData, onComplete, name, tutorial;
+    if (this.scene.createdFromTemplate) {
+        name = this.scene.name;
+        tutorial = !isNil(this.tutorial);
+        this.scene.createdFromTemplate = false;
+        onComplete = () => {
+            this.scene.createdFromTemplate = true;
+            this.setProjectName(name);
+            if (tutorial) {
+                this.launchProjectTutorial();
+            }
+        };
+    }
     this.scene.captureGlobalSettings();
     if (Process.prototype.isCatchingErrors) {
         try {
@@ -8310,7 +8710,13 @@ IDE_Morph.prototype.userCustomizePalette = function (callback = nop) {
     this.categories.refreshEmpty();
     this.createCorralBar();
     this.fixLayout();
-    this.openProjectString(projectData, null, true); // no prims
+    this.openProjectString(
+        projectData,
+        null,
+        true, // no prims
+        true, // keepRoles
+        onComplete // restore name and template origin
+    );
 };
 
 // IDE_Morph cloud interface
@@ -8586,9 +8992,9 @@ IDE_Morph.prototype.saveProjectToCloud = function (name) {
     this.cloud.saveProject(
         this.getProjectName(),
         projectBody,
-        () => {
+        (message) => {
             this.recordSavedChanges();
-            this.showMessage('saved.', 2);
+            this.showMessage(message, 2);
         },
         this.cloudError()
     );
@@ -9002,6 +9408,113 @@ IDE_Morph.prototype.warnAboutDev = function () {
             'visit https://snap.berkeley.edu/run\n' +
             'for the official Snap! installation.'
     ).nag = true;
+};
+
+// IDE_Morph tutorial scene
+
+IDE_Morph.prototype.launchProjectTutorial = function () {
+    // if both a tutorial and a non-tutorial scene exist in the project,
+    // make sure the non-tutorial scene is active and launch the tutorial
+    var scns = this.scenes.itemsArray(),
+        help = scns.find(any => any.role === 'tutorial'),
+        work = scns.find(any => any.role !== 'tutorial');
+    if (help && work) {
+        if (this.scene.role === 'tutorial') {
+            this.switchToScene(work);
+        }
+        this.launchTutorial(help);
+    }
+};
+
+IDE_Morph.prototype.launchTutorial = function (scene) {
+    // open and run a scene in a separate dialog box
+    var dlg = new DialogBoxMorph(
+                null,
+                () => {
+                    scene.stop();
+                    this.tutorial = null;
+                    this.corral.fixLayout(); // update scene icons
+                }
+            ).withKey('tutorial ' + scene.name),
+        handle,
+        diff;
+
+    // handle loading extension modules for the tutorial scene
+    this.autoLoadExtensions(scene);
+
+    dlg.padding = MorphicPreferences.isFlat ? 1 : dlg.corner;
+    dlg.stackPadding = 0;
+    this.escapeTutorial();
+    dlg.scene = scene;
+    dlg.ide = this;
+    scene.stage.setScale(1);
+    scene.stage.tutorialMode = scene;
+    dlg.labelString = scene.name;
+    dlg.createLabel();
+    dlg.addBody(scene.stage);
+    // dlg.addButton('ok', 'OK');
+    dlg.fixLayout();
+    dlg.popUp(this.world(), true); // noFocus
+    dlg.nag = true; // don't close when switching scenes
+    dlg.cancel = nop; // disallow pressing ESC to close the window
+    this.tutorial = dlg;
+    this.corral.fixLayout(); // update scene icons
+    diff = dlg.extent().subtract(scene.stage.dimensions);
+    dlg.minScale = (100 - (Math.min(diff.x, diff.y))) /
+        Math.min(scene.stage.dimensions.x, scene.stage.dimensions.y);
+
+    handle = new HandleMorph(
+        dlg,
+        100,
+        100,
+        dlg.padding,
+        dlg.padding
+    );
+
+    handle.mouseMove = function (pos) {
+        var newPos, newExt;
+        newPos = pos.subtract(this.offset);
+        newExt = newPos.add(
+            this.extent().add(this.inset)
+        ).subtract(this.target.bounds.origin).subtract(diff);
+        newExt = newExt.max(this.minExtent);
+        scene.stage.setScale(Math.min(
+            newExt.x / scene.stage.dimensions.x,
+            newExt.y / scene.stage.dimensions.y
+        ));
+        this.target.fixLayout();
+    };
+
+    dlg.fixLayout = function () {
+        DialogBoxMorph.prototype.fixLayout.call(this);
+        handle.setPosition(
+            this.bottomRight().subtract(handle.extent().add(handle.inset))
+        );
+    };
+
+    dlg.outlinePathBody = function (ctx, radius) {
+        var th = Math.floor(fontHeight(this.titleFontSize)) +
+                this.titlePadding * 2;
+        ctx.roundRect(
+            0,
+            th,
+            this.width(),
+            this.height() - th,
+            MorphicPreferences.isFlat ? 0 : [0, 0, radius, radius]
+        );
+    };
+
+    scene.stage.fireGreenFlagEvent();
+};
+
+IDE_Morph.prototype.escapeTutorial = function () {
+    if (!this.tutorial) {
+        return;
+    }
+    this.tutorial.scene.stage.tutorialMode = null;
+    this.tutorial.ok();
+    this.tutorial = null;
+    this.corral.fixLayout(); // update scene icons
 };
 
 // ProjectDialogMorph ////////////////////////////////////////////////////
@@ -12698,11 +13211,26 @@ SceneIconMorph.prototype.userMenu = function () {
         return null;
     }
     if (!this.isProjectScene()) {
+        if (!this.isCurrentScene()) {
+            menu.addItem(
+                "launch...",
+                "launchAsTutorial",
+                "open and run this scene as a tutorial\nin a separate pane"
+            );
+            menu.addLine();
+        }
         menu.addItem("rename", "renameScene");
         menu.addItem("delete", "removeScene");
     }
     menu.addItem("export", "exportScene");
     return menu;
+};
+
+SceneIconMorph.prototype.launchAsTutorial = function () {
+    var ide = this.parentThatIsA(IDE_Morph);
+    if (ide) {
+        ide.launchTutorial(this.object);
+    }
 };
 
 SceneIconMorph.prototype.renameScene = function () {
@@ -12771,6 +13299,13 @@ SceneIconMorph.prototype.isProjectScene = function (anIDE) {
     // because its name and project notes are those of the project
     var ide = anIDE || this.parentThatIsA(IDE_Morph);
     return ide.scenes.indexOf(this.object) === 1;
+};
+
+SceneIconMorph.prototype.isCurrentScene = function (anIDE) {
+    // the currently actife  scene of a project cannot be launched as a
+    // tutorial, because it cannot live in 2 locations at the same time
+    var ide = anIDE || this.parentThatIsA(IDE_Morph);
+    return ide.scene === this.object;
 };
 
 // SceneIconMorph drawing
@@ -13033,6 +13568,8 @@ StageHandleMorph.prototype.mouseMove = function (pos) {
         ide.controlBar.stageSizeButton.refresh();
     }
     ide.setExtent(ide.world().extent());
+    // save the stage size as setting, commented out for now
+    // ide.saveSetting('stagescale', ide.stageRatio);
 };
 
 StageHandleMorph.prototype.mouseDoubleClick = function () {
