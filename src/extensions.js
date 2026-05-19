@@ -6,7 +6,7 @@
 
     written by Jens Mönig
 
-    Copyright (C) 2025 by Jens Mönig
+    Copyright (C) 2026 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -31,11 +31,12 @@
 IDE_Morph, CamSnapshotDialogMorph, SoundRecorderDialogMorph, isSnapObject, nop,
 Color, Process, contains, localize, SnapTranslator, isString, detect, Point,
 SVG_Costume, newCanvas, WatcherMorph, BlockMorph, HatBlockMorph, invoke, isNil,
-BigUint64Array, DeviceOrientationEvent, DialogBoxMorph, Animation, console*/
+BigUint64Array, DeviceOrientationEvent, DialogBoxMorph, Animation, TableMorph,
+TableFrameMorph, console, Morph, MenuMorph*/
 
 /*jshint esversion: 11, bitwise: false*/
 
-modules.extensions = '2025-December-12';
+modules.extensions = '2026-April-07';
 
 // Global stuff
 
@@ -317,9 +318,11 @@ SnapExtensions.primitives.set(
             ['comment'],
             ['category'],
             ['type'],
+            ['answer'],
             ['scope'],
             ['selector'],
             ['slots'],
+            ['strict'],
             ['defaults'],
             ['menus'],
             ['editables'],
@@ -655,6 +658,7 @@ SnapExtensions.primitives.set(
     function (raw, proc) {
         // raw is a Boolean flag selecting to keep the data unparsed
         var ide = this.parentThatIsA(IDE_Morph),
+            wrld = ide.world(),
             acc = proc.context.accumulator,
             inp;
 
@@ -685,7 +689,8 @@ SnapExtensions.primitives.set(
                 }
 
                 function isType(aFile, string) {
-                    return aFile.type.indexOf(string) !== -1 || (ext === string);
+                    return aFile.type.indexOf(string) !== -1 ||
+                        (ext === string);
                 }
 
                 frd.onloadend = function (e) {
@@ -734,9 +739,8 @@ SnapExtensions.primitives.set(
             inp.style.position = "absolute";
             inp.style.top = "0px";
             inp.style.left = "0px";
-            inp.style.width = "0px";
-            inp.style.height = "0px";
-            inp.style.display = "none";
+            inp.style.width = wrld.width() + 'px';
+            inp.style.height = wrld.height() + 'px';
             inp.addEventListener(
                 "change",
                 userImport,
@@ -744,7 +748,11 @@ SnapExtensions.primitives.set(
             );
             inp.addEventListener(
                 "cancel",
-                () => acc.data = '',
+                () => {
+                    acc.data = '';
+                    document.body.removeChild(inp);
+                    ide.filePicker = null;
+                },
                 false
             );
             document.body.appendChild(inp);
@@ -755,6 +763,20 @@ SnapExtensions.primitives.set(
         }
         proc.pushContext('doYield');
         proc.pushContext();
+    }
+);
+
+// Custom Data Types (adt_):
+
+SnapExtensions.primitives.set(
+    'adt_table(data)',
+    function (data, proc) {
+        proc.assertType(data, 'list');
+        return new TableFrameMorph(
+            new TableMorph(
+                data.lookup('cells').asTable(data.lookup('header'))
+            )
+        );
     }
 );
 
@@ -1308,19 +1330,49 @@ SnapExtensions.primitives.set(
 SnapExtensions.primitives.set(
     'cst_load(url)',
     function (url, proc) {
-        if (!proc.context.accumulator) {
-            proc.context.accumulator = {
+        if (!url) {
+            return '';
+        }
+
+        proc.assertType(url, 'text');
+
+        let context = proc.context;
+
+        if (!context.accumulator) {
+            context.accumulator = {
                 img: new Image(),
                 cst: null,
+                svg: false,
             };
-            proc.context.accumulator.img.onload = function () {
-                var canvas = newCanvas(new Point(this.width, this.height));
-                canvas.getContext('2d').drawImage(this, 0, 0);
-                proc.context.accumulator.cst = new Costume(canvas);
+            context.accumulator.img.onload = function () {
+                if (context.accumulator.svg) {
+                    context.accumulator.cst = new SVG_Costume(this, 'Costume');
+                } else {
+                    var canvas = newCanvas(new Point(this.width, this.height));
+                    canvas.getContext('2d').drawImage(this, 0, 0);
+                    context.accumulator.cst = new Costume(canvas, 'Costume');
+                }
             };
-            proc.context.accumulator.img.src = url;
-        } else if (proc.context.accumulator.cst) {
-            return proc.context.accumulator.cst;
+            context.accumulator.img.onerror = function () {
+                context.accumulator.cst = '';
+            };
+            fetch(url).then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                if (response.headers.get('content-type') === 'image/svg+xml') {
+                    context.accumulator.svg = true;
+                }
+
+                return response.blob();
+            }).catch(() => {
+                context.accumulator.cst = '';
+            }).then((response) => {
+                context.accumulator.img.src = URL.createObjectURL(response);
+            });
+        } else if (context.accumulator.cst || context.accumulator.cst === '') {
+            return context.accumulator.cst;
         }
         proc.pushContext('doYield');
         proc.pushContext();
@@ -1359,6 +1411,94 @@ SnapExtensions.primitives.set(
         cst.embeddedData = data || null;
         cst.version = Date.now();
         ide.recordUnsavedChanges();
+    }
+);
+
+SnapExtensions.primitives.set(
+    'cst_morph(cst)',
+    function (costume, proc) {
+        var m = new Morph(),
+            imageView = () => new DialogBoxMorph().inform(
+                'Image view',
+                null,
+                this.world(),
+                costume.contents,
+                true // enable exporting
+            ),
+            img;
+        proc.assertType(costume, 'costume');
+        img = costume.contents;
+        m.isCachingImage = true;
+        m.bounds.setWidth(img.width);
+        m.bounds.setHeight(img.height);
+        m.cachedImage = img;
+        m.isCustomSwatch = true;
+
+        m.mouseDoubleClick = imageView;
+
+        // support exporting costumes directly from speech balloons:
+        m.userMenu = function () {
+            var menu = new MenuMorph(this),
+                ide = this.parentThatIsA(IDE_Morph)||
+                    this.world().childThatIsA(IDE_Morph);
+
+            if (ide.isAppMode) {return; }
+            menu.addItem('open in dialog...', imageView);
+            menu.addItem(
+                'export',
+                () => ide.saveCanvasAs(img, costume.name || 'image')
+            );
+            return menu;
+        };
+
+        return m;
+    }
+);
+
+SnapExtensions.primitives.set(
+    'cst_shrink-wrap(cst)',
+    function (costume) {
+        costume.shrinkWrap();
+        return costume;
+    }
+);
+
+// Sounds (snd_):
+
+SnapExtensions.primitives.set(
+    'snd_load(url)',
+    function (url, proc) {
+        if (!url) {
+            return '';
+        }
+        
+        proc.assertType(url, 'text');
+
+        let context = proc.context;
+
+        if (!context.accumulator) {
+            context.accumulator = {
+                snd: null,
+            };
+
+            fetch(url).then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                return response.blob();
+            }).catch(() => {
+                context.accumulator.snd = '';
+            }).then((response) => {
+                context.accumulator.snd = new Sound(
+                    new Audio(URL.createObjectURL(response))
+                );
+            });
+        } else if (context.accumulator.snd || context.accumulator.snd === '') {
+            return context.accumulator.snd;
+        }
+        proc.pushContext('doYield');
+        proc.pushContext();
     }
 );
 
@@ -1516,7 +1656,7 @@ SnapExtensions.primitives.set(
         this.changeBlockVisibility(context.expression, true);
         ide.flushBlocksCache();
         ide.refreshPalette();
-        ide.categories.refreshEmpty();
+        ide.refreshEmptyCategories();
     }
 );
 
@@ -1528,7 +1668,7 @@ SnapExtensions.primitives.set(
         this.changeBlockVisibility(context.expression, false);
         ide.flushBlocksCache();
         ide.refreshPalette();
-        ide.categories.refreshEmpty();
+        ide.refreshEmptyCategories();
     }
 );
 
@@ -1646,6 +1786,22 @@ SnapExtensions.primitives.set(
     }
 );
 
+SnapExtensions.primitives.set(
+    'ide_switch_to_palette(category)',
+    function (category) {
+        var ide = this.parentThatIsA(IDE_Morph);
+        if (ide.scene.unifiedPalette) {
+            ide.scrollPaletteToCategory(category);
+        } else {
+            ide.currentCategory = category;
+            ide.categories.buttons.forEach(each =>
+                each.refresh()
+            );
+            ide.refreshPalette(true);
+        }
+    }
+);
+
 // Tutorials & Cloned Scenes (scn_)
 
 SnapExtensions.primitives.set(
@@ -1702,8 +1858,7 @@ SnapExtensions.primitives.set(
 SnapExtensions.primitives.set(
     'scn_position(pane, x, y)',
     function (pane, x = 0, y = 0, proc = null) {
-        var wrld = this.world(),
-            stage = this.parentThatIsA(StageMorph),
+        var stage = this.parentThatIsA(StageMorph),
             acc = proc.context.accumulator,
             dlg, rect, area, target;
 
@@ -1742,7 +1897,7 @@ SnapExtensions.primitives.set(
                     300, // msecs
                     t => Math.pow(t, 6), // easing
                     () => {
-                        dlg.keepWithin(wrld);
+                        // dlg.keepWithin(wrld);
                         acc.progress = false;
                     }
                 );
@@ -1753,7 +1908,6 @@ SnapExtensions.primitives.set(
             proc.pushContext();
         } else {
             dlg.setPosition(target);
-            dlg.keepWithin(wrld);
         }
     }
 );
@@ -1852,6 +2006,20 @@ SnapExtensions.primitives.set(
         }
         proc.assertType(xml, 'text');
         this.synchScriptsFrom(xml);
+    }
+);
+
+// Pen - drawing shapes
+
+SnapExtensions.primitives.set(
+    'pen_path(points, [fill, close])',
+    function (points, fill, close, proc) {
+        proc.assertType(this, 'sprite');
+        proc.assertType(points, 'list');
+        if (points.itemsArray().some(any => !proc.isCoordinate(any))) {
+            throw new Error('expecting a list of x/y coordinates');
+        }
+        this.drawPath(points, fill, close);
     }
 );
 

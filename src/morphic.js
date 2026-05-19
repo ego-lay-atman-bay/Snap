@@ -8,7 +8,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2010-2025 by Jens Mönig
+    Copyright (C) 2010-2026 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -1367,7 +1367,7 @@
 
 /*jshint esversion: 11, bitwise: false*/
 
-var morphicVersion = '2025-December-17';
+var morphicVersion = '2026-February-21';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = true;
 var ZOOM = 1;
@@ -5581,6 +5581,8 @@ GrayPaletteMorph.prototype.render = function (ctx) {
     this.choice = BLACK;
     gradient = ctx.createLinearGradient(0, 0, ext.x, ext.y);
     gradient.addColorStop(0, 'black');
+    gradient.addColorStop(0.1, 'black');
+    gradient.addColorStop(0.9, 'white');
     gradient.addColorStop(1, 'white');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, ext.x, ext.y);
@@ -6542,17 +6544,18 @@ DialMorph.prototype = new Morph();
 DialMorph.prototype.constructor = DialMorph;
 DialMorph.uber = Morph.prototype;
 
-function DialMorph(min, max, value, tick, radius) {
-    this.init(min, max, value, tick, radius);
+function DialMorph(min, max, value, tick, radius, bearings = 'compass') {
+    this.init(min, max, value, tick, radius, bearings);
 }
 
-DialMorph.prototype.init = function (min, max, value, tick, radius) {
+DialMorph.prototype.init = function (min, max, value, tick, radius, bearings) {
     this.target = null;
     this.action = null;
     this.min = min || 0;
     this.max = max || 360;
     this.value = Math.max(this.min, (value || 0) % this.max);
     this.tick = tick || 15;
+    this.bearings = bearings || 'compass'; // or: 'math'
     this.fillColor = null;
 
     DialMorph.uber.init.call(this);
@@ -6583,16 +6586,17 @@ DialMorph.prototype.setValue = function (value, snapToTick, noUpdate) {
 };
 
 DialMorph.prototype.getValueOf = function (point) {
-    var range = this.max - this.min,
+    var isCompass = (this.bearings === 'compass'),
+        range = this.max - this.min,
     	center = this.center(),
         deltaX = point.x - center.x,
-        deltaY = center.y - point.y,
+        deltaY = isCompass ? center.y - point.y : point.y - center.y,
         angle = Math.abs(deltaX) < 0.001 ? (deltaY < 0 ? 90 : 270)
-                : Math.round(
+            : Math.round(
                 (deltaX >= 0 ? 0 : 180)
                     - (Math.atan(deltaY / deltaX) * 57.2957795131)
-        		),
-        value = angle + 90 % 360,
+            ),
+        value = isCompass ? angle + 90 % 360 : angle % 360,
         ratio = value / 360;
     return range * ratio + this.min;
 };
@@ -6604,13 +6608,19 @@ DialMorph.prototype.setExtent = function (aPoint) {
 };
 
 DialMorph.prototype.render = function (ctx) {
-    var i, angle, x1, y1, x2, y2,
+    var i, angle, x1, y1, x2, y2, ta,
         light = this.color.lighter().toString(),
         range = this.max - this.min,
         ticks = range / this.tick,
         face = this.radius * 0.75,
         inner = face * 0.85,
         outer = face * 0.95;
+
+    if (this.bearings === 'compass') {
+        angle = (this.value - this.min) * (Math.PI * 2) / range - Math.PI / 2;
+    } else { // 'math'
+        angle = (this.value - this.min) * (Math.PI * -2) / range;
+    }
 
     // draw a light border:
     ctx.fillStyle = light;
@@ -6641,16 +6651,15 @@ DialMorph.prototype.render = function (ctx) {
     ctx.fill();
 
     // fill value
-    angle = (this.value - this.min) * (Math.PI * 2) / range - Math.PI / 2;
     ctx.fillStyle = (this.fillColor || this.color.darker()).toString();
     ctx.beginPath();
     ctx.arc(
         this.radius,
         this.radius,
         face,
-        Math.PI / -2,
+        this.bearings === 'compass' ? Math.PI / -2 : 0,
         angle,
-        false
+        this.bearings === 'math'
     );
     ctx.lineTo(this.radius, this.radius);
     ctx.closePath();
@@ -6660,12 +6669,12 @@ DialMorph.prototype.render = function (ctx) {
     ctx.strokeStyle = new Color(35, 35, 35).toString();
     ctx.lineWidth = 1;
     for (i = 0; i < ticks; i += 1) {
-        angle = (i - 3) * (Math.PI * 2) / ticks - Math.PI / 2;
+        ta = (i - 3) * (Math.PI * 2) / ticks - Math.PI / 2;
         ctx.beginPath();
-        x1 = this.radius + Math.cos(angle) * inner;
-        y1 = this.radius + Math.sin(angle) * inner;
-        x2 = this.radius + Math.cos(angle) * outer;
-        y2 = this.radius + Math.sin(angle) * outer;
+        x1 = this.radius + Math.cos(ta) * inner;
+        y1 = this.radius + Math.sin(ta) * inner;
+        x2 = this.radius + Math.cos(ta) * outer;
+        y2 = this.radius + Math.sin(ta) * outer;
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
@@ -6689,7 +6698,6 @@ DialMorph.prototype.render = function (ctx) {
     // draw the inner hand:
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 1;
-    angle = (this.value - this.min) * (Math.PI * 2) / range - Math.PI / 2;
     outer = face * 0.8;
     x1 = this.radius + Math.cos(angle) * inner;
     y1 = this.radius + Math.sin(angle) * inner;
@@ -6718,7 +6726,6 @@ DialMorph.prototype.render = function (ctx) {
     ctx.stroke();
 
     // draw the outer hand:
-    angle = (this.value - this.min) * (Math.PI * 2) / range - Math.PI / 2;
     x1 = this.radius + Math.cos(angle) * face;
     y1 = this.radius + Math.sin(angle) * face;
     x2 = this.radius + Math.cos(angle) * (this.radius - 1);

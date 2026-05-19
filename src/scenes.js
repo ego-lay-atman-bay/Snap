@@ -7,7 +7,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2025 by Jens Mönig
+    Copyright (C) 2026 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -47,13 +47,14 @@
 */
 
 /*global modules, VariableFrame, StageMorph, SpriteMorph, Process, List,
-normalizeCanvas, SnapSerializer, Costume, ThreadManager, IDE_Morph*/
+normalizeCanvas, SnapSerializer, Costume, ThreadManager, IDE_Morph,
+ScriptsMorph*/
 
 /*jshint esversion: 6*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.scenes = '2025-October-31';
+modules.scenes = '2026-March-10';
 
 // Projecct /////////////////////////////////////////////////////////
 
@@ -120,10 +121,12 @@ function Scene(aStageMorph) {
     this.hasUnsavedEdits = false;
     this.unifiedPalette = false;
     this.showCategories = true;
+    this.hideEmptyCategories = false;
     this.showPaletteButtons = true;
     this.role = null; // null (default), "template" or "tutorial"
     this.createdFromTemplate = false;
     this.template = null; // {name: str, version: str, hide: nested list}
+    this.hideSprites = false;
 
     // cached IDE state
     this.sprites = new List();
@@ -146,7 +149,8 @@ function Scene(aStageMorph) {
     this.enableHyperOps = true;
     this.disableClickToRun = false;
     this.disableDraggingData = false;
-    this.penColorModel = 'hsv'; // can also bei 'hsl'
+    this.penColorModel = 'hsv'; // can also be 'hsl'
+    this.enforceTypes = false;
 
     // for deserializing - do not persist
     this.spritesDict = {};
@@ -207,6 +211,7 @@ Scene.prototype.captureGlobalSettings = function () {
     this.disableDraggingData = SpriteMorph.prototype.disableDraggingData;
     this.penColorModel = SpriteMorph.prototype.penColorModel;
     this.blocks = SpriteMorph.prototype.blocks;
+    this.enforceTypes = ScriptsMorph.prototype.enforceTypes;
 };
 
 Scene.prototype.applyGlobalSettings = function () {
@@ -226,6 +231,7 @@ Scene.prototype.applyGlobalSettings = function () {
     SpriteMorph.prototype.disableDraggingData = this.disableDraggingData;
     SpriteMorph.prototype.penColorModel = this.penColorModel;
     SpriteMorph.prototype.blocks = this.blocks;
+    ScriptsMorph.prototype.enforceTypes = this.enforceTypes;
 };
 
 // Scene ops:

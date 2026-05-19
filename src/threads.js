@@ -9,7 +9,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2025 by Jens Mönig
+    Copyright (C) 2026 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -66,7 +66,7 @@ CustomHatBlockMorph*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2025-December-19';
+modules.threads = '2026-April-07';
 
 var ThreadManager;
 var Process;
@@ -257,7 +257,8 @@ ThreadManager.prototype.startProcess = function (
     atomic, // special option used (only) for "onStop" scripts
     variables, // optional variable frame, used for WHEN hats
     noHalo,
-    genericCondition
+    genericCondition,
+    silentVars // for dynamic, user-scripted widgets, ignores missing variables
 ) {
     var top = block.topBlock(),
         active = this.findProcess(top, receiver),
@@ -275,6 +276,7 @@ ThreadManager.prototype.startProcess = function (
     newProc.isClicked = isClicked || false;
     newProc.isAtomic = atomic || false;
     newProc.isGenericCondition = genericCondition || false;
+    newProc.isSilentVar = silentVars || false;
 
     // in case an optional variable frame has been passed,
     // copy it into the new outer context.
@@ -467,15 +469,25 @@ ThreadManager.prototype.removeTerminatedProcesses = function () {
                     proc.onComplete(result);
                 } else {
                     if (result instanceof List) {
-                        proc.topBlock.showBubble(
-                            result.isTable() ?
-                                    new TableFrameMorph(
-                                        new TableMorph(result, 10)
-                                    )
-                                    : new ListWatcherMorph(result),
-                            proc.exportResult,
-                            proc.receiver
-                        );
+                        if (result.isADT()) {
+                            // compute the ADT's dynamic view
+                            proc.pushContext();
+                            proc.homeContext.inputs.pop();
+                            proc.evaluate(
+                                proc.reportListItem('_morph', result)
+                            );
+                            remaining.push(proc);
+                        } else {
+                            proc.topBlock.showBubble(
+                                result.isTable() ?
+                                        new TableFrameMorph(
+                                            new TableMorph(result)
+                                        )
+                                        : new ListWatcherMorph(result),
+                                proc.exportResult,
+                                proc.receiver
+                            );
+                        }
                     } else {
                         proc.topBlock.showBubble(
                             result,
@@ -664,7 +676,8 @@ function Process(topBlock, receiver, onComplete, yieldFirst) {
     this.canBroadcast = true; // used to control "when I am stopped"
     this.isAnimated = false; // temporary - used to control yields for animation
     this.isGenericCondition = false; // used for displaying halos
-    this.hasFiredGenericCondition = false; // ised for displaying halos
+    this.hasFiredGenericCondition = false; // used for displaying halos
+    this.isSilentVar = false; // silences missing variable references in widgets
 
     if (topBlock) {
         this.homeContext.variables.parentFrame =
@@ -2457,6 +2470,11 @@ Process.prototype.reportListItem = function (index, list) {
     if (index instanceof List && this.enableHyperOps) {
         return list.query(index);
     }
+    if (index instanceof Context) {
+        // allow binding a function to another object to enable
+        // polymorphic messages involving a "super class"
+        return this.reportContextFor(index, list);
+    }
     value = list.lookup(index);
     if (value instanceof Context && (parseFloat(index) !== +index)) {
         // treat the ring as macro and bind it to the list as environment
@@ -4093,7 +4111,26 @@ Process.prototype.doGlide = function (secs, endX, endY) {
     this.pushContext();
 };
 
+// Process SAY and THINK primitives
+
+Process.prototype.bubble = function (data) {
+    if (data instanceof List && data.isADT()) {
+        return this.dynamicViewFor(data);
+    }
+    this.blockReceiver().bubble(data);
+};
+
+Process.prototype.doThink = function (data) {
+    if (data instanceof List && data.isADT()) {
+        return this.dynamicViewFor(data);
+    }
+    this.blockReceiver().doThink(data);
+};
+
 Process.prototype.doSayFor = function (data, secs) {
+    if (data instanceof List && data.isADT()) {
+        return this.dynamicViewFor(data);
+    }
     if (!this.context.startTime) {
         this.context.startTime = Date.now();
         this.blockReceiver().bubble(data);
@@ -4107,6 +4144,9 @@ Process.prototype.doSayFor = function (data, secs) {
 };
 
 Process.prototype.doThinkFor = function (data, secs) {
+    if (data instanceof List && data.isADT()) {
+        return this.dynamicViewFor(data);
+    }
     if (!this.context.startTime) {
         this.context.startTime = Date.now();
         this.blockReceiver().doThink(data);
@@ -4117,6 +4157,13 @@ Process.prototype.doThinkFor = function (data, secs) {
     }
     this.pushContext('doYield');
     this.pushContext();
+};
+
+Process.prototype.dynamicViewFor = function (data) {
+    // private - compute the dynamic view for an ADT
+    this.context.inputs = [];
+    this.pushContext();
+    this.evaluate(this.reportListItem('_morph', data));
 };
 
 Process.prototype.blockReceiver = function () {
@@ -4854,14 +4901,23 @@ Process.prototype.getLastMessage = function () {
 // Process type inference
 
 Process.prototype.reportIsA = function (thing, typeString) {
-    var choice = this.inputOption(typeString);
+    var choice = this.inputOption(typeString),
+        primType;
     switch (choice) {
     case 'agent':
         return isSnapObject(thing);
     case 'script':
         return thing instanceof Context;
     default:
-        return this.reportTypeOf(thing) === choice;
+        primType = this.reportTypeOf(thing);
+        return primType === choice || // support ADTs (user defined structs)
+            primType === 'list' &&
+                (this.reportListItem('_type', thing) === typeString ||
+                    ((this.reportListItem(['parent'], thing) === 'list') &&
+                    this.reportIsA(
+                        this.reportListItem(['parent'], thing),
+                        typeString
+                    )));
     }
 };
 
@@ -8376,7 +8432,7 @@ Process.prototype.returnValueToParentContext = function (value) {
             if (value instanceof List) {
                 anchor.showBubble(
                     value.isTable() ?
-                        new TableFrameMorph(new TableMorph(value, 10))
+                        new TableFrameMorph(new TableMorph(value))
                         : new ListWatcherMorph(value),
                     this.exportResult,
                     this.receiver
@@ -8575,6 +8631,16 @@ Process.prototype.reportBasicBlockAttribute = function (attribute, block) {
         return ['command', 'reporter', 'predicate', 'hat'].indexOf(
             this.reportTypeOf(block)
         ) + 1;
+    case 'answer':
+        if (expr instanceof ReporterBlockMorph) {
+            if (expr.isCustomBlock) {
+                return (expr.isGlobal ? expr.definition
+                    : this.blockReceiver().getMethod(expr.semanticSpec)
+                ).reports || '';
+            }
+            return expr.reports || '';
+        }
+        return '';
     case 'scope':
         return expr.isCustomBlock ? (expr.isGlobal ? 1 : 2) : 0;
     case 'selector':
@@ -8600,6 +8666,14 @@ Process.prototype.reportBasicBlockAttribute = function (attribute, block) {
                         : each.getSpec())
             )
         ).map(spec => this.slotType(spec));
+    case 'strict':
+        if (expr.isCustomBlock) {
+            return (expr.isGlobal ?
+                expr.definition
+                : this.blockReceiver().getMethod(expr.semanticSpec)
+            ).enforceTypes;
+        }
+        return false;
     case 'defaults':
         slots = new List();
         if (expr.isCustomBlock) {
@@ -9018,7 +9092,23 @@ Process.prototype.slotType = function (spec) {
         '18':           18,
         'elseif':       18, // spec
         // mnemonics:
-        'conditionals': 18
+        'conditionals': 18,
+
+        '19':           19,
+        'parameter':    19, // spec
+        // mnemonics:
+        'parm':         19,
+
+        '20':           20,
+        'adt':          20, // spec
+        // mnemonics:
+        '{}':           20,
+        'dict':         20,
+        'struct':       20,
+
+        '21':           21,
+        'nue':          21 // spec
+        //mnemonics: none
 
     }[key];
     if (num === undefined) {
@@ -9031,7 +9121,7 @@ Process.prototype.slotSpec = function (num) {
     // answer a spec indicating the shape of a slot represented by a number
     // or by a textual mnemomic
     var prefix = '',
-        id = this.reportIsA(num, 'text') ? this.slotType(num) : +num,
+        id,
         spec;
 
     if (num instanceof List) { // input group
@@ -9040,6 +9130,7 @@ Process.prototype.slotSpec = function (num) {
         ).join('');
     }
 
+    id = this.reportIsA(num, 'text') ? this.slotType(num) : +num;
     if (id >= 100) {
         prefix = '%mult';
         id -= 100;
@@ -9047,7 +9138,7 @@ Process.prototype.slotSpec = function (num) {
 
     spec = ['s', 'n', 'b', 'l', 'mlt', 'cs', 'cmdRing', 'repRing', 'predRing',
     'anyUE', 'boolUE', 'obj', 'upvar', 'clr', 'scriptVars', 'loop', 'receive',
-    'send', 'elseif'][id];
+    'send', 'elseif', 'parameter', 'adt', 'nUE'][id];
 
     if (spec === undefined) {
         return null;
@@ -9195,6 +9286,12 @@ Process.prototype.doSetBlockAttribute = function (attribute, block, val) {
             }
         }
         break;
+    case 'answer':
+        this.assertType(val, 'text');
+        if (['reporter', 'predicate'].includes(def.type)) {
+            def.reports = val;
+        }
+        break;
     case 'scope':
         if (isInUse()) {
             throw new Error('cannot change this\nfor a block that is in use');
@@ -9245,6 +9342,10 @@ Process.prototype.doSetBlockAttribute = function (attribute, block, val) {
                 def.declarations.set(name, info);
             }
         });
+        break;
+    case 'strict':
+        this.assertType(val, 'Boolean');
+        def.enforceTypes = val;
         break;
     case 'defaults':
         this.assertType(val, ['list', 'Boolean', 'number', 'text', 'color']);
@@ -9457,7 +9558,7 @@ Process.prototype.doSetBlockAttribute = function (attribute, block, val) {
         template.refreshDefaults();
     }
     ide.flushPaletteCache();
-    ide.categories.refreshEmpty();
+    ide.refreshEmptyCategories();
     ide.refreshPalette();
     rcvr.recordUserEdit(
         'scripts',
@@ -9533,7 +9634,7 @@ Process.prototype.doDefineBlock = function (upvar, label, context) {
 
     // update the IDE
     ide.flushPaletteCache();
-    ide.categories.refreshEmpty();
+    ide.refreshEmptyCategories();
     ide.refreshPalette();
     rcvr.recordUserEdit(
         'palette',
@@ -9641,7 +9742,7 @@ Process.prototype.doDeleteBlock = function (context) {
 
     // update the IDE
     ide.flushPaletteCache();
-    ide.categories.refreshEmpty();
+    ide.refreshEmptyCategories();
     ide.refreshPalette();
     rcvr.recordUserEdit(
         'palette',
@@ -10594,6 +10695,11 @@ VariableFrame.prototype.getVar = function (name, proc) {
     if (typeof name === 'number') {
         // empty input with a Binding-ID called without an argument
         return '';
+    }
+    if (proc?.isSilentVar) {
+        // don't throw an error inside a user-scripted dynamic dropdown etc.
+        // instead return an empty list, because this is the basis for ADTs
+        return new List();
     }
     this.variableError(name);
 };

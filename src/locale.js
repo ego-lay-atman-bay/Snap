@@ -6,7 +6,7 @@
 
     written by Jens Mönig
 
-    Copyright (C) 2025 by Jens Mönig
+    Copyright (C) 2026 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -50,7 +50,7 @@
 
 // Global stuff
 
-modules.locale = '2025-December-12';
+modules.locale = '2026-April-01';
 
 var Localizer;
 var SnapTranslator = new Localizer();
@@ -207,7 +207,7 @@ SnapTranslator.dict.de = {
     'translator_e-mail':
         'jens@moenig.org, jadga.huegle@sap.com',
     'last_changed':
-        '2025-12-12'
+        '2026-01-04'
 };
 
 SnapTranslator.dict.it = {
@@ -284,7 +284,7 @@ SnapTranslator.dict.zh_CN = {
     'translator_e-mail':
         'ubertao@qq.com/djh@rhjxx.cn/simon@snapontop.org',
     'last_changed':
-        '2024-12-09'
+        '2026-04-01'
 };
 
 SnapTranslator.dict.eo = {
@@ -361,7 +361,7 @@ SnapTranslator.dict.pl = {
     'translator_e-mail':
         'witek@oeiizk.waw.pl',
     'last_changed':
-        '2024-08-23'
+        '2026-02-13'
 };
 
 SnapTranslator.dict.zh_TW = {
@@ -416,7 +416,7 @@ SnapTranslator.dict.ca = {
     'translator_e-mail':
         'jguille2@xtec.cat, bernat@snap4arduino.rocks',
     'last_changed':
-        '2025-05-15'
+        '2026-01-18'
 };
 
 SnapTranslator.dict.ca_VA = {
@@ -703,4 +703,26 @@ SnapTranslator.dict.hy = {
         'info@symotec.am and info@armath.am',
     'last_changed':
         '2025-03-13',
+};
+
+SnapTranslator.dict.vi = {
+    'language_name':
+        'Tiếng Việt',
+    'language_translator':
+        'Antigravity gemini 3, and Qwen3-Max',
+    'translator_e-mail':
+        'seeergefaure@gmail.com',
+    'last_changed':
+        '2025-11-21'
+};
+
+SnapTranslator.dict.en_BR = {
+    'language_name':
+        'English - Britain',
+    'language_translator':
+        'Mark de Boer',
+    'translator_e-mail':
+        'markjosdb@hotmail.com',
+    'last_changed':
+        '2026-02-20'
 };

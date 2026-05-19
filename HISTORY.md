@@ -9,7 +9,8 @@
     * templates
         * marking a starter project / puzzle as "template" removes its name when loading it (and lets users create their own projects based on the template) 
         * projects based on a template let the user restore the visibility of global blocks in the template palette
-        * template-projects store their magnification level if it's above 100%
+        * template-projects store their magnification level, block fade level, language, design and theme
+        * "generate puzzle" automatically turns the project into a template
     * tutorials
         * open and run a scene inside a separate modeless window
         * new "Tutorials" library for positioning and scaling the tutorial window and interacting with the editor
@@ -23,36 +24,289 @@
         * new "expression" selector in block-attribute (metaprogramming) reporter
         * enables expressions (unringed blocks) to be CALLed and RUN
         * enabled unringed blocks to be shown in and dragged out of speech and result balloons
-    * drawing and writing on sprites
-        * new "(paint) on (surface)" command primitive in the pen category
+    * graphics & visualization
+        * drawing and writing on sprites: new "(paint) on (surface)" command primitive in the pen category
+        * new "pen_path(points, [fill, close]" extension for drawing precise, filled shapes
+        * new "Draw Paths" library for directly drawing filled or stroked polylines and polygons without moving the pen sprite
+        * new "Shapes" extension for working with geometrical figures, modeled after Pyret's images. Under construction
+    * OOP 2.0 (data objects)
+        * "super" calls: using a ring as index inside the "ITEM ... OF ..." reporter answers a copy of the function (ring) that is bound to the list object in the second slot, enabling polymorphic methods, i.e. message dispatches to a "super class"
+    * custom data types (ADTs)
+        * include a ring entry named underscore + morph in data to specify a dynamic view
+        * new "cst_morph(cst)" extension for specifying custom ADT visualizations
+        * include an entry named underscore + field in the data to specify a custom data type
+        * integrated type-inferral for user defined data types
+        * new ADT input slot for blocks
+    * enforcing data types in input slots
+        * new optional "reports" type declaration entry for custom reporters
+        * new "enforce types" option for all custom blocks: only lets users drop reporters into input slots whose return type matches that of the slot
+        * new general "enforce input types" preference setting for scenes / puzzles / microworlds
+    * domain-specific languages (DSL) support
+        * support for dynamic dropdown menus and read-only settings in variadic input slots
+        * support for variadic upvars in custom blocks
+        * new 'parameter' custom block input type, same as 'upvar', but doesn't add a script variable when evaluated, supports variadicity
+        * support for dynamically setting the contents of expanded variadic upvars and input slots by a user script in the block definition
+        * support for user-scriptable rename-menus in upvars, including variadic ones (a single menu is repeated in each non-unevaluated slot, a list of menu-lists whose first item is an empty list gets repeated across all subslots)
+        * new "360° angles" dial widget for mathematical bearings (zero is East, counterclockwise) instead of compass bearings
+        * new "number unevaluated" special input slot for custom blocks
     * files
         * new general "dta_export(data, name, type)" extension (for csv, json, etc.)
         * new general "dta_import(raw?)" extension (for text files, csv, json etc.)
-    * new "blocks" and "speaker" symbols
+    * ui
+        * change name and color of custom categories
+        * new "blocks" and "speaker" symbols, icons for the sprite-editor tabs
+        * new "hide empty categories" setting
+        * "generate puzzle" automatically hides empty categories
+        * added a black-gray-white palette to the bottom of the color picker for color input slots
+        * new "blocks only" setting for costomized "functions-first" microworlds
+    * more extensions
+        * Edge AI Computer Vision extension - thank you, Bernat!
+        * new "Tables" extension for working with tabular data sets, modeled after Pyret's tables. Thanks, Shriram Krishnamurthi for your inspiration, feedback and advice!
+        * new reporter version of "let" in the variables declaration extension
+        * new "... times ..." reporter in the neural networks library for quantifying results
+        * new blocks to load costumes and sounds from a url in the web-services library, thanks, @ego-lay-atman-bay!
+        * new "cst_shrink-wrap(cst)" extension
+        * new "ide_switch_to_palette(category)" extension
+    * new help screens
+        * new help screens for "combinations" and
+        * "pipe" reporters, thanks, Brian and gang!
+    * new set of costumes and backgrounds by Ketrina!
 * **Notable Changes:**
-    * added icons to the IDE tabs (scripts, costumes, sounds)
-    * flat design mode now (again) supports rounded corners (sigh...)
-    * dialog boxes are more bright and their buttons more discernible in bright mode 
-    * rearranged IDE settings menu items into "looks" submenu
+    * data types
+        * enhanced "is ... a ...?" predicate to support dependent data types and user defined structs (ADTs)
+    * ui
+        * keep result balloons "attached" to their originating block / script when scrolling
+        * added icons to the IDE tabs (scripts, costumes, sounds)
+        * added "plus" signs to the buttons in the corral bar to emphasize that a new sprite is created by clicking them
+        * flat design mode now (again) supports rounded corners (sigh...)
+        * dialog boxes are more bright and their buttons more discernible in bright mode 
+        * rearranged IDE settings menu items into "looks" submenu
+        * sprite icons no longer blur when the sprite size is reduced or the zoom level increases
+        * resizing the browser / window in presentation ("app") mode scales the stage smoothly
+        * removed "stage selected, no motion primitives" text from the palette to support sprite-less microworlds
+    * blocks
+        * removed landscape orientation of text-input slots
+    * meta-programming
+        * silently handle missing variable references in user-scripted dropdowns and expansion subslots by returning an empty list instead
+        * removed "static" tag from the block-attribute getter
     * (EDC) Fancy Text
         * added automatic vertical scrolling to "fancy say / think" balloons
         * added optional "max height" input to "fancy say / think" library commands
     * speech recognition
         * new "tts_started" extension, reports (in a separate process) whether the user has started speaking in response to a "tts_recognize" query
         * TTS library: new "started speech response?" predicate
-    * always "normalize" SVGs on import, avoids "cut-off" costume parts
-    * flat mode now supports rounded corner in widgets, sigh...
-    * meta-programming: removed "static" tag from the block-attribute getter
-    * took out rate limit in the Microblocks library, thanks, Bernat!
-    * new help screens for "combinations" and "pipe" reporters, thanks, Brian and gang!
+    * neural networks extension
+        * added a custom visualization for the neural network data type to the neural networks extensions
+        * refined normalization to handle redundant features (columns with all the same value)
+    * in other extensions
+        * took out rate limit in the Microblocks library, thanks, Bernat!
+        * changed the evaluation semantics of the "let" block in the variables declaration extension to enable reuse of previously declared variables inside the same block
 * **Notable Fixes:**
+    * always "normalize" SVGs on import, avoids "cut-off" costume parts
     * frequency distribution analysis library: fixed "plot bars" block to handle zero values gracefully
     * fixed occasional rendering artifacts on screens with a fractional devicePixelRatio
     * fixed some special cases for using "combine" on an empty list, thanks, @rmunn!
+    * neural networks extension: fixed normalization to disregard redundant features and no longer throw a divide-by-zero induced error
+    * fixed a variable declaration error in the S4A-Connector extension, thank you, Joan!
 * **Documentation Updates:**
     * updated API.md with new "zoom" configuration key for global magnification
 * **Translation Updates:**
+    * new Vietnamese translation, thank you, Serge Faure @seeeerge !!
+    * new British-English translation, thank you, Mark de Boer !
+    * Polish, thank you, @P1neF0rest935 !
+    * Chinese, thank you, @Ayist14 !
+    * Catalan, thanks, Joan!
     * German
+
+### 2026-04-11
+* store: include the author's language, zoom-level, design and theme in templates and puzzles
+* store: include the author's blocks fade level in templates and puzzles
+
+### 2026-04-07
+* store: fixed retaining the remixID of cloud projects
+* threads: added metaprogramming support for "unevaluated number" type input slots (type 21)
+* blocks, threads, extensions: added metaprogramming support for reporter return types ("answer") and enforcing slot types ("strict")
+
+### 2026-04-03
+* objects: fixed restoring the hidden custom blocks in a palette of a template-based project
+* gui: automatically turn generated puzzles into templates and hide empty categories
+
+### 2026-04-02
+* threads: new feature: using a ring as index inside the "ITEM ... OF ..." reporter answers a copy of the function (ring) that is bound to the list object in the second slot, enabling polymorphic methods, i.e. message dispatches to a "super class"
+* updated shapes library with ability to rotate regular polygons
+* added Ketrina to the credits
+
+### 2026-04-01
+* updated shapes library
+* new costumes by Ketrina, yay!!!
+* huge Chinese translation update for libraries, thank you, @Ayist14 !
+
+### 2026-03-31
+* updated shapes library with new "regular polygon" block 
+* updated shapes library to also scale the line width
+
+### 2026-03-22
+* updated shapes library
+* fixed an adt-type inferral bug
+
+### 2026-03-13
+* blocs, objects: made text-input slots type aware and removed landscape orientation
+
+### 2026-03-11
+* tweaked slot type matching
+
+### 2026-03-10
+* blocks: changed ADT input slots evaluation to return an empty list
+* updated the tables extension with new data type enforcements
+* updated the shapes extension with new data type enforcements
+* gui: experimental hidden "enforce input types" preference setting (per session)
+* gui, scenes, store: new "enforce input types" setting for scenes and puzzles / microworlds
+* updated imbw blumen microworld with the new "enforce input types" option
+* blocks, byob: new "number unevaluated" special input slot for custom blocks
+* updated shapes extension with new "number unevaluated" special input slots
+
+### 2026-03-09
+* objects, blocks, byob: "enforce types" option for custom blocks: only lets users drop reporters into input slots whose return type matches that of the slot
+* updated the neural networks extension with new data type enforcements
+* updated the plot bars extension with new data type enforcements
+
+### 2026-03-05
+* updated the tutorial extension with a new "select editor category" command
+
+### 2026-03-04
+* extensions: new "ide_switch_to_palette(category)" extension
+
+### 2026-03-03
+* extensions, widgets: enable exporting images from image-view dialogs
+* shapes module update
+
+### 2026-03-02
+* objects, blocks, widgets, gui: change name and color of custom categories
+* extensions, widgets: "open in dialog..." menu option for costume-morphs, double-click to pop up images in dialog
+
+### 2026-02-28
+* added  (equilateral) triangles to the shapes library
+
+### 2026-02-27
+* threads: metaprogramming support for the ADT slot
+* blocks, extensions: enable exporting custom graphical ADT representations from result balloons and speech bubbles
+* British-English translation update
+* updated neural networks, tables and shapes extensions with new ADT input slots
+
+### 2026-02-26
+* blocks, byob, store: new ADT type input slot
+* blocks, byob, store: added optional type annotations and strict typing to blocks and custom blocks
+
+### 2026-02-25
+* updated neural networks, tables and shapes libraries with new type annotation format (underscore-type string)
+* blocks, threads: changed "is ... a ... ?" predicate to support user defined structs (ADTs) and dependent data types
+
+### 2026-02-24
+* extensions: new "cst_shrink-wrap(cst)" extension
+* objects: speed-up for generated costumes, but now need to explicitly shrink-wrap them
+* updated the neural networks library with faster previews for ADTs
+* updated shapes library with math angles for rotation (instead of compass bearings) and preview speed-up
+* gui: fixed the palette handle when hiding empty categories
+* updated the shapes library with a new "scale ... by x: ... y: ..." block
+
+### 2026-02-21
+* morphic, blocks, byob: new "360° angles" dial widget for mathematical bearings (zero is East, counterclockwise) instead of compass bearings
+
+### 2026-02-18
+* gui: added "Blocks only" setting to the "looks" menu - hides the stage and all sprite editing panes for custom "functions-first" microworlds
+* scenes, gui: made "hideSprites" a separate scene setting
+* store: persist "blocks only" setting in the project
+* objects: removed "stage selected, no motion primitives" text from the palette to support sprite-less microworlds
+
+### 2026-02-13
+* morphic: tweaked GrayPaletteMorph to allow easer selection of pure black / white colors
+* blocks: added a black-gray-white palette to the bottom of the color picker for color input slots
+* Chinese translation update, thank you, @Ayist14 !
+* disabled santa hats again
+* new British-English translation, thank you, Mark de Boer!
+* integrated extension blocks to load costumes and sounds from a url, thanks, @ego-lay-atman-bay!
+
+### 2026-02-12
+* optimized the experimental "Shapes" library
+* improved rendering of neural networks ADT-view
+* objects: refactored watcher-cell readout creation for ADTs
+* blocks: tweaked block result balloon dynamic positioning
+
+### 2026-02-11
+* extensions: new "cst_morph(cst)" extension for specifying custom ADT visualizations
+* added a custom visualization for the neural network data type to the neural networks extensions
+* blocks: keep result balloons "attached" to their originating block / script when scrolling
+* new "Shapes" extension for working with geometrical figures, modeled after Pyret's images. Under construction
+
+### 2026-02-10
+* threads, objects: made dynamic views for ADTs use Snap's process instead of JS-invoke()
+
+### 2026-02-04
+* neural networks extension: added "... times ..." reporter for quantifying results, changed normalization to disregard redundant features and no longer throw a divide-by-zero induced error
+
+### 2026-02-03
+* objects, extensions: new "pen_path(points, [fill, close]" extension for drawing precise, filled shapes
+
+### 2026-01-29
+* create-variables-extension: changed "let" block semantics to enable use of previously declared variables in subsequent declarations inside the same blocks
+* create-variables-extension: added a new reporter version of "let"
+* updated tables extension with new "let ... then report ..." block
+* new Edge AI Computer Vision extension, thank you, Bernat!
+
+### 2026-01-28
+* blocks, threads: silently handle missing variable references in user-scripted dropdowns and expansion subslots by returning an empty list instead
+* new "Tables" extension for working with tabular data sets, modeled after Pyret's tables. Thanks, Shriram Krishnamurthi for your inspiration, feedback and advice!
+* added new experimental "let ... then report ..." reporter to the tables library
+
+### 2026-01-27
+* blocks: added support for different dropdowns in different variadic subslots by returning a list of menu-lists with the first item being an empty list
+* threads: added metaprogramming support for the new "parameter" input slot type (No. 19)
+
+### 2026-01-26
+* blocks, byob: new %parameter custom block input type, same as %upvar, but doesn't add a script variable when evaluated, supports variadicity
+
+### 2026-01-22
+* blocks, byob: added support for dynamically setting the contents of expanded variadic input slots by a user script in the block definition
+* byob: added support for variadic upvars
+* blocks: added support for user-scriptable rename-menus in upvars, including variadic ones
+* blocks: disable user-scripted dropdowns for unevaluated variadic subslots
+
+### 2026-01-21
+* objects: made table-adt views resizable inside variable watchers
+* extensions: tweaked positioning the tuturial window
+
+### 2026-01-20
+* blocks, byob: added support for dynamic dropdown menus and read-only settings in variadic input slots
+
+### 2026-01-19
+* threads, extensions, tables, lists: experimental support for user-defined ADTs
+* tables, lists: fixed a layout issue for rendering non-list-based table structures
+* objects: added support for displaying ADTs in speech balloons
+* objects: added support for displaying ADTs in variable watchers
+
+### 2026-01-16
+* gui: removed scale-clipping for the stage in presentation ("app") mode, now resizing the window scales the stage smoothly
+* lists: experimental asTable(colNames) method
+
+### 2026-01-12
+* extensions: tweaked dta_import extension for iOS
+
+### 2026-01-03
+* gui, objects, scenes: new "hide empty categories" setting
+* store: serialize "hide empty categories" setting in the project file
+* German translation update for new "Hide empty categories" menu item
+
+### 2026-01-02
+* gui, objects, threads, extensions, byob: refactored refreshing empty block category buttons
+
+### 2025-12-29
+* new Vietnamese translation, thank you, @seeeerge !!
+
+### 2025-12-22
+* objects, gui: dynamically render sprite icons instead of creating bitmaps every time
+* objects, gui: dynamically render costume icons instead of creating bitmaps every time
+* gui: optimized rendering sprite and costume icons
+* gui: optimized rendering of sprite icon in the sprite editor
 
 ### 2025-12-20
 * store: template-projects store their magnification level if it's above 100%
