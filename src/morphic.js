@@ -1289,6 +1289,15 @@
 
     method.
 
+    Animations can further be used to schedule a function execution dynamically
+    once a condition has been met, avoiding the need to specify an event or
+    a promise. A syntactic shortcut for single-time conditional scheduling
+    exists in the WorldMorph's
+
+        once()
+
+    method.
+
 
     (11) minifying morphic.js
     -------------------------
@@ -1367,7 +1376,7 @@
 
 /*jshint esversion: 11, bitwise: false*/
 
-var morphicVersion = '2026-February-21';
+var morphicVersion = '2026-May-11';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = true;
 var ZOOM = 1;
@@ -8119,6 +8128,21 @@ MenuMorph.prototype.addLine = function (width) {
     this.items.push([0, width || 1]);
 };
 
+MenuMorph.prototype.addSectionLabel = function (labelText) {
+    this.items.push(new StringMorph(
+        localize(labelText),
+        (this.fontSize || MorphicPreferences.menuFontSize) * 0.85,
+        null, // fontStyle
+        true, // bold
+        null, // italic
+        null, // isNumeric
+        null, // shadowOffset
+        null, // shadowColor
+        new Color(170, 170, 170),
+        null // fontName
+    ));
+};
+
 MenuMorph.prototype.createLabel = function () {
     var text;
     if (this.label !== null) {
@@ -8180,6 +8204,7 @@ MenuMorph.prototype.createItems = function () {
     this.items.forEach(tuple => {
         isLine = false;
         if (tuple instanceof StringFieldMorph ||
+                tuple instanceof StringMorph ||
                 tuple instanceof ColorPickerMorph ||
                 tuple instanceof SliderMorph ||
                 tuple instanceof DialMorph) {
@@ -8207,8 +8232,13 @@ MenuMorph.prototype.createItems = function () {
         }
         if (isLine) {
             y += 1;
+        } else if (item instanceof StringMorph) {
+            y += item.height() / 4;
         }
-        item.setPosition(new Point(x, y));
+        item.setPosition(new Point(
+            item instanceof StringMorph ? x + 4 : x,
+            y
+        ));
         this.add(item);
         y = y + item.height();
         if (isLine) {
@@ -8237,6 +8267,7 @@ MenuMorph.prototype.maxWidth = function () {
                     (item.shortcut ? item.shortcut.width() + 4 : 0)
             );
         } else if ((item instanceof StringFieldMorph) ||
+                (item instanceof StringMorph) ||
                 (item instanceof ColorPickerMorph) ||
                 (item instanceof SliderMorph) ||
                 (item instanceof DialMorph)) {
@@ -12103,9 +12134,12 @@ WorldMorph.prototype.fullDrawOn = function (aContext, aRect) {
 };
 
 WorldMorph.prototype.updateBroken = function () {
-    var ctx = this.worldCanvas.getContext('2d');
+    var ctx = this.worldCanvas.getContext('2d'),
+        i;
     this.condenseDamages();
-    ctx.restore(); // make sure to hit rock-bottom scale
+    for (i = 0; i < 4; i += 1) { // kludge alert:
+        ctx.restore(); // make sure to hit rock-bottom scale
+    }
     ctx.save();
     ctx.scale(ZOOM, ZOOM);
     this.broken.forEach(rect => {
@@ -12254,6 +12288,33 @@ WorldMorph.prototype.schedule = function (callback, timeout) {
     );
     this.animations.push(schedule);
     return schedule;
+};
+
+WorldMorph.prototype.once = function (
+    conditionCallback,
+    actionCallback
+) {
+    // run a function - the actionCallback - once the given condition
+    // has been met, answer an Animation object
+    var condition = new Animation(
+        nop, // setter
+        nop, // getter
+        0, // delta
+        0, // duration msecs
+        nop, // easing
+        nop // onComplete
+    );
+
+    condition.step = function () {
+        if (!this.isActive) {return; }
+        if (conditionCallback()) {
+            this.isActive = false;
+            actionCallback();
+        }
+    };
+
+    this.animations.push(condition);
+    return condition;
 };
 
 // WorldMorph global pixel access:

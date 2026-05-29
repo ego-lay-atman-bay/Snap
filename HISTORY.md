@@ -9,7 +9,8 @@
     * templates
         * marking a starter project / puzzle as "template" removes its name when loading it (and lets users create their own projects based on the template) 
         * projects based on a template let the user restore the visibility of global blocks in the template palette
-        * template-projects store their magnification level, block fade level, language, design and theme
+        * template-projects can store their magnification level, block fade level, blocks zoom, language, design and theme and propagate them into the projects that are created from them
+        * template-projects always open in edit mode (but still auto-run unless supressed)
         * "generate puzzle" automatically turns the project into a template
     * tutorials
         * open and run a scene inside a separate modeless window
@@ -31,12 +32,12 @@
         * new "Shapes" extension for working with geometrical figures, modeled after Pyret's images. Under construction
     * OOP 2.0 (data objects)
         * "super" calls: using a ring as index inside the "ITEM ... OF ..." reporter answers a copy of the function (ring) that is bound to the list object in the second slot, enabling polymorphic methods, i.e. message dispatches to a "super class"
-    * custom data types (ADTs)
+    * custom data types
         * include a ring entry named underscore + morph in data to specify a dynamic view
-        * new "cst_morph(cst)" extension for specifying custom ADT visualizations
+        * new "cst_morph(cst)" extension for specifying custom data type visualizations
         * include an entry named underscore + field in the data to specify a custom data type
         * integrated type-inferral for user defined data types
-        * new ADT input slot for blocks
+        * new "custom type" input slot for blocks
     * enforcing data types in input slots
         * new optional "reports" type declaration entry for custom reporters
         * new "enforce types" option for all custom blocks: only lets users drop reporters into input slots whose return type matches that of the slot
@@ -75,15 +76,20 @@
     * data types
         * enhanced "is ... a ...?" predicate to support dependent data types and user defined structs (ADTs)
     * ui
+        * the green-flag button changes its color to red while any script has an error
         * keep result balloons "attached" to their originating block / script when scrolling
         * added icons to the IDE tabs (scripts, costumes, sounds)
         * added "plus" signs to the buttons in the corral bar to emphasize that a new sprite is created by clicking them
         * flat design mode now (again) supports rounded corners (sigh...)
         * dialog boxes are more bright and their buttons more discernible in bright mode 
-        * rearranged IDE settings menu items into "looks" submenu
+        * rearranged IDE settings menu items into submenus, thank you, Joan!
         * sprite icons no longer blur when the sprite size is reduced or the zoom level increases
+        * sprite icons no longer display graphics effects, but the original costume
         * resizing the browser / window in presentation ("app") mode scales the stage smoothly
         * removed "stage selected, no motion primitives" text from the palette to support sprite-less microworlds
+        * turned "language", "looks" and "microphone resolution" menus into settings-submenus
+        * rearranged some slot types in the long form input dialog so default "Any type" is the first one top left
+        * removed old photo costumes of people
     * blocks
         * removed landscape orientation of text-input slots
     * meta-programming
@@ -112,11 +118,130 @@
     * updated API.md with new "zoom" configuration key for global magnification
 * **Translation Updates:**
     * new Vietnamese translation, thank you, Serge Faure @seeeerge !!
-    * new British-English translation, thank you, Mark de Boer !
+    * new Western Armenian translation, yay! Thanks to Avag Sayan and the Antrohoos Education Foundation !!
+    * new British-English translation, thank you, Mark de Boer !!
     * Polish, thank you, @P1neF0rest935 !
     * Chinese, thank you, @Ayist14 !
     * Catalan, thanks, Joan!
     * German
+
+### 2026-05-28
+* gui: open templates in edit mode
+* updated the Streams library, thanks, Mark de Boer and Brian!
+* v12 rc6 260528
+
+### 2026-05-27
+* gui: launch IDE in editMode when opening a template project with a tutorial scene
+* v12 rc5 260527
+
+### 2026-05-25
+* gui: prevent switching to costume or sound tabs in blocks-only mode
+* v12 rc4 260525
+
+### 2026-05-24
+* Chinese translation update
+* v12 rc3 260524
+
+### 2026-05-22
+* objects: disabled asset context menus in tutorial mode
+* sw: took out removed human photo costumes from the cache
+* sw: added Ketrina's new costume to the offline cache
+* v12 rc2 260522
+
+### 2026-05-19
+* new Western Armenian translation, yay! Thanks to Avag Sayan and the Antrohoos Education Foundation!
+* scenes, gui: Prefixing the scene name of a tutorial with an underscore avoids naming conflicts, the underscore will not get displayed in the tutorial window, and will not affect the translation of the name in the window title bar
+* removed old photo costumes of people
+* v12 rc1 260519
+
+### 2026-05-15
+* objects: another attempt at supporting fancy text writing when overdrawing a sprite
+* v12 beta 260515
+
+### 2026-05-14
+* threads: fixed testing for hierarchical custom types
+* updated all selection menu translations, thank you, Joan!
+* v12 beta 260514
+
+### 2026-05-12
+* added support for a locally managed Matomo instance, thank you, Michael!.
+* v12 beta 260512
+* fixed Edge AI (Computer Vision) library so it also works in other languages than English
+
+### 2026-05-11
+* byob, blocks: renamed "ADT" input slot to "custom type", thanks, Michael, for the suggestion!
+* gui: reorganized and extended the settings menu and its submenus, thanks, Joan and Michael!
+* German translation update
+* morphic: new Menu >> addSectionLabel feature
+* gui: added section labels to settings and accessibility menus
+* v12 beta 260511
+* threads: tweaked getObject accessors to guard against null references
+
+### 2026-05-09
+* gui: fixed subpreferences in the project settings menu
+* v12 beta 260509
+
+### 2026-05-07
+* gui: rearranged settings menu and submenus, thank you, Joan!
+* gui: reaarranged some settings into a new accessibility submenu
+* v12 beta 260507
+
+### 2026-05-06
+* optimized layout/composition speed for the shapes library
+* v12 beta 260506
+
+### 2026-05-04
+* fixed an occasional race-condition with the open-file dialog, thanks, Michael Aschauer!
+* v12 beta 260504
+
+### 2026-04-30
+* morphic, store: new World>>once mechanism for dynamic scheduling used to load projects and apply settings
+* store: fixed including the blocks zoom level in templates and derived projects
+* v12 beta 260430
+
+### 2026-04-29
+* Catalan translation update, thank you, Joan!
+* objects: fixed applying graphics effects to sprites
+* fixed initialization of the "Shapes" library, thanks, @DarDoro, for the report!
+* objects: added basic support for writing in "overdraw" mode on a costume-less sprite
+* v12 beta 260429
+
+### 2026-04-28
+* store: refactored loading local custom blocks with custom dropdowns in variadic slots
+* objects: fixed "fill" for the stage
+* v12 beta 260428
+
+### 2026-04-27
+* gui: made green-flag button change its color to red while any script has an error
+* blocks: guard piano keyboard dropdown menu against non-numerical values 
+* byob: rearranged some slot types in the long form input dialog so default "Any type" is the first one top left
+* store: tweaked loading local custom blocks to refresh custom dropdowns in variadic slots 
+* v12 beta 260427
+
+### 2026-04-23
+* blocks: trigger "When slot signals edited" for piano keyboard and direction dial dropdown menus
+* v12 beta 260423
+
+### 2026-04-22
+* morphic: work around occasional global zoom rendering artifacts
+* v12 beta 260422
+
+### 2026-04-21
+* gui: don't log edit changes when switching to another language
+* gui, sw: Snap! v12 beta 260421 - removed dev warning dialog
+
+### 2026-04-20
+* gui, store: don't include ide settings in tutorial scenes
+
+### 2026-04-17
+* blocks: pause auto-following of result balloons while resizing shown watchers
+
+### 2026-04-15
+* gui, scenes, store: let authors select which IDE settings to include in their template projects
+* German translation update
+
+### 2026-04-14
+* store, scenes, gui: include the author's blocks zoom level in templates and puzzles and in template-instances
 
 ### 2026-04-11
 * store: include the author's language, zoom-level, design and theme in templates and puzzles

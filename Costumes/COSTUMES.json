@@ -984,186 +984,6 @@
     }
   },
   {
-    "fileName": "amon.gif",
-    "name": "amon",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_pop_down.png",
-    "name": "anina pop down",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_pop_front.png",
-    "name": "anina pop front",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_pop_L_arm.png",
-    "name": "anina pop L arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_pop_left.png",
-    "name": "anina pop left",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_pop_R_arm.png",
-    "name": "anina pop R arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_pop_right.png",
-    "name": "anina pop right",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_pop_stand.png",
-    "name": "anina pop stand",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_R_cross.png",
-    "name": "anina R cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_stance.png",
-    "name": "anina stance",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_top_freeze.png",
-    "name": "anina top freeze",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_top_L_step.png",
-    "name": "anina top L step",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_top_R_step.png",
-    "name": "anina top R step",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anina_top_stand.png",
-    "name": "anina top stand",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna01.png",
-    "name": "anna01",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna02.png",
-    "name": "anna02",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna03.png",
-    "name": "anna03",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna04.png",
-    "name": "anna04",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna05.png",
-    "name": "anna05",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna06.png",
-    "name": "anna06",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna07b.png",
-    "name": "anna07b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna07c.png",
-    "name": "anna07c",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna07.png",
-    "name": "anna07",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna08.png",
-    "name": "anna08",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna09.png",
-    "name": "anna09",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna10.png",
-    "name": "anna10",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna11.png",
-    "name": "anna11",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna12.png",
-    "name": "anna12",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna-a.png",
-    "name": "anna a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "anna-b.png",
-    "name": "anna b",
-    "translations": {
-    }
-  },
-  {
     "fileName": "apple.svg",
     "name": "apple",
     "translations": {
@@ -1226,84 +1046,6 @@
   {
     "fileName": "avery_walking-d.svg",
     "name": "avery walking d",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_pop_down.png",
-    "name": "AZ pop down",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_pop_front.png",
-    "name": "AZ pop front",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_pop_L_arm.png",
-    "name": "AZ pop L arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_pop_left.png",
-    "name": "AZ pop left",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_pop_R_arm.png",
-    "name": "AZ pop R arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_pop_right.png",
-    "name": "AZ pop right",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_pop_stand.png",
-    "name": "AZ pop stand",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_stance.png",
-    "name": "AZ stance",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_top_freeze.png",
-    "name": "AZ top freeze",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_top_L_step.png",
-    "name": "AZ top L step",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_top_R_cross.png",
-    "name": "AZ top R cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_top_R_step.png",
-    "name": "AZ top R step",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "AZ_top_stand.png",
-    "name": "AZ top stand",
     "translations": {
     }
   },
@@ -1674,18 +1416,6 @@
     }
   },
   {
-    "fileName": "calvrett_jumping.png",
-    "name": "calvrett jumping",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "calvrett_thinking.png",
-    "name": "calvrett thinking",
-    "translations": {
-    }
-  },
-  {
     "fileName": "candle1-a.svg",
     "name": "candle1 a",
     "translations": {
@@ -1716,54 +1446,6 @@
     }
   },
   {
-    "fileName": "cassy-a.png",
-    "name": "cassy a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cassy-b.png",
-    "name": "cassy b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cassy-c.png",
-    "name": "cassy c",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cassy_dance-a.png",
-    "name": "cassy dance a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cassy_dance-b.png",
-    "name": "cassy dance b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cassy_dance-c.png",
-    "name": "cassy dance c",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cassy_dance-d.png",
-    "name": "cassy dance d",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cassy-d.png",
-    "name": "cassy d",
-    "translations": {
-    }
-  },
-  {
     "fileName": "cat2.gif",
     "name": "cat2",
     "translations": {
@@ -1790,72 +1472,6 @@
   {
     "fileName": "cat5.gif",
     "name": "cat5",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "catherine-a.png",
-    "name": "catherine a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "catherine-b.png",
-    "name": "catherine b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "catherine-c.png",
-    "name": "catherine c",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "catherine-d.png",
-    "name": "catherine d",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "champ99-a.png",
-    "name": "champ99 a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "champ99-b.png",
-    "name": "champ99 b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "champ99-c.png",
-    "name": "champ99 c",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "champ99-d.png",
-    "name": "champ99 d",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "champ99-e.png",
-    "name": "champ99 e",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "champ99-f.png",
-    "name": "champ99 f",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "champ99-g.png",
-    "name": "champ99 g",
     "translations": {
     }
   },
@@ -1932,54 +1548,6 @@
     }
   },
   {
-    "fileName": "cm_pop_L_arm.png",
-    "name": "cm pop L arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cm_pop_R_arm.png",
-    "name": "cm pop R arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cm_top_L_cross.png",
-    "name": "cm top L cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cm_top_L_leg.png",
-    "name": "cm top L leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cm_top_R_cross.png",
-    "name": "cm top R cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cm_top_ready.png",
-    "name": "cm top ready",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cm_top_R_leg.png",
-    "name": "cm top R leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "cm_top_stand.png",
-    "name": "cm top stand",
-    "translations": {
-    }
-  },
-  {
     "fileName": "convertible1.png",
     "name": "convertible1",
     "translations": {
@@ -2042,18 +1610,6 @@
   {
     "fileName": "cymbal-b.svg",
     "name": "cymbal b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dan-a.png",
-    "name": "dan a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dan-b.png",
-    "name": "dan b",
     "translations": {
     }
   },
@@ -2238,78 +1794,6 @@
     }
   },
   {
-    "fileName": "dm_freeze.png",
-    "name": "dm freeze",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_pop_down.png",
-    "name": "dm pop down",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_pop_front.png",
-    "name": "dm pop front",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_pop_L_arm.png",
-    "name": "dm pop L arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_pop_left.png",
-    "name": "dm pop left",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_pop_R_arm.png",
-    "name": "dm pop R arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_pop_right.png",
-    "name": "dm pop right",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_pop_stand.png",
-    "name": "dm pop stand",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_stance.svg",
-    "name": "dm stance",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_top_L_leg.png",
-    "name": "dm top L leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_top_R_leg.png",
-    "name": "dm top R leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dm_top_stand.png",
-    "name": "dm top stand",
-    "translations": {
-    }
-  },
-  {
     "fileName": "dog1-a.svg",
     "name": "dog1 a",
     "translations": {
@@ -2336,30 +1820,6 @@
   {
     "fileName": "dog2-c.svg",
     "name": "dog2 c",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dog_puppy_back.png",
-    "name": "dog puppy back",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dog_puppy_right.png",
-    "name": "dog puppy right",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dog_puppy_side.png",
-    "name": "dog puppy side",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "dog_puppy_sit.png",
-    "name": "dog puppy sit",
     "translations": {
     }
   },
@@ -2532,18 +1992,6 @@
     }
   },
   {
-    "fileName": "football_running.png",
-    "name": "football running",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "football_standing.png",
-    "name": "football standing",
-    "translations": {
-    }
-  },
-  {
     "fileName": "fortunecookie.png",
     "name": "fortunecookie",
     "translations": {
@@ -2696,24 +2144,6 @@
   {
     "fileName": "guitar.svg",
     "name": "guitar",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "hannah-a.png",
-    "name": "hannah a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "hannah-b.png",
-    "name": "hannah b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "hannah-c.png",
-    "name": "hannah c",
     "translations": {
     }
   },
@@ -2964,12 +2394,6 @@
     }
   },
   {
-    "fileName": "jay.gif",
-    "name": "jay",
-    "translations": {
-    }
-  },
-  {
     "fileName": "jeans-a.svg",
     "name": "jeans a",
     "translations": {
@@ -2978,90 +2402,6 @@
   {
     "fileName": "jeans-b.svg",
     "name": "jeans b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jodi.gif",
-    "name": "jodi",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_pop_down.png",
-    "name": "jo pop down",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_pop_front.png",
-    "name": "jo pop front",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_pop_L_arm.png",
-    "name": "jo pop L arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_pop_left.png",
-    "name": "jo pop left",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_pop_R_arm.png",
-    "name": "jo pop R arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_pop_right.png",
-    "name": "jo pop right",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_pop_stand.png",
-    "name": "jo pop stand",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_stance.png",
-    "name": "jo stance",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_top_L_cross.png",
-    "name": "jo top L cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_top_L_leg.png",
-    "name": "jo top L leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_top_R_cross.png",
-    "name": "jo top R cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_top_R_leg.png",
-    "name": "jo top R leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "jo_top_stand.png",
-    "name": "jo top stand",
     "translations": {
     }
   },
@@ -3123,30 +2463,6 @@
     }
   },
   {
-    "fileName": "khalid-a.png",
-    "name": "khalid a",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "Khalid-b.png",
-    "name": "Khalid b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "khalid-c.png",
-    "name": "khalid c",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "khalid-d.png",
-    "name": "khalid d",
-    "translations": {
-    }
-  },
-  {
     "fileName": "knight.svg",
     "name": "knight",
     "translations": {
@@ -3179,84 +2495,6 @@
   {
     "fileName": "laptop.svg",
     "name": "laptop",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_pop_down.png",
-    "name": "lb pop down",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_pop_front.png",
-    "name": "lb pop front",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_pop_L_arm.png",
-    "name": "lb pop L arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_pop_left.png",
-    "name": "lb pop left",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_pop_R_arm.png",
-    "name": "lb pop R arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_pop_right.png",
-    "name": "lb pop right",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_pop_stand.png",
-    "name": "lb pop stand",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_stance.png",
-    "name": "lb stance",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_top_L_cross.png",
-    "name": "lb top L cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_top_L_leg.png",
-    "name": "lb top L leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_top_R_cross.png",
-    "name": "lb top R cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_top_R_leg.png",
-    "name": "lb top R leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lb_top_stand.png",
-    "name": "lb top stand",
     "translations": {
     }
   },
@@ -3321,54 +2559,6 @@
     }
   },
   {
-    "fileName": "lorenz01.png",
-    "name": "lorenz01",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lorenz02.png",
-    "name": "lorenz02",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lorenz03.png",
-    "name": "lorenz03",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lorenz04.png",
-    "name": "lorenz04",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lorenz05.png",
-    "name": "lorenz05",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lorenz06.png",
-    "name": "lorenz06",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lorenz07b.png",
-    "name": "lorenz07b",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "lorenz07.png",
-    "name": "lorenz07",
-    "translations": {
-    }
-  },
-  {
     "fileName": "magiccarpet.png",
     "name": "magiccarpet",
     "translations": {
@@ -3383,24 +2573,6 @@
   {
     "fileName": "marble-building.png",
     "name": "marble building",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "marissa-crouching.gif",
-    "name": "marissa crouching",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "marissa.gif",
-    "name": "marissa",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "marissa-sitting.gif",
-    "name": "marissa sitting",
     "translations": {
     }
   },
@@ -3561,12 +2733,6 @@
     }
   },
   {
-    "fileName": "paul.gif",
-    "name": "paul",
-    "translations": {
-    }
-  },
-  {
     "fileName": "pencil-a.svg",
     "name": "pencil a",
     "translations": {
@@ -3659,12 +2825,6 @@
   {
     "fileName": "rainbow.svg",
     "name": "rainbow",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "referee.gif",
-    "name": "referee",
     "translations": {
     }
   },
@@ -3863,54 +3023,6 @@
   {
     "fileName": "skates.svg",
     "name": "skates",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_pop_L_arm.png",
-    "name": "sl pop L arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_pop_R_arm.png",
-    "name": "sl pop R arm",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_top_L_cross.png",
-    "name": "sl top L cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_top_L_leg.png",
-    "name": "sl top L leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_top_R_cross.png",
-    "name": "sl top R cross",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_top_ready.png",
-    "name": "sl top ready",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_top_R_leg.png",
-    "name": "sl top R leg",
-    "translations": {
-    }
-  },
-  {
-    "fileName": "sl_top_stand.png",
-    "name": "sl top stand",
     "translations": {
     }
   },

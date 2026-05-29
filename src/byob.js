@@ -113,7 +113,7 @@ ADT_SlotMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.byob = '2026-March-10';
+modules.byob = '2026-May-11';
 
 // Declarations
 
@@ -1100,7 +1100,7 @@ CustomBlockDefinition.prototype.declarationFor = function (spec) {
     decl[2] = this.encodeChoices(options);
 
     // isReadOnly
-    decl[3] = part instanceof InputSlotMorph ? part.isReadOnly : true;
+    decl[3] = part instanceof InputSlotMorph ? part.isReadOnly : false;
 
     // isIrreplaceable
     decl[4] = part.isStatic;
@@ -4863,11 +4863,11 @@ InputSlotDialogMorph.prototype.createSlotTypeButtons = function () {
     var defLabel, defInput, defSwitch, defPicker, loopArrow, settingsButton;
 
     // slot types
+    this.addSlotTypeButton('Any type', '%s');
+    this.addSlotTypeButton('Number', '%n');
+    this.addSlotTypeButton('List', '%l');
     this.addSlotTypeButton('Color', '%clr');
     this.addSlotTypeButton('Text', '%txt');
-    this.addSlotTypeButton('List', '%l');
-    this.addSlotTypeButton('Number', '%n');
-    this.addSlotTypeButton('Any type', '%s');
     this.addSlotTypeButton('Boolean (T/F)', '%b');
     this.addSlotTypeButton('Command\n(inline)', '%cmdRing'); //'%cmd');
     this.addSlotTypeButton('Reporter', '%repRing'); //'%r');
@@ -4908,7 +4908,7 @@ InputSlotDialogMorph.prototype.createSlotTypeButtons = function () {
             )) {
             defLabel.changed();
             if (this.fragment.type === '%adt') {
-                defLabel.text = localize('ADT Type:');
+                defLabel.text = localize('Custom Type:');
             } else if (['%upvar', '%parameter'].includes(this.fragment.type)) {
                 defLabel.text = localize('Default Name:');
             } else {
@@ -5371,7 +5371,7 @@ InputSlotDialogMorph.prototype.specialSlotsMenu = function () {
     addSpecialSlotType('number \u03BB', '%nUE');
     addSpecialSlotType('object', '%obj');
     addSpecialSlotType('parameter', '%parameter');
-    addSpecialSlotType('ADT', '%adt');
+    addSpecialSlotType('custom type', '%adt');
     menu.addLine();
     addSpecialSlotType('variables', '%scriptVars');
     addSpecialSlotType('receivers', '%receive');

@@ -96,7 +96,7 @@ CustomBlockDefinition, exportEmbroidery, CustomHatBlockMorph, HandMorph*/
 
 /*jshint esversion: 11*/
 
-modules.objects = '2026-April-03';
+modules.objects = '2026-May-22';
 
 var SpriteMorph;
 var StageMorph;
@@ -3438,6 +3438,7 @@ SpriteMorph.prototype.getImage = function () {
             this.cachedImage
         );
         this.render(this.cachedImage.getContext('2d'));
+        this.applyGraphicsEffects(this.cachedImage);
         this.shouldRerender = false;
     }
     return this.cachedImage;
@@ -3605,8 +3606,6 @@ SpriteMorph.prototype.render = function (ctx) {
             return this.wearCostume(null, true);
         }
     }
-    // apply graphics effects to image
-    this.applyGraphicsEffects(this.cachedImage);
     this.version = Date.now();
 };
 
@@ -4580,7 +4579,7 @@ SpriteMorph.prototype.freshPalette = function (category) {
                 () => new BlockVisibilityDialogMorph(myself).popUp(
                     myself.world())
             );
-            if (ide.scene.template) {
+            if (ide.scene.template.hide) {
                 menu.addItem(
                     'restore palette',
                     () => ide.stage.restoreHiddenGlobalBlocks(
@@ -5872,7 +5871,10 @@ SpriteMorph.prototype.userMenu = function () {
         allParts,
         anchors;
 
-    if (ide && (ide.isAppMode || ide.config.noSpriteEdits)) {
+    if (
+        (ide && (ide.isAppMode || ide.config.noSpriteEdits)) ||
+        this.parentThatIsA(StageMorph)?.tutorialMode
+    ) {
         // menu.addItem('help', 'nop');
         return menu;
     }
@@ -6875,11 +6877,14 @@ SpriteMorph.prototype.write = function (text, size) {
 };
 
 SpriteMorph.prototype.writeOn = function (target, text, size) {
-    var targetCostume,
+    var mode = this.blendingMode(),
+        stage,
+        targetCostume,
         start,
         delta,
         dest,
         fontSize,
+        decorations,
         rotation,
         len,
         ctx;
@@ -6893,17 +6898,36 @@ SpriteMorph.prototype.writeOn = function (target, text, size) {
     // check if target has a costume and fetch its pen surface
     if (target.costume) {
         targetCostume = target.surface();
+    } else if (mode === 'source-over') {
+        stage = this.parentThatIsA(StageMorph);
+        target.doSwitchToCostume(new Costume(
+            newCanvas(stage ? stage.dimensions : new Point(480, 360), true),
+            this.newCostumeName(localize('Costume'))
+        ));
+        targetCostume = target.surface();
+        // target.originalCostume = ['Turtle'];
     } else {
         return;
     }
 
     // determine the relative coordinates, rotation and font size
     start = target.costumePoint(this.rotationCenter());
-    fontSize = size;
+    // fontSize = size;
+    decorations = size.toString().split(' ');
+    fontSize = (decorations.length > 1) ?
+        parseFloat(decorations[decorations.length - 2])
+        : +size;
     rotation = radians(this.direction() - 90);
     if (target instanceof SpriteMorph) {
         fontSize /= target.scale;
         rotation -= radians(target.direction() - 90);
+    }
+    if (decorations.length > 1) { // try supporting decorations
+        fontSize = decorations.slice(0, decorations.length - 2)
+            .reduce(
+                (a, b) => a + ' ' + b,
+                ''
+            ) + ' ' + fontSize + 'px ' + decorations[decorations.length - 1];
     }
 
     // write the text on the target canvas
@@ -6916,7 +6940,7 @@ SpriteMorph.prototype.writeOn = function (target, text, size) {
     len = ctx.measureText(text).width;
     ctx.translate(start.x, start.y);
     ctx.rotate(rotation);
-    ctx.globalCompositeOperation = this.blendingMode();
+    ctx.globalCompositeOperation = mode;
     ctx.fillText(text, 0, 0);
     ctx.translate(-start.x, -start.y);
     ctx.restore();
@@ -7968,8 +7992,6 @@ SpriteMorph.prototype.floodFill = function () {
 
     var onSheet = this.drawsOnSprite(),
         target = onSheet ? this.sheet : this.parent,
-        start = (onSheet ? this.sheet : this.parent)
-            .costumePoint(this.rotationCenter()),
         clr = new Color(
             Math.round(Math.min(Math.max(this.color.r, 0), 255)),
             Math.round(Math.min(Math.max(this.color.g, 0), 255)),
@@ -7979,6 +8001,7 @@ SpriteMorph.prototype.floodFill = function () {
         layer,
         width,
         height,
+        start,
         ctx,
         img,
         dta,
@@ -8006,6 +8029,8 @@ SpriteMorph.prototype.floodFill = function () {
         : this.parent.penTrails());
     width = layer.width;
     height = layer.height;
+    start = (onSheet ? this.sheet : this.parent)
+        .costumePoint(this.rotationCenter());
     ctx = layer.getContext('2d');
     img = ctx.getImageData(0, 0, width, height);
     dta = img.data;
@@ -12111,7 +12136,10 @@ StageMorph.prototype.userMenu = function () {
     var ide = this.parentThatIsA(IDE_Morph),
         menu = new MenuMorph(this);
 
-    if (ide && (ide.isAppMode || ide.config.noSpriteEdits)) {
+    if (
+        (ide && (ide.isAppMode || ide.config.noSpriteEdits)) ||
+        this.tutorialMode
+    ) {
         // menu.addItem('help', 'nop');
         return menu;
     }
@@ -12470,18 +12498,12 @@ StageMorph.prototype.trailsLogAsPolySVG = function () {
 
 // StageMorph coordinate conversion
 
-StageMorph.prototype.costumePoint = SpriteMorph.prototype.costumePoint;
-
 StageMorph.prototype.costumePoint = function(aPoint) {
     // answer the coordinates of the given world point on the current
-    // costume's pixel bitmap, if any
+    // pentrails pixel bitmap
     var flipY = new Point(1, -1),
-        stagePoint;
-    if (!this.costume) {
-        return new Point();
-    }
-    stagePoint = this.snapPoint(aPoint).multiplyBy(flipY);
-    return stagePoint.add(this.costume.extent().divideBy(2));
+        stagePoint = this.snapPoint(aPoint).multiplyBy(flipY);
+    return stagePoint.add(this.dimensions.divideBy(2));
 };
 
 StageMorph.prototype.normalizePoint = SpriteMorph.prototype.normalizePoint;
@@ -16023,7 +16045,10 @@ WatcherMorph.prototype.userMenu = function () {
         );
     }
 
-    if (ide && ide.isAppMode) { // prevent context menu in app mode
+    if (
+        (ide && ide.isAppMode) ||
+        this.parentThatIsA(StageMorph)?.tutorialMode
+    ) { // prevent context menu in app and tutorial mode
         return;
     }
 

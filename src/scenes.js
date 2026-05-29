@@ -54,7 +54,7 @@ ScriptsMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.scenes = '2026-March-10';
+modules.scenes = '2026-May-19';
 
 // Projecct /////////////////////////////////////////////////////////
 
@@ -63,7 +63,7 @@ modules.scenes = '2026-March-10';
 
 // Project instance creation:
 
-function Project(scenes, current) {
+function Project(scenes, current, temporary = false) {
     var projectScene;
 
     this.scenes = scenes || new List();
@@ -88,6 +88,9 @@ function Project(scenes, current) {
 
     // for undeleting scenes - do not persist
     this.trash = [];
+
+    // for refreshing the ide
+    this.isTemporary = temporary;
 }
 
 Project.prototype.initialize = function () {
@@ -125,8 +128,20 @@ function Scene(aStageMorph) {
     this.showPaletteButtons = true;
     this.role = null; // null (default), "template" or "tutorial"
     this.createdFromTemplate = false;
-    this.template = null; // {name: str, version: str, hide: nested list}
     this.hideSprites = false;
+
+    // template settings
+    this.template = {
+        name: null,
+        version: null,
+        hide: null,
+        lang: undefined,
+        zoom: undefined,
+        scale: undefined,
+        fade: undefined,
+        flat: undefined,
+        bright: undefined
+    };
 
     // cached IDE state
     this.sprites = new List();
@@ -234,7 +249,24 @@ Scene.prototype.applyGlobalSettings = function () {
     ScriptsMorph.prototype.enforceTypes = this.enforceTypes;
 };
 
+// Scene embedded template settings
+
+Scene.prototype.hasEmbeddedTemplateSettings = function () {
+    return ['lang', 'zoom', 'scale', 'fade', 'flat', 'bright'].some(any =>
+        this.template[any] !== undefined);
+};
+
 // Scene ops:
+
+Scene.prototype.displayName = function () {
+    if (this.role === 'tutorial' &&
+        this.name.length > 1 &&
+        this.name.startsWith('_')
+    ) {
+            return this.name.slice(1);
+    }
+    return this.name;
+};
 
 Scene.prototype.updateTrash = function () {
     this.trash = this.trash.filter(sprite => sprite.isCorpse);

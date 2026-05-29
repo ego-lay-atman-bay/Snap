@@ -50,7 +50,7 @@
 
 // Global stuff
 
-modules.locale = '2026-April-01';
+modules.locale = '2026-May-24';
 
 var Localizer;
 var SnapTranslator = new Localizer();
@@ -207,7 +207,7 @@ SnapTranslator.dict.de = {
     'translator_e-mail':
         'jens@moenig.org, jadga.huegle@sap.com',
     'last_changed':
-        '2026-01-04'
+        '2026-05-11'
 };
 
 SnapTranslator.dict.it = {
@@ -284,7 +284,7 @@ SnapTranslator.dict.zh_CN = {
     'translator_e-mail':
         'ubertao@qq.com/djh@rhjxx.cn/simon@snapontop.org',
     'last_changed':
-        '2026-04-01'
+        '2026-05-24'
 };
 
 SnapTranslator.dict.eo = {
@@ -416,7 +416,7 @@ SnapTranslator.dict.ca = {
     'translator_e-mail':
         'jguille2@xtec.cat, bernat@snap4arduino.rocks',
     'last_changed':
-        '2026-01-18'
+        '2026-04-28'
 };
 
 SnapTranslator.dict.ca_VA = {
@@ -702,7 +702,18 @@ SnapTranslator.dict.hy = {
     'translator_e-mail':
         'info@symotec.am and info@armath.am',
     'last_changed':
-        '2025-03-13',
+        '2025-03-13'
+};
+
+SnapTranslator.dict.hyw = {
+    'language_name':
+        'Արեւմտահայերէն',
+    'language_translator':
+        'Antrohoos Education Foundation',
+    'translator_e-mail':
+        'info@armath.am',
+    'last_changed':
+        '2026-05-19'
 };
 
 SnapTranslator.dict.vi = {

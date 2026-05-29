@@ -164,7 +164,7 @@ CustomHatBlockMorph, GrayPaletteMorph, ZOOM*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.blocks = '2026-April-07';
+modules.blocks = '2026-May-11';
 
 var SyntaxElementMorph;
 var BlockMorph;
@@ -2923,6 +2923,11 @@ SyntaxElementMorph.prototype.showBubble = function (value, exportPic, target) {
 
     bubble.step = () => {
         var pos, area;
+
+        if (wrrld.hand.inputTarget instanceof HandleMorph) {
+            // pause while resizing
+            return;
+        }
 
         if (ide && (ide.currentSprite !== target)) {
             pos = anchor.center();
@@ -11383,6 +11388,7 @@ InputSlotMorph.prototype.menuFromDict = function (
 	function update(num) {
     	myself.setContents(num);
         myself.reactToSliderEdit();
+        myself.reactToEdit();
         if (trgt && !block.isTemplate) {
             trgt.recordUserEdit(
                 'scripts',
@@ -12333,7 +12339,10 @@ InputSlotMorph.prototype.pianoKeyboardMenu = function (searching) {
         instrument = block.scriptTarget().instrument;
     }
     menu = new PianoMenuMorph(
-        this.setContents,
+        (value) => {
+            this.setContents(value);
+            this.reactToEdit();
+        },
         this,
         this.fontSize,
         instrument
@@ -12342,7 +12351,7 @@ InputSlotMorph.prototype.pianoKeyboardMenu = function (searching) {
         this.right() - (menu.width() / 2),
         this.bottom()
     ));
-    menu.selectKey(Math.min(Math.max(+this.evaluate(), 0), 143));
+    menu.selectKey(Math.min(Math.max(+this.evaluate() || 0, 0), 143));
 };
 
 InputSlotMorph.prototype.directionDialMenu = function (searching) {
@@ -14144,10 +14153,7 @@ TextSlotMorph.prototype.init = function (
 // TextSlotMorph accessing:
 
 TextSlotMorph.prototype.getSpec = function () {
-    if (this.isNumeric) {
-        return '%mlt';
-    }
-    return '%mlt'; // default
+    return '%mlt';
 };
 
 TextSlotMorph.prototype.contents = function () {
@@ -14359,7 +14365,7 @@ ADT_SlotMorph.prototype.init = function (typeString) {
     contents.isEditable = false;
     contents.isDraggable = false;
     contents.disableSelecting();
-    this.setContents(typeString || 'ADT');
+    this.setContents(typeString || 'type');
     this.fixLayout();
 };
 
@@ -14369,7 +14375,7 @@ ADT_SlotMorph.prototype.getSpec = function () {
 
 ADT_SlotMorph.prototype.contents = InputSlotMorph.prototype.contents;
 
-ADT_SlotMorph.prototype.setContents = function (typeString = 'ADT') {
+ADT_SlotMorph.prototype.setContents = function (typeString = 'type') {
     var cnts = this.contents(),
         block = this.parentThatIsA(BlockMorph); // could be inside a multi-arg
     cnts.text = typeString;
